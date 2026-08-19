@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\PerteneceAEmpresa;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Venta extends Model
+{
+    use HasFactory, PerteneceAEmpresa;
+
+    protected $guarded = ['id'];
+
+    public const ESTADOS = [
+        'cotizacion' => 'Cotización',
+        'reservada' => 'Reservada',
+        'cerrada' => 'Cerrada',
+        'anulada' => 'Anulada',
+    ];
+
+    public const FORMAS_PAGO = [
+        'contado' => 'Contado',
+        'financiamiento_banco' => 'Financiamiento bancario',
+        'credito_propio' => 'Crédito propio',
+        'mixto' => 'Mixto',
+    ];
+
+    public const BASES_COMISION = [
+        'margen' => 'Sobre la utilidad',
+        'precio' => 'Sobre el precio de venta',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'fecha' => 'date',
+            'deposito' => 'decimal:2',
+            'deposito_vence_en' => 'date',
+            'precio_venta' => 'decimal:2',
+            'descuento' => 'decimal:2',
+            'precio_final' => 'decimal:2',
+            'enganche' => 'decimal:2',
+            'saldo_financiado' => 'decimal:2',
+            'comision_porcentaje' => 'decimal:3',
+            'comision_monto' => 'decimal:2',
+            'comision_pagada' => 'boolean',
+            'factura_fecha' => 'date',
+            'entregada_en' => 'date',
+            'anulada_en' => 'datetime',
+        ];
+    }
+
+    public function unidad(): BelongsTo
+    {
+        return $this->belongsTo(Unidad::class);
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function vendedor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'vendedor_id');
+    }
+
+    public function sucursal(): BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
+
+    public function estaCerrada(): bool
+    {
+        return $this->estado === 'cerrada';
+    }
+
+    public function estaAnulada(): bool
+    {
+        return $this->anulada_en !== null;
+    }
+
+    /** Lo que queda después del costo de la unidad y de la comisión. */
+    public function getUtilidadAttribute(): string
+    {
+        return bcsub(
+            bcsub((string) $this->precio_final, (string) $this->unidad->costo_total, 2),
+            (string) $this->comision_monto,
+            2,
+        );
+    }
+
+    public function getMargenAttribute(): ?float
+    {
+        return (float) $this->precio_final > 0
+            ? ((float) $this->utilidad / (float) $this->precio_final) * 100
+            : null;
+    }
+
+    /** Cuánto se movió el precio real respecto de lo que se pedía. */
+    public function getDiferenciaContraListaAttribute(): ?string
+    {
+        return $this->unidad->precio_lista !== null
+            ? bcsub((string) $this->precio_final, (string) $this->unidad->precio_lista, 2)
+            : null;
+    }
+
+    public function scopeVigentes(Builder $query): Builder
+    {
+        return $query->whereNull('anulada_en');
+    }
+
+    public function scopeCerradas(Builder $query): Builder
+    {
+        return $query->vigentes()->where('estado', 'cerrada');
+    }
+}

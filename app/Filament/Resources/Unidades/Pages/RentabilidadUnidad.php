@@ -123,9 +123,15 @@ class RentabilidadUnidad extends Page
             ->sum('monto_base');
     }
 
+    /** El de cierre si ya se vendió; el de lista mientras tanto. */
     public function getPrecio(): float
     {
-        return (float) ($this->record->precio_lista ?? 0);
+        return (float) ($this->record->precio_para_margen ?? 0);
+    }
+
+    public function getVenta(): ?\App\Models\Venta
+    {
+        return $this->record->venta;
     }
 
     public function getUtilidad(): float

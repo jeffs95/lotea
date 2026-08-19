@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
             $dueno->assignRole('dueno');
 
             if (Unidad::count() === 0) {
-                $this->call([UnidadesDemoSeeder::class, CostosDemoSeeder::class]);
+                $this->call([UnidadesDemoSeeder::class, CostosDemoSeeder::class, VentasDemoSeeder::class]);
             }
         });
     }

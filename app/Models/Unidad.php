@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -100,6 +101,17 @@ class Unidad extends Model implements HasMedia
         return $this->hasMany(CostoUnidad::class);
     }
 
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class);
+    }
+
+    /** La venta que efectivamente cerró, si ya se vendió. */
+    public function venta(): HasOne
+    {
+        return $this->hasOne(Venta::class)->where('estado', 'cerrada')->whereNull('anulada_en');
+    }
+
     /** Cómo se nombra el carro en pantalla: "Toyota RAV4 2019". */
     public function getDescripcionAttribute(): string
     {
@@ -131,13 +143,23 @@ class Unidad extends Model implements HasMedia
             : null;
     }
 
+    /**
+     * El precio con el que se calcula la utilidad: el real si ya se vendió, el
+     * de lista mientras tanto. Un margen sobre precio de lista es una
+     * aspiración; sobre el precio de cierre es un hecho.
+     */
+    public function getPrecioParaMargenAttribute(): ?string
+    {
+        return $this->venta?->precio_final ?? $this->precio_lista;
+    }
+
     public function getUtilidadEstimadaAttribute(): ?string
     {
-        if ($this->precio_lista === null) {
+        if ($this->precio_para_margen === null) {
             return null;
         }
 
-        return bcsub((string) $this->precio_lista, (string) $this->costo_total, 2);
+        return bcsub((string) $this->precio_para_margen, (string) $this->costo_total, 2);
     }
 
     public function scopeEnInventario($query)

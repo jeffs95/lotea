@@ -115,11 +115,35 @@ WhatsApp, calculadora de cuota y un botón de WhatsApp con el mensaje ya escrito
 de stock adentro. Los formularios caen en `leads` con el cronómetro de primera respuesta
 corriendo.
 
+## Ventas
+
+La venta es donde el margen deja de ser una aspiración. Mientras la unidad no se vende, la
+rentabilidad usa el precio de lista; en cuanto se cierra una venta, usa el precio real de
+cierre (`Unidad::$precio_para_margen`).
+
+`App\Actions\RegistrarVenta` hace tres cosas en una sola transacción: mueve la unidad a
+*Vendida*, calcula la comisión y la registra como gasto de la unidad. Anular la venta
+(`AnularVenta`) devuelve el carro al patio y anula esa comisión, sin borrar nada.
+
+**La comisión se calcula sobre la utilidad, no sobre el precio.** Es lo que alinea al
+vendedor con el dueño: si regala precio, se corta su propia comisión. Hay un test que lo
+comprueba.
+
+## Usuarios de prueba
+
+| Usuario | Contraseña | Para qué |
+|---|---|---|
+| `dueno@lotea.test` | `password` | Ve todo, incluidos costos y márgenes |
+| `vendedor@lotea.test` | `password` | Ve inventario, ventas y clientes — **ningún costo** |
+
+Entrar con el vendedor es la forma más rápida de comprobar la regla de negocio más
+importante del sistema.
+
 ## Estado
 
-Fases 1 a 5 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el
-tablero del patio, el costeo con multimoneda y prorrateo, y el portal público con CRM de
-prospectos.
+Terminado: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el tablero del
+patio, el costeo con multimoneda y prorrateo, el portal público con CRM, y clientes y
+ventas con comisiones.
 
-Falta de la v1: ventas y comisiones, taller con órdenes de trabajo, y cartera de crédito
-propio.
+Falta: taller con órdenes de trabajo, cartera de crédito propio, caja por sucursal,
+empleados y el panel central del SaaS.

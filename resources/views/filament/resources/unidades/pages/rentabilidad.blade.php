@@ -6,6 +6,7 @@
     $margen = $this->getMargen();
     $grupos = $this->getGrupos();
     $desviaciones = $this->getDesviaciones();
+    $venta = $this->getVenta();
     $positiva = $utilidad >= 0;
     $q = fn ($n) => 'Q ' . number_format((float) $n, 2);
 @endphp
@@ -20,10 +21,16 @@
         </div>
 
         <div class="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Precio de lista</p>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                {{ $venta ? 'Precio de venta' : 'Precio de lista' }}
+            </p>
             <p class="mt-2 text-3xl font-bold tracking-tight text-gray-950 dark:text-white">{{ $q($precio) }}</p>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {{ $record->dias_inventario !== null ? $record->dias_inventario . ' días en inventario' : 'Sin fecha de compra' }}
+                @if ($venta)
+                    Vendida a {{ $venta->cliente->nombre }} · {{ $venta->fecha->format('d/m/Y') }}
+                @else
+                    {{ $record->dias_inventario !== null ? $record->dias_inventario . ' días en inventario' : 'Sin fecha de compra' }}
+                @endif
             </p>
         </div>
 
@@ -47,7 +54,8 @@
                 'text-success-700/80 dark:text-success-400/80' => $positiva,
                 'text-danger-700/80 dark:text-danger-400/80' => ! $positiva,
             ])>
-                {{ $margen === null ? 'Falta el precio de lista' : number_format($margen, 1) . '% de margen' }}
+                {{ $margen === null ? 'Falta el precio' : number_format($margen, 1) . '% de margen' }}
+                {{ $venta ? '· real' : '· estimado' }}
             </p>
         </div>
     </div>
@@ -160,9 +168,24 @@
                     </div>
 
                     <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-600 dark:text-gray-300">Precio de lista</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">
+                            {{ $venta ? 'Precio de venta ('.$venta->numero.')' : 'Precio de lista' }}
+                        </span>
                         <span class="text-sm tabular-nums text-gray-600 dark:text-gray-300">{{ $q($precio) }}</span>
                     </div>
+
+                    @if ($venta && $venta->diferencia_contra_lista !== null && (float) $venta->diferencia_contra_lista != 0)
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Se movió del precio de lista</span>
+                            <span @class([
+                                'text-sm tabular-nums',
+                                'text-danger-600 dark:text-danger-400' => (float) $venta->diferencia_contra_lista < 0,
+                                'text-success-600 dark:text-success-400' => (float) $venta->diferencia_contra_lista > 0,
+                            ])>
+                                {{ (float) $venta->diferencia_contra_lista > 0 ? '+' : '' }}{{ $q($venta->diferencia_contra_lista) }}
+                            </span>
+                        </div>
+                    @endif
 
                     @if ($gastosVenta > 0)
                         <div class="flex items-center justify-between">
