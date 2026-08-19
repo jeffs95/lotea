@@ -7,7 +7,10 @@ use App\Listeners\SincronizarEmpresaActiva;
 use Illuminate\Auth\Events\Login;
 use Filament\Events\TenantSet;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,8 +21,25 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
+    /**
+     * Cuántas consultas puede mandar una misma persona desde el portal.
+     *
+     * Un comprador manda una o dos; cinco por minuto ya es un bot. El límite
+     * por hora es el que de verdad protege: sin él, un script paciente igual
+     * llena el CRM del cliente en una tarde.
+     */
+    protected function limitarEnviosDelPortal(): void
+    {
+        RateLimiter::for('leads', fn (Request $peticion) => [
+            Limit::perMinute(5)->by($peticion->ip()),
+            Limit::perHour(20)->by($peticion->ip()),
+        ]);
+    }
+
     public function boot(): void
     {
+        $this->limitarEnviosDelPortal();
+
         Event::listen(TenantSet::class, SincronizarEmpresaActiva::class);
         Event::listen(Login::class, RegistrarUltimoAcceso::class);
 

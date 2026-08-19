@@ -194,6 +194,13 @@
                             @csrf
                             <input type="hidden" name="unidad_id" value="{{ $unidad->id }}">
 
+                            {{-- Trampa para bots: invisible y sin autocompletar.
+                                 Una persona nunca lo ve; un script lo llena. --}}
+                            <input type="text" name="{{ \App\Http\Controllers\Portal\LeadController::HONEYPOT }}"
+                                   tabindex="-1" autocomplete="off" aria-hidden="true"
+                                   style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+                            <input type="hidden" name="_t" value="{{ now()->timestamp }}">
+
                             <input type="text" name="nombre" placeholder="Tu nombre" required maxlength="120"
                                    value="{{ old('nombre') }}"
                                    class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">

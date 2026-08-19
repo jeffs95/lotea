@@ -15,7 +15,9 @@ $rutas = function () {
     Route::get('/', [CatalogoController::class, 'inicio'])->name('inicio');
     Route::get('/vehiculos', [CatalogoController::class, 'catalogo'])->name('catalogo');
     Route::get('/vehiculos/{slug}', [CatalogoController::class, 'unidad'])->name('unidad');
-    Route::post('/contacto', [LeadController::class, 'store'])->name('lead');
+    Route::post('/contacto', [LeadController::class, 'store'])
+        ->middleware('throttle:leads')
+        ->name('lead');
     Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
     Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 };
