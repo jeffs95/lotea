@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\EstadoUnidad;
+use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use App\Models\Marca;
 use App\Models\Sucursal;
@@ -39,7 +40,25 @@ class UnidadesDemoSeeder extends Seeder
         ['Honda', 'Fit', 'LX', 2018, 'Plata', 69800, 'salvage', 'Minor dent', EstadoUnidad::Entregada, 82000],
     ];
 
+    /**
+     * Motos: se traen de subasta igual que los carros y su ficha es distinta.
+     *
+     * marca, línea, versión, año, color, odómetro, título, daño, estado,
+     * precio, cilindrada, estilo
+     */
+    public const MOTOS = [
+        ['Honda', 'CB 190R', 'Repsol', 2022, 'Rojo', 8400, 'clean', null, EstadoUnidad::Publicada, 21500, 184, 'naked'],
+        ['Yamaha', 'NMAX', '155 ABS', 2023, 'Azul', 3200, 'clean', null, EstadoUnidad::Publicada, 28900, 155, 'scooter'],
+        ['Suzuki', 'DR 650', 'SE', 2019, 'Blanco', 19700, 'salvage', 'Caída lateral', EstadoUnidad::EnTaller, 44000, 644, 'doble_proposito'],
+    ];
+
     public function run(): void
+    {
+        $this->automoviles();
+        $this->motocicletas();
+    }
+
+    protected function automoviles(): void
     {
         $sucursal = Sucursal::first();
 
@@ -78,24 +97,79 @@ class UnidadesDemoSeeder extends Seeder
                 'slug' => Str::slug("{$marca} {$linea} {$anio} stock ".($i + 1)),
             ]);
 
-            UnidadTransicion::create([
-                'unidad_id' => $unidad->id,
-                'estado_anterior' => null,
-                'estado_nuevo' => EstadoUnidad::Comprada,
-                'ocurrio_en' => $fechaCompra,
-                'nota' => 'Unidad registrada',
+            $this->historial($unidad, $fechaCompra, $estado);
+        }
+    }
+
+    protected function motocicletas(): void
+    {
+        $sucursal = Sucursal::first();
+        $desde = Unidad::count();
+
+        foreach (self::MOTOS as $i => [$marca, $linea, $version, $anio, $color, $odometro, $titulo, $dano, $estado, $precio, $cc, $estilo]) {
+            $modeloMarca = Marca::where('nombre', $marca)->first();
+            $modeloLinea = Linea::where('marca_id', $modeloMarca?->id)->where('nombre', $linea)->first()
+                ?? Linea::create([
+                    'marca_id' => $modeloMarca?->id,
+                    'nombre' => $linea,
+                    'slug' => Str::slug($linea),
+                    'activo' => true,
+                ]);
+
+            $fechaCompra = now()->subDays(20 + $i * 11);
+
+            $unidad = Unidad::create([
+                'sucursal_id' => $sucursal?->id,
+                'tipo_vehiculo' => TipoVehiculo::Motocicleta,
+                'vin' => Str::upper(Str::random(11)).str_pad((string) (200000 + $i), 6, '0'),
+                'stock_no' => 'M'.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT),
+                'marca_id' => $modeloMarca?->id,
+                'linea_id' => $modeloLinea?->id,
+                'version' => $version,
+                'anio' => $anio,
+                'color' => $color,
+                'odometro' => $odometro,
+                'odometro_unidad' => 'km',
+                'cilindrada_cc' => $cc,
+                'carroceria' => $estilo,
+                'transmision' => $estilo === 'scooter' ? 'automatica' : 'manual',
+                'combustible' => 'gasolina',
+                'cilindros' => 1,
+                'tipo_titulo' => $titulo,
+                'tipo_dano' => $dano,
+                'estado' => $estado,
+                'estado_desde' => now()->subDays(5 + $i * 3),
+                'fecha_compra' => $fechaCompra,
+                'precio_lista' => $precio,
+                'precio_minimo' => round($precio * 0.93, 2),
+                'costo_presupuestado' => round($precio * 0.68, 2),
+                'publicado' => $estado->admitePreventa(),
+                'slug' => Str::slug("{$marca} {$linea} {$anio} stock m".($i + 1)),
             ]);
 
-            if ($estado !== EstadoUnidad::Comprada) {
-                UnidadTransicion::create([
-                    'unidad_id' => $unidad->id,
-                    'estado_anterior' => EstadoUnidad::Comprada,
-                    'estado_nuevo' => $estado,
-                    'ocurrio_en' => $unidad->estado_desde,
-                    'dias_en_estado_anterior' => (int) $fechaCompra->diffInDays($unidad->estado_desde),
-                    'nota' => 'Carga inicial de demostración',
-                ]);
-            }
+            $this->historial($unidad, $fechaCompra, $estado);
+        }
+    }
+
+    protected function historial(Unidad $unidad, $fechaCompra, EstadoUnidad $estado): void
+    {
+        UnidadTransicion::create([
+            'unidad_id' => $unidad->id,
+            'estado_anterior' => null,
+            'estado_nuevo' => EstadoUnidad::Comprada,
+            'ocurrio_en' => $fechaCompra,
+            'nota' => 'Unidad registrada',
+        ]);
+
+        if ($estado !== EstadoUnidad::Comprada) {
+            UnidadTransicion::create([
+                'unidad_id' => $unidad->id,
+                'estado_anterior' => EstadoUnidad::Comprada,
+                'estado_nuevo' => $estado,
+                'ocurrio_en' => $unidad->estado_desde,
+                'dias_en_estado_anterior' => (int) $fechaCompra->diffInDays($unidad->estado_desde),
+                'nota' => 'Carga inicial de demostración',
+            ]);
         }
     }
 }

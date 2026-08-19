@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TipoVehiculo;
 use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -109,7 +110,8 @@ class LectorDeDocumentos
         $transmisiones = implode(', ', array_keys(UnidadForm::TRANSMISIONES));
         $combustibles = implode(', ', array_keys(UnidadForm::COMBUSTIBLES));
         $tracciones = implode(', ', array_keys(UnidadForm::TRACCIONES));
-        $carrocerias = implode(', ', array_keys(UnidadForm::CARROCERIAS));
+        $carrocerias = implode(', ', array_keys(TipoVehiculo::todasLasCarrocerias()));
+        $tipos = implode(', ', array_column(TipoVehiculo::cases(), 'value'));
         $titulos = implode(', ', array_keys(UnidadForm::TIPOS_TITULO));
 
         return <<<TXT
@@ -135,6 +137,7 @@ class LectorDeDocumentos
         {
           "documentos": ["tarjeta_circulacion" | "titulo_usa" | "hoja_subasta" | "otro"],
           "datos": {
+            "tipo_vehiculo": {$tipos}|null,
             "vin": string|null,
             "marca": string|null,
             "linea": string|null,
@@ -143,6 +146,7 @@ class LectorDeDocumentos
             "color": string|null,
             "motor": string|null,
             "cilindros": number|null,
+            "cilindrada_cc": number|null,
             "puertas": number|null,
             "odometro": number|null,
             "odometro_unidad": "mi"|"km"|null,
@@ -171,6 +175,15 @@ class LectorDeDocumentos
         - "anio" es el año del modelo, entre 1980 y 2030.
         - El odómetro va en número entero, sin comas ni puntos.
         - Los campos con lista de valores solo aceptan uno de esos valores exactos.
+        - Fijate primero si es automóvil, motocicleta o camión, y poné eso en
+          "tipo_vehiculo". Cambia lo que tiene sentido pedir:
+          · Una MOTOCICLETA no tiene puertas, ni color de interior, ni tracción:
+            dejá esos tres en null aunque creas saberlos. En cambio la
+            cilindrada en centímetros cúbicos ("cilindrada_cc") es su dato más
+            importante; en los documentos aparece como CC, C.C. o "cilindraje".
+          · Para moto, "carroceria" es su estilo: scooter, deportiva, naked,
+            doble_proposito, cross, touring, custom o tres_ruedas.
+          · Un CAMIÓN tampoco lleva color de interior.
         - En "aviso" poné una frase corta en español si algo quedó dudoso, si un
           documento estaba ilegible o si dos documentos se contradicen; si todo
           se leyó bien y no hubo conflictos, poné null.

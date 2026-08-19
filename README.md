@@ -195,6 +195,24 @@ duplicarlo. Anular la orden le devuelve ese costo a la unidad.
 caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
 cuota el crédito se cancela solo.
 
+## Automóviles, motos y pesados
+
+Cada unidad tiene un **tipo de vehículo** y la ficha técnica cambia con él, porque una moto
+no tiene puertas ni color de interior ni tracción 4x4 — y en cambio su dato principal, la
+cilindrada en cc, no existía en la ficha de un carro.
+
+| | Automóvil | Motocicleta | Camión |
+|---|---|---|---|
+| Puertas, color interior | Sí | **No** | Puertas sí, interior no |
+| Tracción | Sí | **No** | Sí |
+| Cilindrada en cc | Opcional | **Destacada** | Opcional |
+| Carrocería | Sedán, SUV, pick-up… | Scooter, deportiva, naked… | Cabezal, furgón, volteo… |
+| Transmisión | Automática, manual, CVT | Manual, semiautomática, automática | Automática, manual, CVT |
+
+Las listas viven en `App\Enums\TipoVehiculo`, y el formulario, el portal público y el prompt
+de la IA las leen de ahí. Al cambiar el tipo en el formulario se limpian los campos que ya no
+aplican, en vez de dejarlos escondidos con un valor viejo.
+
 ## El QR del parabrisas
 
 Cada unidad nace con un código corto único (`WVD299`) impreso junto a un QR que se pega en

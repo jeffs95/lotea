@@ -43,7 +43,8 @@
             @if ($unidad->odometro)
                 <span>{{ number_format($unidad->odometro) }} {{ $unidad->odometro_unidad === 'mi' ? 'mi' : 'km' }}</span>
             @endif
-            @if ($unidad->transmision)<span>· {{ \App\Filament\Resources\Unidades\Schemas\UnidadForm::TRANSMISIONES[$unidad->transmision] ?? $unidad->transmision }}</span>@endif
+            @if ($unidad->cilindrada_cc)<span>· {{ $unidad->cilindrada_cc }} cc</span>@endif
+            @if ($unidad->transmision)<span>· {{ $unidad->tipo_vehiculo->transmisiones()[$unidad->transmision] ?? $unidad->transmision }}</span>@endif
             @if ($unidad->combustible)<span>· {{ \App\Filament\Resources\Unidades\Schemas\UnidadForm::COMBUSTIBLES[$unidad->combustible] ?? $unidad->combustible }}</span>@endif
         </div>
 

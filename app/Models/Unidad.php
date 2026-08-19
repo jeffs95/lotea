@@ -22,10 +22,19 @@ class Unidad extends Model implements HasMedia
 
     protected $guarded = ['id'];
 
+    /**
+     * Sin esto el tipo llega null en memoria hasta refrescar desde la base, y
+     * cualquier `$unidad->tipo_vehiculo->carrocerias()` revienta.
+     */
+    protected $attributes = [
+        'tipo_vehiculo' => 'automovil',
+    ];
+
     protected function casts(): array
     {
         return [
             'estado' => EstadoUnidad::class,
+            'tipo_vehiculo' => \App\Enums\TipoVehiculo::class,
             'estado_desde' => 'datetime',
             'fecha_compra' => 'date',
             'fecha_recepcion' => 'date',
@@ -172,6 +181,11 @@ class Unidad extends Model implements HasMedia
         }
 
         return bcsub((string) $this->precio_para_margen, (string) $this->costo_total, 2);
+    }
+
+    public function esMoto(): bool
+    {
+        return $this->tipo_vehiculo === \App\Enums\TipoVehiculo::Motocicleta;
     }
 
     public function scopeEnInventario($query)

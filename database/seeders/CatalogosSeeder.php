@@ -37,6 +37,11 @@ class CatalogosSeeder extends Seeder
             'GMC' => ['Sierra', 'Terrain', 'Yukon'],
             'Audi' => ['A3', 'A4', 'Q5'],
             'Lexus' => ['RX', 'NX', 'ES'],
+            // Motos: se importan igual que los carros.
+            'Yamaha' => ['NMAX', 'FZ', 'YBR', 'XTZ', 'MT-03', 'R3'],
+            'Bajaj' => ['Pulsar', 'Boxer', 'Discover', 'Dominar'],
+            'Italika' => ['FT', 'DS', 'RT', 'Vort-X'],
+            'KTM' => ['Duke', 'Adventure', 'RC'],
         ];
 
         foreach ($catalogo as $marca => $lineas) {

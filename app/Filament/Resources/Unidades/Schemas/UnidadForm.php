@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Unidades\Schemas;
 
 use App\Actions\GenerarStockNo;
+use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -20,18 +21,26 @@ use Illuminate\Support\Str;
 
 class UnidadForm
 {
-    public const TRANSMISIONES = ['automatica' => 'Automática', 'manual' => 'Manual', 'cvt' => 'CVT'];
+    /** El tipo elegido en el formulario, o automóvil mientras no se elija. */
+    protected static function tipo(callable $get): TipoVehiculo
+    {
+        return TipoVehiculo::tryFrom((string) $get('tipo_vehiculo')) ?? TipoVehiculo::Automovil;
+    }
+
+    /** Todas las de todos los tipos: el formulario filtra según corresponda. */
+    public const TRANSMISIONES = [
+        'automatica' => 'Automática',
+        'manual' => 'Manual',
+        'cvt' => 'CVT',
+        'semiautomatica' => 'Semiautomática',
+    ];
 
     public const COMBUSTIBLES = ['gasolina' => 'Gasolina', 'diesel' => 'Diésel', 'hibrido' => 'Híbrido', 'electrico' => 'Eléctrico'];
 
     public const TRACCIONES = ['4x2' => '4x2', '4x4' => '4x4', 'awd' => 'AWD'];
 
-    public const CARROCERIAS = [
-        'sedan' => 'Sedán', 'suv' => 'SUV', 'pickup' => 'Pick-up', 'hatchback' => 'Hatchback',
-        'coupe' => 'Coupé', 'van' => 'Van', 'camion' => 'Camión', 'otro' => 'Otro',
-    ];
-
     public const TIPOS_TITULO = ['clean' => 'Clean', 'salvage' => 'Salvage', 'rebuilt' => 'Rebuilt'];
+
 
     public static function configure(Schema $schema): Schema
     {
@@ -85,6 +94,25 @@ class UnidadForm
                         ]),
 
                     Section::make()->columns(4)->schema([
+                        Select::make('tipo_vehiculo')
+                            ->label('Tipo de vehículo')
+                            ->options(TipoVehiculo::opciones())
+                            ->default(TipoVehiculo::Automovil->value)
+                            ->required()
+                            ->live()
+                            ->native(false)
+                            ->columnSpan(1)
+                            ->helperText('Cambia la ficha técnica.')
+                            ->afterStateUpdated(function (callable $set) {
+                                // Lo que no aplica al nuevo tipo se limpia en
+                                // vez de quedar escondido con un valor viejo.
+                                $set('carroceria', null);
+                                $set('transmision', null);
+                                $set('puertas', null);
+                                $set('color_interior', null);
+                                $set('traccion', null);
+                            }),
+
                         Select::make('marca_id')
                             ->label('Marca')
                             ->relationship('marca', 'nombre')
@@ -116,15 +144,52 @@ class UnidadForm
 
                 Tab::make('Ficha técnica')->schema([
                     Section::make()->columns(4)->schema([
-                        Select::make('carroceria')->label('Carrocería')->options(self::CARROCERIAS)->native(false),
-                        Select::make('transmision')->label('Transmisión')->options(self::TRANSMISIONES)->native(false),
+                        Select::make('carroceria')
+                            ->label(fn (callable $get) => self::tipo($get)->esMoto() ? 'Tipo de moto' : 'Carrocería')
+                            ->options(fn (callable $get) => self::tipo($get)->carrocerias())
+                            ->native(false),
+
+                        Select::make('transmision')
+                            ->label('Transmisión')
+                            ->options(fn (callable $get) => self::tipo($get)->transmisiones())
+                            ->native(false),
+
                         Select::make('combustible')->options(self::COMBUSTIBLES)->native(false),
-                        Select::make('traccion')->label('Tracción')->options(self::TRACCIONES)->native(false),
-                        TextInput::make('motor')->maxLength(40)->placeholder('2.5L L4'),
-                        TextInput::make('cilindros')->numeric()->minValue(2)->maxValue(16),
-                        TextInput::make('puertas')->numeric()->minValue(2)->maxValue(6),
+
+                        Select::make('traccion')
+                            ->label('Tracción')
+                            ->options(self::TRACCIONES)
+                            ->native(false)
+                            ->visible(fn (callable $get) => self::tipo($get)->aplica('traccion')),
+
+                        TextInput::make('motor')
+                            ->maxLength(40)
+                            ->placeholder(fn (callable $get) => self::tipo($get)->esMoto() ? '4T refrigerado por aire' : '2.5L L4'),
+
+                        TextInput::make('cilindrada_cc')
+                            ->label('Cilindrada (cc)')
+                            ->numeric()
+                            ->minValue(49)
+                            ->maxValue(9999)
+                            ->suffix('cc')
+                            ->helperText(fn (callable $get) => self::tipo($get)->destacaCilindrada()
+                                ? 'Es lo primero que pregunta el cliente.'
+                                : null),
+
+                        TextInput::make('cilindros')->numeric()->minValue(1)->maxValue(16),
+
+                        TextInput::make('puertas')
+                            ->numeric()
+                            ->minValue(2)
+                            ->maxValue(6)
+                            ->visible(fn (callable $get) => self::tipo($get)->aplica('puertas')),
+
                         TextInput::make('color')->maxLength(40),
-                        TextInput::make('color_interior')->label('Color interior')->maxLength(40),
+
+                        TextInput::make('color_interior')
+                            ->label('Color interior')
+                            ->maxLength(40)
+                            ->visible(fn (callable $get) => self::tipo($get)->aplica('color_interior')),
                         TextInput::make('odometro')
                             ->label('Odómetro')
                             ->numeric(),

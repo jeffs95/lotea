@@ -59,10 +59,20 @@
                     </div>
 
                     <div>
+                        <label class="block text-sm font-semibold text-gray-900">Qué buscás</label>
+                        <select name="tipo_vehiculo" class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
+                            <option value="">Todo</option>
+                            @foreach (\App\Enums\TipoVehiculo::opciones() as $valor => $etiqueta)
+                                <option value="{{ $valor }}" @selected(request('tipo_vehiculo') === $valor)>{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-semibold text-gray-900">Tipo</label>
                         <select name="carroceria" class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
                             <option value="">Cualquiera</option>
-                            @foreach (\App\Filament\Resources\Unidades\Schemas\UnidadForm::CARROCERIAS as $valor => $etiqueta)
+                            @foreach (\App\Enums\TipoVehiculo::todasLasCarrocerias() as $valor => $etiqueta)
                                 <option value="{{ $valor }}" @selected(request('carroceria') === $valor)>{{ $etiqueta }}</option>
                             @endforeach
                         </select>

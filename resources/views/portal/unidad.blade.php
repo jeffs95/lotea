@@ -6,16 +6,22 @@
     $enCamino = $unidad->estado->etapa() !== 'venta';
     $whatsapp = preg_replace('/\D/', '', $empresa->telefono ?? '');
     $mensajeWa = rawurlencode("Hola, me interesa el {$unidad->descripcion} (stock {$unidad->stock_no}) que vi en su sitio.");
+    $tipo = $unidad->tipo_vehiculo;
+    $forma = \App\Filament\Resources\Unidades\Schemas\UnidadForm::class;
+
+    // La ficha se arma según lo que sea: una moto no tiene puertas y sí
+    // cilindrada, que es lo primero que preguntan.
     $especificaciones = collect([
         'Año' => $unidad->anio,
         'Kilometraje' => $unidad->odometro ? number_format($unidad->odometro) . ' ' . ($unidad->odometro_unidad === 'mi' ? 'millas' : 'km') : null,
-        'Transmisión' => \App\Filament\Resources\Unidades\Schemas\UnidadForm::TRANSMISIONES[$unidad->transmision] ?? null,
-        'Combustible' => \App\Filament\Resources\Unidades\Schemas\UnidadForm::COMBUSTIBLES[$unidad->combustible] ?? null,
-        'Tracción' => \App\Filament\Resources\Unidades\Schemas\UnidadForm::TRACCIONES[$unidad->traccion] ?? null,
-        'Tipo' => \App\Filament\Resources\Unidades\Schemas\UnidadForm::CARROCERIAS[$unidad->carroceria] ?? null,
+        'Cilindrada' => $unidad->cilindrada_cc ? $unidad->cilindrada_cc . ' cc' : null,
+        ($tipo->esMoto() ? 'Estilo' : 'Tipo') => $tipo->carrocerias()[$unidad->carroceria] ?? null,
+        'Transmisión' => $tipo->transmisiones()[$unidad->transmision] ?? null,
+        'Combustible' => $forma::COMBUSTIBLES[$unidad->combustible] ?? null,
+        'Tracción' => $tipo->aplica('traccion') ? ($forma::TRACCIONES[$unidad->traccion] ?? null) : null,
         'Motor' => $unidad->motor,
         'Color' => $unidad->color,
-        'Puertas' => $unidad->puertas,
+        'Puertas' => $tipo->aplica('puertas') ? $unidad->puertas : null,
     ])->filter();
 @endphp
 

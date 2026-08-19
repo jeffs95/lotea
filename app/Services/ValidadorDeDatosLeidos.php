@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TipoVehiculo;
 use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use Illuminate\Support\Str;
 
@@ -25,14 +26,16 @@ class ValidadorDeDatosLeidos
             'anio' => self::anio($datos['anio'] ?? null),
             'color' => self::texto($datos['color'] ?? null, 40),
             'motor' => self::texto($datos['motor'] ?? null, 40),
-            'cilindros' => self::entero($datos['cilindros'] ?? null, 2, 16),
+            'tipo_vehiculo' => self::deLista($datos['tipo_vehiculo'] ?? null, array_column(TipoVehiculo::cases(), 'value')),
+            'cilindros' => self::entero($datos['cilindros'] ?? null, 1, 16),
+            'cilindrada_cc' => self::entero($datos['cilindrada_cc'] ?? null, 49, 9999),
             'puertas' => self::entero($datos['puertas'] ?? null, 2, 6),
             'odometro' => self::entero($datos['odometro'] ?? null, 0, 2_000_000),
             'odometro_unidad' => self::deLista($datos['odometro_unidad'] ?? null, ['mi', 'km']),
             'transmision' => self::deLista($datos['transmision'] ?? null, array_keys(UnidadForm::TRANSMISIONES)),
             'combustible' => self::deLista($datos['combustible'] ?? null, array_keys(UnidadForm::COMBUSTIBLES)),
             'traccion' => self::deLista($datos['traccion'] ?? null, array_keys(UnidadForm::TRACCIONES)),
-            'carroceria' => self::deLista($datos['carroceria'] ?? null, array_keys(UnidadForm::CARROCERIAS)),
+            'carroceria' => self::deLista($datos['carroceria'] ?? null, array_keys(TipoVehiculo::todasLasCarrocerias())),
             'tipo_titulo' => self::deLista($datos['tipo_titulo'] ?? null, array_keys(UnidadForm::TIPOS_TITULO)),
             'tipo_dano' => self::texto($datos['tipo_dano'] ?? null, 80),
             // La placa es un identificador, no un nombre: no se le aplica

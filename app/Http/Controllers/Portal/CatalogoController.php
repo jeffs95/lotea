@@ -42,6 +42,7 @@ class CatalogoController
         $consulta->when($request->filled('precio_max'), fn ($q) => $q->where('precio_lista', '<=', $request->integer('precio_max')));
         $consulta->when($request->filled('transmision'), fn ($q) => $q->where('transmision', $request->string('transmision')));
         $consulta->when($request->filled('carroceria'), fn ($q) => $q->where('carroceria', $request->string('carroceria')));
+        $consulta->when($request->filled('tipo_vehiculo'), fn ($q) => $q->where('tipo_vehiculo', $request->string('tipo_vehiculo')));
         $consulta->when($request->filled('sucursal'), fn ($q) => $q->whereHas('sucursal', fn ($s) => $s->where('codigo', $request->string('sucursal'))));
 
         $consulta->when($request->filled('q'), function ($q) use ($request) {

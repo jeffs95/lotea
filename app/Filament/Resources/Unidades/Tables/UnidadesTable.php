@@ -37,6 +37,12 @@ class UnidadesTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('tipo_vehiculo')
+                    ->label('Tipo')
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('descripcion')
                     ->label('Unidad')
                     ->description(fn ($record) => $record->vin)
@@ -96,6 +102,7 @@ class UnidadesTable
                     ->multiple(),
                 SelectFilter::make('sucursal')->relationship('sucursal', 'nombre'),
                 SelectFilter::make('marca')->relationship('marca', 'nombre')->searchable()->preload(),
+                SelectFilter::make('tipo_vehiculo')->label('Tipo')->options(\App\Enums\TipoVehiculo::opciones()),
                 SelectFilter::make('tipo_titulo')->label('Título')->options(UnidadForm::TIPOS_TITULO),
                 TrashedFilter::make(),
             ])
