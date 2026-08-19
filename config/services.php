@@ -18,6 +18,16 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    /**
+     * Lectura de documentos con IA (tarjeta de circulación, título americano,
+     * hoja de subasta). La llave es del cliente y vive solo en el .env.
+     */
+    'openrouter' => [
+        'key' => env('OPENROUTER_API_KEY'),
+        'modelo' => env('OPENROUTER_MODELO', 'qwen/qwen2.5-vl-72b-instruct'),
+        'url' => env('OPENROUTER_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],

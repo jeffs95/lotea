@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Unidades\Pages;
 
+use App\Filament\Resources\Unidades\Actions\LeerDocumentoAction;
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\UnidadTransicion;
 use Filament\Resources\Pages\CreateRecord;
@@ -9,6 +10,11 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateUnidad extends CreateRecord
 {
     protected static string $resource = UnidadResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [LeerDocumentoAction::make()];
+    }
 
     protected function afterCreate(): void
     {

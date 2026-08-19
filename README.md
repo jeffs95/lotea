@@ -216,6 +216,30 @@ muestra el QR, que siempre está al día.
 En la pantalla de venta, el buscador de unidad acepta ese mismo código, así que un lector de
 códigos conectado al puerto USB funciona sin configurar nada.
 
+## Llenar la ficha leyendo el documento
+
+En el alta de una unidad hay un botón **Llenar con IA**: se sube una foto o un PDF de la
+tarjeta de circulación, del título americano o de la hoja del lote de subasta, y los campos
+se llenan solos. Lo que devuelve es **una propuesta**; la persona revisa y guarda.
+
+Para activarlo, poné tu llave de [OpenRouter](https://openrouter.ai/keys) en el `.env`:
+
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODELO=qwen/qwen2.5-vl-72b-instruct
+```
+
+**Sin llave configurada el botón no aparece**, así que un cliente que no contrate el add-on
+no ve la función.
+
+Lo que devuelve el modelo pasa por `App\Services\ValidadorDeDatosLeidos` antes de tocar el
+formulario: un VIN que no tenga 17 caracteres válidos se descarta, un año 2045 se descarta,
+y una transmisión que no esté en nuestra lista se descarta. La IA se equivoca y a veces
+inventa; un VIN mal puesto sigue al carro toda su vida.
+
+El documento se borra del servidor apenas se lee. Las marcas y líneas que no existan en el
+catálogo se crean solas, porque es preferible un catálogo que crece a una ficha incompleta.
+
 ## Estado
 
 Terminado: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el tablero del

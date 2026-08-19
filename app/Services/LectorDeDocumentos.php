@@ -1,0 +1,203 @@
+<?php
+
+namespace App\Services;
+
+use App\Filament\Resources\Unidades\Schemas\UnidadForm;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
+
+/**
+ * Lee la tarjeta de circulación, el título americano o la hoja de subasta y
+ * saca de ahí los datos del vehículo.
+ *
+ * Existe porque llenar veinte campos a mano por cada carro es donde el
+ * vendedor se cansa y empieza a dejar la ficha incompleta. Lo que devuelve es
+ * una propuesta: siempre la revisa una persona antes de guardar.
+ */
+class LectorDeDocumentos
+{
+    public function __construct(private ConversorDeDocumentos $conversor) {}
+
+    /** Sin llave configurada, la función simplemente no se ofrece. */
+    public function estaDisponible(): bool
+    {
+        return filled(config('services.openrouter.key'));
+    }
+
+    /**
+     * @return array{datos: array<string, mixed>, tipo_documento: ?string, aviso: ?string}
+     */
+    public function leer(string $rutaArchivo): array
+    {
+        if (! $this->estaDisponible()) {
+            throw new RuntimeException('Falta configurar OPENROUTER_API_KEY en el archivo .env.');
+        }
+
+        $imagenes = $this->conversor->aImagenes($rutaArchivo);
+
+        if ($imagenes === []) {
+            throw new RuntimeException('No se pudo leer el archivo. Probá con una foto en JPG o PNG.');
+        }
+
+        $respuesta = $this->preguntar($imagenes);
+
+        return $this->interpretar($respuesta);
+    }
+
+    /** @param array<int, string> $imagenes rutas de imágenes ya listas */
+    protected function preguntar(array $imagenes): string
+    {
+        $contenido = [['type' => 'text', 'text' => $this->instrucciones()]];
+
+        foreach ($imagenes as $imagen) {
+            $contenido[] = [
+                'type' => 'image_url',
+                'image_url' => ['url' => $this->comoDataUri($imagen)],
+            ];
+        }
+
+        try {
+            $respuesta = Http::withToken(config('services.openrouter.key'))
+                ->withHeaders([
+                    'HTTP-Referer' => config('app.url'),
+                    'X-Title' => config('app.name'),
+                ])
+                ->timeout(120)
+                ->retry(2, 2000, throw: false)
+                ->post(config('services.openrouter.url'), [
+                    'model' => config('services.openrouter.modelo'),
+                    'temperature' => 0,   // datos de un documento: nada de creatividad
+                    'messages' => [['role' => 'user', 'content' => $contenido]],
+                ]);
+        } catch (ConnectionException $e) {
+            throw new RuntimeException('No se pudo conectar con el servicio de lectura. Revisá tu conexión.');
+        }
+
+        if ($respuesta->failed()) {
+            Log::warning('OpenRouter respondió con error', [
+                'status' => $respuesta->status(),
+                'body' => $respuesta->json('error.message') ?? substr($respuesta->body(), 0, 300),
+            ]);
+
+            throw new RuntimeException(match ($respuesta->status()) {
+                401, 403 => 'La llave de OpenRouter no es válida o no tiene permiso.',
+                402 => 'Se agotó el crédito de OpenRouter.',
+                429 => 'Demasiadas lecturas seguidas. Esperá un momento y volvé a intentar.',
+                default => 'El servicio de lectura no respondió bien. Intentá de nuevo.',
+            });
+        }
+
+        $texto = $respuesta->json('choices.0.message.content');
+
+        if (blank($texto)) {
+            throw new RuntimeException('El servicio no devolvió nada legible.');
+        }
+
+        return $texto;
+    }
+
+    /** Lo que se le pide al modelo. Explícito para que no invente. */
+    protected function instrucciones(): string
+    {
+        $transmisiones = implode(', ', array_keys(UnidadForm::TRANSMISIONES));
+        $combustibles = implode(', ', array_keys(UnidadForm::COMBUSTIBLES));
+        $tracciones = implode(', ', array_keys(UnidadForm::TRACCIONES));
+        $carrocerias = implode(', ', array_keys(UnidadForm::CARROCERIAS));
+        $titulos = implode(', ', array_keys(UnidadForm::TIPOS_TITULO));
+
+        return <<<TXT
+        Sos un asistente que lee documentos de vehículos y extrae sus datos.
+
+        El documento puede ser una tarjeta de circulación de Guatemala, un título
+        de vehículo de Estados Unidos (certificate of title) o la hoja de un lote
+        de subasta (Copart, IAAI).
+
+        Devolvé ÚNICAMENTE un objeto JSON, sin texto antes ni después, sin bloques
+        de código, con exactamente esta forma:
+
+        {
+          "tipo_documento": "tarjeta_circulacion" | "titulo_usa" | "hoja_subasta" | "otro",
+          "datos": {
+            "vin": string|null,
+            "marca": string|null,
+            "linea": string|null,
+            "version": string|null,
+            "anio": number|null,
+            "color": string|null,
+            "motor": string|null,
+            "cilindros": number|null,
+            "puertas": number|null,
+            "odometro": number|null,
+            "odometro_unidad": "mi"|"km"|null,
+            "transmision": {$transmisiones}|null,
+            "combustible": {$combustibles}|null,
+            "traccion": {$tracciones}|null,
+            "carroceria": {$carrocerias}|null,
+            "tipo_titulo": {$titulos}|null,
+            "tipo_dano": string|null,
+            "placa": string|null
+          },
+          "aviso": string|null
+        }
+
+        Reglas:
+        - Si un dato no aparece en el documento, poné null. NO lo adivines ni lo
+          deduzcas del modelo del carro.
+        - El VIN tiene exactamente 17 caracteres, sin las letras I, O ni Q. Si lo
+          que ves no cumple eso, devolvé null.
+        - "marca" y "linea" van por separado: de "TOYOTA RAV4", marca es "Toyota"
+          y linea es "RAV4". Escribilos con mayúscula inicial, no en mayúsculas
+          sostenidas.
+        - "anio" es el año del modelo, entre 1980 y 2030.
+        - El odómetro va en número entero, sin comas ni puntos.
+        - Los campos con lista de valores solo aceptan uno de esos valores exactos.
+        - En "aviso" poné una frase corta en español si algo quedó dudoso o
+          ilegible; si todo se leyó bien, poné null.
+        TXT;
+    }
+
+    protected function comoDataUri(string $ruta): string
+    {
+        $tipo = mime_content_type($ruta) ?: 'image/jpeg';
+
+        return 'data:'.$tipo.';base64,'.base64_encode(file_get_contents($ruta));
+    }
+
+    /** @return array{datos: array<string, mixed>, tipo_documento: ?string, aviso: ?string} */
+    protected function interpretar(string $texto): array
+    {
+        $json = $this->extraerJson($texto);
+
+        if ($json === null) {
+            throw new RuntimeException('No se entendió la respuesta del servicio. Probá con una foto más nítida.');
+        }
+
+        return [
+            'datos' => ValidadorDeDatosLeidos::limpiar($json['datos'] ?? []),
+            'tipo_documento' => $json['tipo_documento'] ?? null,
+            'aviso' => $json['aviso'] ?? null,
+        ];
+    }
+
+    /** El modelo a veces envuelve el JSON en ```json aunque se le pida que no. */
+    protected function extraerJson(string $texto): ?array
+    {
+        $limpio = trim(preg_replace('/^```(?:json)?|```$/mi', '', trim($texto)));
+
+        $decodificado = json_decode($limpio, true);
+
+        if (is_array($decodificado)) {
+            return $decodificado;
+        }
+
+        if (preg_match('/\{.*\}/s', $limpio, $coincidencias)) {
+            $decodificado = json_decode($coincidencias[0], true);
+
+            return is_array($decodificado) ? $decodificado : null;
+        }
+
+        return null;
+    }
+}
