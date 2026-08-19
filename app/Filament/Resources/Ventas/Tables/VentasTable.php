@@ -3,10 +3,16 @@
 namespace App\Filament\Resources\Ventas\Tables;
 
 use App\Actions\AnularVenta;
+use App\Actions\CobrarVentaEnCaja;
+use App\Models\Caja;
+use App\Models\MovimientoCaja;
 use App\Models\Venta;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
@@ -72,6 +78,49 @@ class VentasTable
                 SelectFilter::make('vendedor')->relationship('vendedor', 'name'),
             ])
             ->recordActions([
+                Action::make('cobrar')
+                    ->label('Registrar cobro')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->visible(fn (Venta $record) => ! $record->estaAnulada() && Caja::activas()->exists())
+                    ->schema([
+                        Select::make('caja_id')
+                            ->label('¿A qué caja entra?')
+                            ->options(fn () => Caja::activas()->pluck('nombre', 'id'))
+                            ->required()
+                            ->native(false),
+
+                        Select::make('categoria')
+                            ->label('Concepto')
+                            ->options([
+                                'venta' => MovimientoCaja::CATEGORIAS['venta'],
+                                'enganche' => MovimientoCaja::CATEGORIAS['enganche'],
+                            ])
+                            ->default(fn (Venta $record) => $record->forma_pago === 'contado' ? 'venta' : 'enganche')
+                            ->required()
+                            ->native(false),
+
+                        TextInput::make('monto')
+                            ->numeric()
+                            ->required()
+                            ->prefix('Q')
+                            ->default(fn (Venta $record) => $record->forma_pago === 'contado'
+                                ? $record->precio_final
+                                : $record->enganche),
+
+                        DatePicker::make('fecha')->required()->default(now())->native(false)->displayFormat('d/m/Y'),
+                        TextInput::make('referencia')->maxLength(60)->placeholder('Boleta, cheque'),
+                    ])
+                    ->action(function (Venta $record, array $data) {
+                        try {
+                            app(CobrarVentaEnCaja::class)->ejecutar($record, Caja::findOrFail($data['caja_id']), $data);
+
+                            Notification::make()->title('Cobro registrado en caja')->success()->send();
+                        } catch (DomainException $e) {
+                            Notification::make()->title($e->getMessage())->danger()->send();
+                        }
+                    }),
+
                 EditAction::make()->visible(fn (Venta $record) => ! $record->estaAnulada()),
 
                 Action::make('anular')
