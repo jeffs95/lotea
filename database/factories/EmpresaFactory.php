@@ -19,7 +19,6 @@ class EmpresaFactory extends Factory
             'telefono' => fake()->phoneNumber(),
             'email' => fake()->companyEmail(),
             'moneda_base' => 'GTQ',
-            'plan' => 'basico',
             'activa' => true,
         ];
     }

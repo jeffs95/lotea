@@ -129,11 +129,29 @@ cierre (`Unidad::$precio_para_margen`).
 vendedor con el dueño: si regala precio, se corta su propia comisión. Hay un test que lo
 comprueba.
 
+## Los dos paneles
+
+| Panel | Ruta | Quién entra |
+|---|---|---|
+| **Operación** | `/app/{empresa}` | El concesionario: su inventario, costos, ventas y prospectos |
+| **Central** | `/central` | Lotea: concesionarios, planes, cobros y métricas del negocio |
+
+El acceso al panel central sale de la bandera `users.es_operador`, **no de un rol**. Los roles
+viven por empresa y los administra el propio cliente; si el acceso dependiera de uno, un
+cliente podría dárselo a sí mismo.
+
+Dar de alta un concesionario desde `/central` deja todo listo de una vez: catálogos, roles,
+sucursal principal, el usuario dueño con sus permisos y el primer cobro.
+
+**La suspensión corta de verdad.** Un cliente suspendido no entra a su panel y su portal
+público deja de responder, pero no pierde un solo dato: al reactivarlo sigue donde quedó.
+
 ## Usuarios de prueba
 
 | Usuario | Contraseña | Para qué |
 |---|---|---|
-| `dueno@lotea.test` | `password` | Ve todo, incluidos costos y márgenes |
+| `operador@lotea.gt` | `password` | Panel central: el negocio de vender Lotea |
+| `dueno@lotea.test` | `password` | Ve todo de su concesionario, incluidos costos y márgenes |
 | `vendedor@lotea.test` | `password` | Ve inventario, ventas y clientes — **ningún costo** |
 
 Entrar con el vendedor es la forma más rápida de comprobar la regla de negocio más
@@ -145,5 +163,5 @@ Terminado: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el 
 patio, el costeo con multimoneda y prorrateo, el portal público con CRM, y clientes y
 ventas con comisiones.
 
-Falta: taller con órdenes de trabajo, cartera de crédito propio, caja por sucursal,
-empleados y el panel central del SaaS.
+Falta: taller con órdenes de trabajo, cartera de crédito propio, caja por sucursal y
+empleados.

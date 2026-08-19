@@ -23,6 +23,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'password',
         'telefono',
         'activo',
+        'es_operador',
     ];
 
     protected $hidden = [
@@ -37,6 +38,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'ultimo_acceso_at' => 'datetime',
             'password' => 'hashed',
             'activo' => 'boolean',
+            'es_operador' => 'boolean',
         ];
     }
 
@@ -47,17 +49,40 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return (bool) $this->activo;
+        if (! $this->activo) {
+            return false;
+        }
+
+        // El panel central es de Lotea, no de los concesionarios. El acceso
+        // sale de una bandera propia y no de un rol, porque los roles los
+        // administra el cliente dentro de su propia empresa.
+        if ($panel->getId() === 'central') {
+            return (bool) $this->es_operador;
+        }
+
+        return true;
     }
 
-    /** Empresas entre las que puede cambiar con el selector del panel. */
+    /**
+     * Empresas entre las que puede cambiar con el selector del panel.
+     *
+     * Una suspendida no aparece: la suspensión es la palanca de cobro y si no
+     * corta el acceso no sirve de nada.
+     */
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->empresas()->where('activa', true)->get();
+        return $this->empresas()
+            ->where('activa', true)
+            ->whereNull('suspendida_en')
+            ->get();
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
+        if ($tenant instanceof Empresa && ! $tenant->puedeOperar()) {
+            return false;
+        }
+
         return $this->empresas()->whereKey($tenant->getKey())->exists();
     }
 }

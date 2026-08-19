@@ -22,7 +22,8 @@ class ResolverEmpresaDelPortal
     {
         $empresa = $this->porSlugDeLaRuta($request) ?? $this->porDominio($request);
 
-        abort_if($empresa === null || ! $empresa->activa, 404);
+        // Incluye a los suspendidos: mientras no paguen, su sitio no responde.
+        abort_if($empresa === null || ! $empresa->puedeOperar(), 404);
 
         Tenancy::usar($empresa);
         View::share('empresa', $empresa);

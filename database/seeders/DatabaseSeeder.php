@@ -13,9 +13,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([CatalogosSeeder::class, PermisosPropiosSeeder::class]);
+        $this->call([CatalogosSeeder::class, PermisosPropiosSeeder::class, PlanesSeeder::class, OperadorSeeder::class]);
 
         $empresa = Empresa::firstWhere('slug', 'autos-del-valle') ?? (new CrearEmpresa)->ejecutar([
+            'plan_id' => \App\Models\Plan::firstWhere('slug', 'pro')?->id,
             'nombre' => 'Autos del Valle, S.A.',
             'nombre_comercial' => 'Autos del Valle',
             'nit' => '1234567-8',
@@ -39,5 +40,8 @@ class DatabaseSeeder extends Seeder
                 $this->call([UnidadesDemoSeeder::class, CostosDemoSeeder::class, VentasDemoSeeder::class]);
             }
         });
+
+        // Fuera del contexto de la primera empresa: da de alta a las demás.
+        $this->call(ConcesionariosDemoSeeder::class);
     }
 }

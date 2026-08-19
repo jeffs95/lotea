@@ -29,8 +29,7 @@ return new class extends Migration
             // Operación
             $table->char('moneda_base', 3)->default('GTQ');
 
-            // Suscripción SaaS
-            $table->string('plan')->default('basico');       // basico | pro | full
+            // Suscripción SaaS (el plan se enlaza en una migración posterior)
             $table->boolean('activa')->default(true);
             $table->date('fecha_activacion')->nullable();
             $table->date('fecha_vencimiento')->nullable();

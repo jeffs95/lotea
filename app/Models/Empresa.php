@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,7 +30,49 @@ class Empresa extends Model implements HasName
             'activa' => 'boolean',
             'fecha_activacion' => 'date',
             'fecha_vencimiento' => 'date',
+            'suspendida_en' => 'datetime',
         ];
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function cobros(): HasMany
+    {
+        return $this->hasMany(Cobro::class);
+    }
+
+    public function unidades(): HasMany
+    {
+        return $this->hasMany(Unidad::class);
+    }
+
+    public function estaSuspendida(): bool
+    {
+        return $this->suspendida_en !== null;
+    }
+
+    /** Puede operar: ni dada de baja ni suspendida por falta de pago. */
+    public function puedeOperar(): bool
+    {
+        return $this->activa && ! $this->estaSuspendida();
+    }
+
+    public function getEstadoSuscripcionAttribute(): string
+    {
+        return match (true) {
+            ! $this->activa => 'baja',
+            $this->estaSuspendida() => 'suspendida',
+            default => 'activa',
+        };
+    }
+
+    /** Lo que factura al mes. Es la unidad del MRR. */
+    public function getMensualidadAttribute(): float
+    {
+        return $this->puedeOperar() ? (float) ($this->plan?->precio_mensual ?? 0) : 0.0;
     }
 
     /** Lo que se ve en el selector de empresa del panel. */
