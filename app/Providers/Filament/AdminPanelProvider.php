@@ -31,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('app')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->brandName('Lotea')
             ->colors([

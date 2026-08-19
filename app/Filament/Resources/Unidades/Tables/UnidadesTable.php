@@ -74,7 +74,7 @@ class UnidadesTable
 
                 TextColumn::make('costo_total')
                     ->label('Costo')
-                    ->money('GTQ')
+                    ->money('GTQ', locale: 'es_GT')
                     ->alignEnd()
                     ->sortable()
                     // El vendedor nunca ve el costo. Es requisito de negocio:
@@ -83,7 +83,7 @@ class UnidadesTable
 
                 TextColumn::make('precio_lista')
                     ->label('Precio')
-                    ->money('GTQ')
+                    ->money('GTQ', locale: 'es_GT')
                     ->alignEnd()
                     ->sortable(),
             ])
