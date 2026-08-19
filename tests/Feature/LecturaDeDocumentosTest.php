@@ -139,7 +139,7 @@ class LecturaDeDocumentosTest extends TestCase
 
         Http::fake([
             '*' => Http::response(['choices' => [['message' => ['content' => json_encode([
-                'tipo_documento' => 'tarjeta_circulacion',
+                'documentos' => ['tarjeta_circulacion'],
                 'datos' => [
                     'vin' => '1HGCM82633A004352',
                     'marca' => 'TOYOTA',
@@ -156,7 +156,7 @@ class LecturaDeDocumentosTest extends TestCase
 
         $resultado = app(LectorDeDocumentos::class)->leer($this->imagenDePrueba());
 
-        $this->assertSame('tarjeta_circulacion', $resultado['tipo_documento']);
+        $this->assertSame(['tarjeta_circulacion'], $resultado['documentos']);
         $this->assertSame('1HGCM82633A004352', $resultado['datos']['vin']);
         $this->assertSame('Toyota', $resultado['datos']['marca']);
         $this->assertSame(2019, $resultado['datos']['anio']);
@@ -214,6 +214,98 @@ class LecturaDeDocumentosTest extends TestCase
         app(LectorDeDocumentos::class)->leer($this->imagenDePrueba());
     }
 
+    /**
+     * El caso real: el título trae el VIN y el año, la hoja de subasta trae el
+     * daño y el odómetro. Ninguno solo tiene todo.
+     */
+    public function test_combina_los_datos_de_varios_documentos(): void
+    {
+        config(['services.openrouter.key' => 'llave-de-prueba']);
+
+        Http::fake([
+            '*' => Http::response(['choices' => [['message' => ['content' => json_encode([
+                'documentos' => ['titulo_usa', 'hoja_subasta'],
+                'datos' => [
+                    'vin' => '1HGCM82633A004352',
+                    'anio' => 2019,
+                    'odometro' => 62400,
+                    'odometro_unidad' => 'mi',
+                    'tipo_titulo' => 'salvage',
+                    'tipo_dano' => 'Front end',
+                ],
+                'aviso' => null,
+            ])]]]]),
+        ]);
+
+        $resultado = app(LectorDeDocumentos::class)->leer([
+            $this->imagenDePrueba('titulo.png'),
+            $this->imagenDePrueba('subasta.png'),
+        ]);
+
+        $this->assertSame(['titulo_usa', 'hoja_subasta'], $resultado['documentos']);
+        $this->assertSame('1HGCM82633A004352', $resultado['datos']['vin']);
+        $this->assertSame(62400, $resultado['datos']['odometro']);
+        $this->assertSame('salvage', $resultado['datos']['tipo_titulo']);
+    }
+
+    public function test_manda_todas_las_imagenes_en_una_sola_peticion(): void
+    {
+        config(['services.openrouter.key' => 'llave-de-prueba']);
+
+        Http::fake(['*' => Http::response(['choices' => [['message' => ['content' => '{"datos":{}}']]]])]);
+
+        app(LectorDeDocumentos::class)->leer([
+            $this->imagenDePrueba('uno.png'),
+            $this->imagenDePrueba('dos.png'),
+            $this->imagenDePrueba('tres.png'),
+        ]);
+
+        Http::assertSentCount(1);
+
+        Http::assertSent(function (Request $peticion) {
+            $contenido = $peticion->data()['messages'][0]['content'];
+
+            $imagenes = collect($contenido)->where('type', 'image_url')->count();
+
+            return $imagenes === 3;
+        });
+    }
+
+    /** Cuando los documentos se contradicen, eso hay que verlo. */
+    public function test_conserva_el_aviso_de_discrepancia(): void
+    {
+        config(['services.openrouter.key' => 'llave-de-prueba']);
+
+        Http::fake([
+            '*' => Http::response(['choices' => [['message' => ['content' => json_encode([
+                'documentos' => ['titulo_usa', 'hoja_subasta'],
+                'datos' => ['anio' => 2019],
+                'aviso' => 'El título dice 2019 y la hoja de subasta dice 2018.',
+            ])]]]]),
+        ]);
+
+        $resultado = app(LectorDeDocumentos::class)->leer([$this->imagenDePrueba()]);
+
+        $this->assertStringContainsString('2018', $resultado['aviso']);
+    }
+
+    public function test_no_manda_mas_imagenes_de_las_permitidas(): void
+    {
+        config(['services.openrouter.key' => 'llave-de-prueba']);
+
+        Http::fake(['*' => Http::response(['choices' => [['message' => ['content' => '{"datos":{}}']]]])]);
+
+        $muchas = collect(range(1, 10))->map(fn (int $i) => $this->imagenDePrueba("doc{$i}.png"))->all();
+
+        app(LectorDeDocumentos::class)->leer($muchas);
+
+        Http::assertSent(function (Request $peticion) {
+            $imagenes = collect($peticion->data()['messages'][0]['content'])->where('type', 'image_url')->count();
+
+            return $imagenes === \App\Services\ConversorDeDocumentos::IMAGENES_MAXIMAS;
+        });
+    }
+
     public function test_manda_la_imagen_y_el_modelo_configurado(): void
     {
         config([
@@ -237,11 +329,9 @@ class LecturaDeDocumentosTest extends TestCase
         });
     }
 
-    protected function imagenDePrueba(): string
+    protected function imagenDePrueba(string $nombre = 'documento-de-prueba.png'): string
     {
-        Storage::fake('local');
-
-        $ruta = storage_path('app/documento-de-prueba.png');
+        $ruta = storage_path('app/'.$nombre);
 
         $imagen = imagecreatetruecolor(40, 25);
         imagefill($imagen, 0, 0, imagecolorallocate($imagen, 255, 255, 255));

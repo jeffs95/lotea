@@ -57,6 +57,8 @@ class BotonLlenarConIaTest extends TestCase
         Filament::setTenant($this->empresa);
 
         config(['services.openrouter.key' => 'llave-de-prueba']);
+
+        Storage::fake('local');
     }
 
     public function test_el_boton_llena_el_formulario_con_lo_que_leyo(): void
@@ -130,6 +132,53 @@ class BotonLlenarConIaTest extends TestCase
             ]);
     }
 
+    /** Dos documentos del mismo carro, cada uno con su parte. */
+    public function test_acepta_varios_documentos_y_combina_lo_que_dicen(): void
+    {
+        Http::fake([
+            '*' => Http::response(['choices' => [['message' => ['content' => json_encode([
+                'documentos' => ['titulo_usa', 'hoja_subasta'],
+                'datos' => [
+                    'vin' => '1HGCM82633A004352',
+                    'anio' => 2019,
+                    'odometro' => 62400,
+                    'tipo_titulo' => 'salvage',
+                    'tipo_dano' => 'Front end',
+                ],
+                'aviso' => null,
+            ])]]]]),
+        ]);
+
+        Livewire::test(CreateUnidad::class)
+            ->callAction('leerDocumento', data: ['documento' => [
+                $this->documentoSubido('titulo.png'),
+                $this->documentoSubido('subasta.png'),
+            ]])
+            ->assertHasNoActionErrors()
+            ->assertFormSet([
+                'vin' => '1HGCM82633A004352',
+                'anio' => 2019,
+                'odometro' => 62400,
+                'tipo_titulo' => 'salvage',
+                'tipo_dano' => 'Front end',
+            ]);
+    }
+
+    public function test_borra_todos_los_documentos_despues_de_leerlos(): void
+    {
+        Http::fake(['*' => Http::response(['choices' => [['message' => ['content' => '{"datos":{}}']]]])]);
+
+        $rutas = [$this->documentoSubido('a.png'), $this->documentoSubido('b.png')];
+
+        Livewire::test(CreateUnidad::class)
+            ->callAction('leerDocumento', data: ['documento' => $rutas])
+            ->assertHasNoActionErrors();
+
+        foreach ($rutas as $ruta) {
+            Storage::disk('local')->assertMissing($ruta);
+        }
+    }
+
     public function test_avisa_sin_romperse_cuando_el_servicio_falla(): void
     {
         Http::fake(['*' => Http::response(['error' => ['message' => 'sin credito']], 402)]);
@@ -155,10 +204,8 @@ class BotonLlenarConIaTest extends TestCase
     }
 
     /** Deja una imagen en el disk como la habría dejado el FileUpload. */
-    protected function documentoSubido(): string
+    protected function documentoSubido(string $nombre = 'documento.png'): string
     {
-        Storage::fake('local');
-
         $imagen = imagecreatetruecolor(60, 40);
         imagefill($imagen, 0, 0, imagecolorallocate($imagen, 255, 255, 255));
 
@@ -167,7 +214,7 @@ class BotonLlenarConIaTest extends TestCase
         $binario = ob_get_clean();
         imagedestroy($imagen);
 
-        $ruta = 'lecturas/documento.png';
+        $ruta = 'lecturas/'.$nombre;
         Storage::disk('local')->put($ruta, $binario);
 
         return $ruta;

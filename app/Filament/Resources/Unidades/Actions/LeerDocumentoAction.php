@@ -28,13 +28,17 @@ class LeerDocumentoAction
             ->label('Llenar con IA')
             ->icon('heroicon-o-sparkles')
             ->color('info')
-            ->modalHeading('Leer el documento del vehículo')
-            ->modalDescription('Tarjeta de circulación, título americano o la hoja del lote de subasta. Los datos se llenan solos y vos los revisás antes de guardar.')
-            ->modalSubmitActionLabel('Leer documento')
+            ->modalHeading('Leer los documentos del vehículo')
+            ->modalDescription('Tarjeta de circulación, título americano, hoja del lote de subasta. Podés subir varios: se leen juntos y se combinan, porque cada uno trae datos distintos del mismo carro.')
+            ->modalSubmitActionLabel('Leer documentos')
             ->visible(fn () => app(LectorDeDocumentos::class)->estaDisponible())
             ->schema([
                 FileUpload::make('documento')
-                    ->label('Foto o PDF del documento')
+                    ->label('Fotos o PDF de los documentos')
+                    ->multiple()
+                    ->maxFiles(ConversorDeDocumentos::IMAGENES_MAXIMAS)
+                    ->reorderable()
+                    ->panelLayout('grid')
                     ->disk('local')
                     ->directory('lecturas')
                     ->visibility('private')
@@ -47,18 +51,18 @@ class LeerDocumentoAction
             // encabezado de la página, donde no hay componente de formulario
             // desde el cual construirlo.
             ->action(function (array $data, Page $livewire) {
-                // FileUpload guarda su estado como array (uuid => ruta) incluso
-                // cuando es de un solo archivo.
-                $relativa = self::rutaDelArchivo($data['documento'] ?? null);
+                $relativas = self::rutasDeArchivos($data['documento'] ?? null);
 
-                if ($relativa === null) {
-                    Notification::make()->title('No se recibió el archivo')->danger()->send();
+                if ($relativas === []) {
+                    Notification::make()->title('No se recibió ningún archivo')->danger()->send();
 
                     return;
                 }
 
                 try {
-                    $resultado = app(LectorDeDocumentos::class)->leer(Storage::disk('local')->path($relativa));
+                    $resultado = app(LectorDeDocumentos::class)->leer(
+                        array_map(fn (string $ruta) => Storage::disk('local')->path($ruta), $relativas),
+                    );
 
                     self::volcarEnElFormulario($resultado['datos'], $livewire);
                     self::avisar($resultado);
@@ -73,26 +77,25 @@ class LeerDocumentoAction
                         ->danger()
                         ->send();
                 } finally {
-                    // El documento del cliente no se queda en el servidor.
-                    Storage::disk('local')->delete($relativa);
+                    // Los documentos del cliente no se quedan en el servidor.
+                    Storage::disk('local')->delete($relativas);
                 }
             });
     }
 
-    /** @param  array<string, string>|string|null  $valor */
-    protected static function rutaDelArchivo(array|string|null $valor): ?string
+    /**
+     * FileUpload guarda su estado como array (uuid => ruta), aun con un solo
+     * archivo.
+     *
+     * @param  array<string, string>|string|null  $valor
+     * @return array<int, string>
+     */
+    protected static function rutasDeArchivos(array|string|null $valor): array
     {
-        if (is_string($valor)) {
-            return $valor !== '' ? $valor : null;
-        }
-
-        if (is_array($valor)) {
-            $primera = collect($valor)->filter(fn ($ruta) => is_string($ruta) && $ruta !== '')->first();
-
-            return $primera ?: null;
-        }
-
-        return null;
+        return collect(is_array($valor) ? $valor : [$valor])
+            ->filter(fn ($ruta) => is_string($ruta) && $ruta !== '')
+            ->values()
+            ->all();
     }
 
     /**
@@ -124,7 +127,7 @@ class LeerDocumentoAction
         $livewire->form->fill([...$livewire->data, ...$nuevos]);
     }
 
-    /** @param array{datos: array, tipo_documento: ?string, aviso: ?string} $resultado */
+    /** @param array{datos: array, documentos: array<int, string>, aviso: ?string} $resultado */
     protected static function avisar(array $resultado): void
     {
         $cuantos = count($resultado['datos']);
@@ -132,26 +135,46 @@ class LeerDocumentoAction
         if ($cuantos === 0) {
             Notification::make()
                 ->title('No se encontraron datos')
-                ->body('Probá con una foto más nítida, de frente y con buena luz.')
+                ->body('Probá con fotos más nítidas, de frente y con buena luz.')
                 ->warning()
                 ->send();
 
             return;
         }
 
-        $documento = match ($resultado['tipo_documento']) {
-            'tarjeta_circulacion' => 'tarjeta de circulación',
-            'titulo_usa' => 'título americano',
-            'hoja_subasta' => 'hoja de subasta',
-            default => 'documento',
-        };
+        $cuerpo = collect([
+            self::describirDocumentos($resultado['documentos']),
+            'Revisá los datos antes de guardar, sobre todo el VIN.',
+            $resultado['aviso'],
+        ])->filter()->implode(' ');
 
         Notification::make()
-            ->title("Se llenaron {$cuantos} campos")
-            ->body(trim("Leído de la {$documento}. Revisá los datos antes de guardar, sobre todo el VIN. ".($resultado['aviso'] ?? '')))
-            ->success()
+            ->title("Se llenaron {$cuantos} ".($cuantos === 1 ? 'campo' : 'campos'))
+            ->body($cuerpo)
+            // Si hubo contradicciones entre documentos, que no pase inadvertido.
+            ->color(filled($resultado['aviso']) ? 'warning' : 'success')
             ->persistent()
             ->send();
+    }
+
+    /** @param array<int, string> $documentos */
+    protected static function describirDocumentos(array $documentos): ?string
+    {
+        $nombres = collect($documentos)
+            ->map(fn (string $tipo) => match ($tipo) {
+                'tarjeta_circulacion' => 'la tarjeta de circulación',
+                'titulo_usa' => 'el título americano',
+                'hoja_subasta' => 'la hoja de subasta',
+                default => null,
+            })
+            ->filter()
+            ->values();
+
+        if ($nombres->isEmpty()) {
+            return null;
+        }
+
+        return 'Leído de '.$nombres->join(', ', ' y ').'.';
     }
 
     /** @return array<int, string> */
@@ -168,8 +191,11 @@ class LeerDocumentoAction
 
     protected static function ayuda(): string
     {
-        return app(ConversorDeDocumentos::class)->puedeLeerPdf()
-            ? 'Foto (JPG, PNG) o PDF, hasta 12 MB. Se borra del servidor apenas se lee.'
-            : 'Foto (JPG, PNG), hasta 12 MB. Se borra del servidor apenas se lee.';
+        $formatos = app(ConversorDeDocumentos::class)->puedeLeerPdf()
+            ? 'Fotos (JPG, PNG) o PDF'
+            : 'Fotos (JPG, PNG)';
+
+        return $formatos.', hasta '.ConversorDeDocumentos::IMAGENES_MAXIMAS
+            .' documentos de 12 MB cada uno. Se borran del servidor apenas se leen.';
     }
 }

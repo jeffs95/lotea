@@ -27,23 +27,28 @@ class LectorDeDocumentos
     }
 
     /**
-     * @return array{datos: array<string, mixed>, tipo_documento: ?string, aviso: ?string}
+     * Lee uno o varios documentos del mismo vehículo y combina lo que dicen.
+     *
+     * Van todos en la misma petición y no uno por uno: así el modelo puede
+     * cruzarlos —confirmar el VIN que aparece en dos— y avisar cuando se
+     * contradicen, que es justo lo que hay que saber.
+     *
+     * @param  array<int, string>|string  $rutas
+     * @return array{datos: array<string, mixed>, documentos: array<int, string>, aviso: ?string}
      */
-    public function leer(string $rutaArchivo): array
+    public function leer(array|string $rutas): array
     {
         if (! $this->estaDisponible()) {
             throw new RuntimeException('Falta configurar OPENROUTER_API_KEY en el archivo .env.');
         }
 
-        $imagenes = $this->conversor->aImagenes($rutaArchivo);
+        $imagenes = $this->conversor->variosAImagenes(is_array($rutas) ? $rutas : [$rutas]);
 
         if ($imagenes === []) {
-            throw new RuntimeException('No se pudo leer el archivo. Probá con una foto en JPG o PNG.');
+            throw new RuntimeException('No se pudo leer ningún archivo. Probá con fotos en JPG o PNG.');
         }
 
-        $respuesta = $this->preguntar($imagenes);
-
-        return $this->interpretar($respuesta);
+        return $this->interpretar($this->preguntar($imagenes));
     }
 
     /** @param array<int, string> $imagenes rutas de imágenes ya listas */
@@ -110,15 +115,25 @@ class LectorDeDocumentos
         return <<<TXT
         Sos un asistente que lee documentos de vehículos y extrae sus datos.
 
-        El documento puede ser una tarjeta de circulación de Guatemala, un título
-        de vehículo de Estados Unidos (certificate of title) o la hoja de un lote
-        de subasta (Copart, IAAI).
+        Puede que recibas VARIAS imágenes. Todas son del MISMO vehículo, y cada
+        una puede ser una tarjeta de circulación de Guatemala, un título de
+        Estados Unidos (certificate of title), la hoja de un lote de subasta
+        (Copart, IAAI) o una página distinta del mismo documento.
+
+        Tu trabajo es combinarlas: tomá cada dato de la imagen donde aparezca y
+        armá una sola ficha con todo lo que encuentres entre todas.
+
+        Si dos documentos dicen cosas distintas del mismo campo:
+        - Quedate con el del documento más formal, en este orden: tarjeta de
+          circulación, título de Estados Unidos, hoja de subasta.
+        - Y explicá la diferencia en "aviso". No la escondas: que la vea la
+          persona que va a guardar la ficha.
 
         Devolvé ÚNICAMENTE un objeto JSON, sin texto antes ni después, sin bloques
         de código, con exactamente esta forma:
 
         {
-          "tipo_documento": "tarjeta_circulacion" | "titulo_usa" | "hoja_subasta" | "otro",
+          "documentos": ["tarjeta_circulacion" | "titulo_usa" | "hoja_subasta" | "otro"],
           "datos": {
             "vin": string|null,
             "marca": string|null,
@@ -142,6 +157,9 @@ class LectorDeDocumentos
           "aviso": string|null
         }
 
+        En "documentos" listá los tipos que reconociste, uno por documento
+        distinto que hayas visto.
+
         Reglas:
         - Si un dato no aparece en el documento, poné null. NO lo adivines ni lo
           deduzcas del modelo del carro.
@@ -153,8 +171,9 @@ class LectorDeDocumentos
         - "anio" es el año del modelo, entre 1980 y 2030.
         - El odómetro va en número entero, sin comas ni puntos.
         - Los campos con lista de valores solo aceptan uno de esos valores exactos.
-        - En "aviso" poné una frase corta en español si algo quedó dudoso o
-          ilegible; si todo se leyó bien, poné null.
+        - En "aviso" poné una frase corta en español si algo quedó dudoso, si un
+          documento estaba ilegible o si dos documentos se contradicen; si todo
+          se leyó bien y no hubo conflictos, poné null.
         TXT;
     }
 
@@ -165,20 +184,37 @@ class LectorDeDocumentos
         return 'data:'.$tipo.';base64,'.base64_encode(file_get_contents($ruta));
     }
 
-    /** @return array{datos: array<string, mixed>, tipo_documento: ?string, aviso: ?string} */
+    /** @return array{datos: array<string, mixed>, documentos: array<int, string>, aviso: ?string} */
     protected function interpretar(string $texto): array
     {
         $json = $this->extraerJson($texto);
 
         if ($json === null) {
-            throw new RuntimeException('No se entendió la respuesta del servicio. Probá con una foto más nítida.');
+            throw new RuntimeException('No se entendió la respuesta del servicio. Probá con fotos más nítidas.');
         }
 
         return [
             'datos' => ValidadorDeDatosLeidos::limpiar($json['datos'] ?? []),
-            'tipo_documento' => $json['tipo_documento'] ?? null,
-            'aviso' => $json['aviso'] ?? null,
+            'documentos' => $this->tiposReconocidos($json),
+            'aviso' => is_string($json['aviso'] ?? null) ? $json['aviso'] : null,
         ];
+    }
+
+    /**
+     * Acepta tanto la lista nueva como el campo viejo en singular, por si el
+     * modelo responde a la antigua.
+     *
+     * @return array<int, string>
+     */
+    protected function tiposReconocidos(array $json): array
+    {
+        $tipos = $json['documentos'] ?? $json['tipo_documento'] ?? [];
+
+        return collect(is_array($tipos) ? $tipos : [$tipos])
+            ->filter(fn ($tipo) => is_string($tipo) && $tipo !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /** El modelo a veces envuelve el JSON en ```json aunque se le pida que no. */

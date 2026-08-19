@@ -218,9 +218,16 @@ códigos conectado al puerto USB funciona sin configurar nada.
 
 ## Llenar la ficha leyendo el documento
 
-En el alta de una unidad hay un botón **Llenar con IA**: se sube una foto o un PDF de la
-tarjeta de circulación, del título americano o de la hoja del lote de subasta, y los campos
-se llenan solos. Lo que devuelve es **una propuesta**; la persona revisa y guarda.
+En el alta de una unidad hay un botón **Llenar con IA**: se suben fotos o PDF de la tarjeta
+de circulación, del título americano y de la hoja del lote de subasta —hasta seis
+documentos— y los campos se llenan solos. Lo que devuelve es **una propuesta**; la persona
+revisa y guarda.
+
+Los documentos se mandan **juntos en una sola petición**, no uno por uno: cada uno trae
+datos distintos del mismo carro (el título tiene el VIN y el año, la hoja de subasta el daño
+y el odómetro) y así el modelo puede cruzarlos. Cuando dos se contradicen, se queda con el
+más formal —tarjeta, luego título, luego hoja de subasta— y **avisa la diferencia** en lugar
+de esconderla.
 
 Para activarlo, poné tu llave de [OpenRouter](https://openrouter.ai/keys) en el `.env`:
 

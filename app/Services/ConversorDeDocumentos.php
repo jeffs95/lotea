@@ -19,6 +19,37 @@ class ConversorDeDocumentos
     /** Un documento de más de dos páginas casi nunca aporta datos nuevos. */
     public const PAGINAS_MAXIMAS = 2;
 
+    /**
+     * Tope de imágenes que se manda en una lectura.
+     *
+     * Cada una son tokens que se pagan, y más de esto no aporta: entre el
+     * título, la tarjeta y la hoja de subasta ya está todo.
+     */
+    public const IMAGENES_MAXIMAS = 6;
+
+    /**
+     * Junta varios documentos en una sola lista de imágenes.
+     *
+     * @param  array<int, string>  $rutas
+     * @return array<int, string>
+     */
+    public function variosAImagenes(array $rutas): array
+    {
+        $imagenes = [];
+
+        foreach ($rutas as $ruta) {
+            foreach ($this->aImagenes($ruta) as $imagen) {
+                $imagenes[] = $imagen;
+
+                if (count($imagenes) >= self::IMAGENES_MAXIMAS) {
+                    return $imagenes;
+                }
+            }
+        }
+
+        return $imagenes;
+    }
+
     /** @return array<int, string> rutas de imágenes temporales */
     public function aImagenes(string $ruta): array
     {
