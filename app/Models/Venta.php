@@ -73,6 +73,16 @@ class Venta extends Model
         return $this->belongsTo(Sucursal::class);
     }
 
+    public function planPago(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PlanPago::class);
+    }
+
+    public function esACreditoPropio(): bool
+    {
+        return $this->forma_pago === 'credito_propio';
+    }
+
     public function estaCerrada(): bool
     {
         return $this->estado === 'cerrada';

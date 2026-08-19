@@ -177,11 +177,29 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 Entrar con el vendedor es la forma más rápida de comprobar la regla de negocio más
 importante del sistema.
 
+## Taller, caja y cartera
+
+**Empleados** viven aparte de `users`: el mecánico casi nunca tiene usuario del sistema. Su
+`costo_hora` es de donde el taller saca la mano de obra que le carga a cada unidad.
+
+**Caja** por sucursal, en quetzales y en dólares. El saldo se calcula, nunca se guarda. Los
+movimientos no se borran y los traslados son dos movimientos que se apuntan entre sí, así
+que anular uno anula los dos. Los arqueos registran la diferencia en lugar de ajustarla.
+
+**Órdenes de trabajo** con mano de obra, repuestos y trabajos a terceros. Al cerrarlas, el
+costo pasa a `costos_unidad` (un renglón por tipo) y la bandera `costos_descargados` impide
+duplicarlo. Anular la orden le devuelve ese costo a la unidad.
+
+**Cartera** de crédito propio con amortización francesa: el residuo del redondeo cae en la
+última cuota para que la suma del capital dé exactamente lo financiado. Los pagos entran a
+caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
+cuota el crédito se cancela solo.
+
 ## Estado
 
 Terminado: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el tablero del
-patio, el costeo con multimoneda y prorrateo, el portal público con CRM, y clientes y
-ventas con comisiones.
+patio, el costeo con multimoneda y prorrateo, el portal público con CRM, clientes y ventas
+con comisiones, empleados, caja por sucursal, taller y cartera de crédito propio.
 
-Falta: taller con órdenes de trabajo, cartera de crédito propio, caja por sucursal y
-empleados.
+Del plan original queda pendiente: nómina de Guatemala, inversionistas por unidad,
+inventario de repuestos, reportes avanzados y el "qué comprar".

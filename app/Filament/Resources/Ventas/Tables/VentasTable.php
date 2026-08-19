@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Ventas\Tables;
 
 use App\Actions\AnularVenta;
 use App\Actions\CobrarVentaEnCaja;
+use App\Actions\GenerarPlanPago;
+use App\Filament\Resources\Creditos\PlanPagoResource;
 use App\Models\Caja;
 use App\Models\MovimientoCaja;
 use App\Models\Venta;
@@ -116,6 +118,47 @@ class VentasTable
                             app(CobrarVentaEnCaja::class)->ejecutar($record, Caja::findOrFail($data['caja_id']), $data);
 
                             Notification::make()->title('Cobro registrado en caja')->success()->send();
+                        } catch (DomainException $e) {
+                            Notification::make()->title($e->getMessage())->danger()->send();
+                        }
+                    }),
+
+                Action::make('financiar')
+                    ->label('Generar plan de pagos')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('info')
+                    ->visible(fn (Venta $record) => $record->esACreditoPropio()
+                        && $record->estaCerrada()
+                        && ! $record->estaAnulada()
+                        && ! $record->planPago()->exists())
+                    ->schema([
+                        TextInput::make('enganche')
+                            ->numeric()
+                            ->required()
+                            ->prefix('Q')
+                            ->default(fn (Venta $record) => $record->enganche ?? 0)
+                            ->helperText('Lo que ya dejó el cliente. El resto es lo que se financia.'),
+
+                        TextInput::make('plazo_meses')->label('Plazo en meses')->numeric()->required()->default(24)->minValue(1),
+                        TextInput::make('tasa_anual')->label('Tasa anual')->numeric()->default(18)->suffix('%'),
+                        TextInput::make('tasa_mora_anual')->label('Tasa de mora anual')->numeric()->default(36)->suffix('%'),
+                        DatePicker::make('primera_cuota')->label('Primera cuota')->required()->default(now()->addMonth())->native(false)->displayFormat('d/m/Y'),
+                    ])
+                    ->action(function (Venta $record, array $data) {
+                        try {
+                            $plan = app(GenerarPlanPago::class)->ejecutar($record, $data);
+
+                            Notification::make()
+                                ->title('Plan de pagos generado')
+                                ->body("{$plan->numero}: {$plan->plazo_meses} cuotas de Q "
+                                    .number_format((float) $plan->cuota_mensual, 2).'.')
+                                ->success()
+                                ->actions([
+                                    \Filament\Actions\Action::make('verPlan')
+                                        ->label('Ver el plan')
+                                        ->url(PlanPagoResource::getUrl('edit', ['record' => $plan])),
+                                ])
+                                ->send();
                         } catch (DomainException $e) {
                             Notification::make()->title($e->getMessage())->danger()->send();
                         }
