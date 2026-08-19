@@ -104,10 +104,25 @@ class Venta extends Model
         return $this->morphMany(MovimientoCaja::class, 'origen');
     }
 
-    /** Suma de los cobros vigentes, en quetzales. */
+    /**
+     * Suma de los cobros vigentes, en quetzales.
+     *
+     * Si la consulta ya lo trajo con withSum (como hace el listado), se usa
+     * ese valor: preguntarlo de nuevo por cada fila es el N+1 clásico.
+     */
     public function getCobradoAttribute(): string
     {
+        if (array_key_exists('cobrado', $this->attributes)) {
+            return (string) ($this->attributes['cobrado'] ?? 0);
+        }
+
         return (string) $this->movimientosCaja()->vigentes()->sum('monto_base');
+    }
+
+    /** Lo que el cliente todavía debe de este carro. */
+    public function getSaldoPendienteAttribute(): string
+    {
+        return bcsub((string) $this->precio_final, $this->cobrado, 2);
     }
 
     public function esACreditoPropio(): bool

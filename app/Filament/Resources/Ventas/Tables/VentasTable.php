@@ -29,7 +29,14 @@ class VentasTable
         return $table
             // Precarga: sin esto cada fila dispara una consulta por
             // relación, y con doscientas filas son cientos de consultas.
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['cliente', 'vendedor', 'unidad.marca', 'unidad.linea']))
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->with(['cliente', 'vendedor', 'unidad.marca', 'unidad.linea'])
+                // Lo cobrado se suma en la misma consulta: pedirlo fila por
+                // fila serían doscientas consultas más.
+                ->withSum(
+                    ['movimientosCaja as cobrado' => fn ($movimientos) => $movimientos->vigentes()],
+                    'monto_base',
+                ))
             ->defaultSort('fecha', 'desc')
             ->columns([
                 TextColumn::make('numero')->label('No.')->searchable()->weight('bold'),
@@ -49,6 +56,26 @@ class VentasTable
                     ->description(fn (Venta $record) => $record->descuento > 0
                         ? 'Desc. Q '.number_format((float) $record->descuento, 2)
                         : null),
+
+                // Lo que ya entró a caja por este carro. Sin esto, el dueño
+                // registra un enganche y después tiene que ir a buscarlo a la
+                // caja para saber cuánto le falta cobrar.
+                TextColumn::make('cobrado')
+                    ->label('Cobrado')
+                    ->money('GTQ', locale: 'es_GT')
+                    ->alignEnd()
+                    ->color(fn (Venta $record) => match (true) {
+                        bccomp($record->cobrado, '0.00', 2) === 0 => 'danger',
+                        bccomp($record->saldo_pendiente, '0.00', 2) <= 0 => 'success',
+                        default => 'warning',
+                    })
+                    ->description(fn (Venta $record) => bccomp($record->saldo_pendiente, '0.00', 2) > 0
+                        ? 'Falta Q '.number_format((float) $record->saldo_pendiente, 2)
+                        : 'Pagado')
+                    // Quien puede ver el dinero de las cajas puede ver cuánto entró
+                    // por este carro. No hay política de MovimientoCaja: el Gate
+                    // negaría siempre y la columna no se pintaría nunca.
+                    ->visible(fn () => auth()->user()?->can('viewAny', Caja::class) ?? false),
 
                 // Solo para quien puede ver costos: es la utilidad real.
                 TextColumn::make('utilidad')
@@ -88,7 +115,11 @@ class VentasTable
                     ->label('Registrar cobro')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->visible(fn (Venta $record) => ! $record->estaAnulada() && Caja::activas()->exists())
+                    // once(): la visibilidad se evalúa fila por fila, y sin
+                    // memoizar esto son doscientas consultas de «¿hay caja?»
+                    // para pintar doscientas ventas.
+                    ->visible(fn (Venta $record) => ! $record->estaAnulada()
+                        && once(fn () => Caja::activas()->exists()))
                     ->schema([
                         Select::make('caja_id')
                             ->label('¿A qué caja entra?')
