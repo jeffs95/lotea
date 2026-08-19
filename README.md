@@ -60,7 +60,28 @@ php artisan test
 Corren contra PostgreSQL (base `lotea_test`), no SQLite, para no descubrir en producción las
 diferencias entre motores.
 
+## El ciclo de la unidad
+
+Todo gira alrededor de una máquina de estados por VIN, en `App\Enums\EstadoUnidad`:
+
+```
+COMPRADA → EN_TÍTULO → TRÁNSITO_USA → BODEGA_USA → EMBARCADA →
+EN_ADUANA → TRÁNSITO_LOCAL → RECIBIDA → EN_TALLER → LISTA →
+PUBLICADA → RESERVADA → VENDIDA → ENTREGADA → EN_CARTERA
+```
+
+El enum decide qué transiciones existen y `App\Actions\CambiarEstadoUnidad` es el único
+camino para moverse entre ellas: valida, deja historial con fecha, usuario y días en la
+etapa anterior, y sella las fechas hito una sola vez. De ahí salen el aging, el capital
+dormido y los días de rotación.
+
+Desde `EMBARCADA` la unidad ya se puede publicar: la preventa es negocio real y es lo que
+recorta los días de inventario.
+
 ## Estado
 
-Fase 1 terminada: fundación, tenancy y catálogos. Lo siguiente es la unidad (ficha VIN,
-máquina de estados) y después el costeo, que es el corazón del producto.
+Fases 1 y 2 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida,
+el tablero del patio y los widgets de capital.
+
+Lo siguiente es el **costeo** (`costos_unidad`, multimoneda, prorrateo, presupuestado vs
+real), que es el corazón del producto y la pantalla con la que se vende.
