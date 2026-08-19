@@ -38,6 +38,9 @@ class CentralPanelProvider extends PanelProvider
                 // Azul y no ámbar: que se note de un vistazo en qué panel estás.
                 'primary' => Color::Indigo,
             ])
+            // Mismo tema que el panel de los clientes: las clases de Tailwind
+            // de las vistas propias solo existen en el CSS compilado.
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Central/Resources'), for: 'App\Filament\Central\Resources')
             ->discoverPages(in: app_path('Filament/Central/Pages'), for: 'App\Filament\Central\Pages')
             ->pages([

@@ -146,6 +146,26 @@ sucursal principal, el usuario dueño con sus permisos y el primer cobro.
 **La suspensión corta de verdad.** Un cliente suspendido no entra a su panel y su portal
 público deja de responder, pero no pierde un solo dato: al reactivarlo sigue donde quedó.
 
+## Soporte
+
+Cuando un cliente dice *"no puedo agregar un vehículo"*, la causa casi siempre es un permiso
+que le falta al rol. Para eso hay dos herramientas en el panel central, y ninguna requiere
+entrar a la cuenta del cliente:
+
+- **Diagnóstico** (`/central/diagnostico`) — elegís un usuario y ves qué puede y qué no,
+  módulo por módulo, en español y no en `ViewAny:Unidad`. El botón *Copiar diagnóstico* deja
+  un resumen listo para pegarle al dueño por WhatsApp.
+- **Bandeja de soporte** (`/central/soporte`) — lo que reportan los clientes desde su panel,
+  con el contexto capturado solo: quién, con qué rol, en qué pantalla. Desde cada ticket hay
+  un enlace directo al diagnóstico de quien lo reportó.
+
+Del lado del cliente, **Soporte** en su menú: reporta en dos líneas y ve la respuesta ahí
+mismo. Pedir ayuda no depende del rol —si el mecánico no puede reportar, el problema llega
+tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
+
+> `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
+> sobreescribe: si volvés a correrlo, revisá que siga como está.
+
 ## Usuarios de prueba
 
 | Usuario | Contraseña | Para qué |

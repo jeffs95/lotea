@@ -42,6 +42,6 @@ class DatabaseSeeder extends Seeder
         });
 
         // Fuera del contexto de la primera empresa: da de alta a las demás.
-        $this->call(ConcesionariosDemoSeeder::class);
+        $this->call([ConcesionariosDemoSeeder::class, SoporteDemoSeeder::class]);
     }
 }

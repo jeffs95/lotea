@@ -9,6 +9,7 @@ use App\Filament\Central\Resources\Concesionarios\Schemas\ConcesionarioForm;
 use App\Filament\Central\Resources\Concesionarios\Tables\ConcesionariosTable;
 use App\Models\Empresa;
 use BackedEnum;
+use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class ConcesionarioResource extends Resource
 {
+    use EsRecursoDeLotea;
+
     protected static ?string $model = Empresa::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;

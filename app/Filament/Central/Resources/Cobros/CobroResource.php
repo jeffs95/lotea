@@ -7,6 +7,7 @@ use App\Filament\Central\Resources\Cobros\Schemas\CobroForm;
 use App\Filament\Central\Resources\Cobros\Tables\CobrosTable;
 use App\Models\Cobro;
 use BackedEnum;
+use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class CobroResource extends Resource
 {
+    use EsRecursoDeLotea;
+
     protected static ?string $model = Cobro::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
