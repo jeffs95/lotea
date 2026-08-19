@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Unidades;
 
 use App\Filament\Resources\Unidades\Pages\CreateUnidad;
 use App\Filament\Resources\Unidades\Pages\EditUnidad;
+use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Filament\Resources\Unidades\Pages\ListUnidades;
 use App\Filament\Resources\Unidades\Pages\RentabilidadUnidad;
 use App\Filament\Resources\Unidades\RelationManagers\CostosRelationManager;
@@ -69,6 +70,7 @@ class UnidadResource extends Resource
             'create' => CreateUnidad::route('/nueva'),
             'edit' => EditUnidad::route('/{record}/editar'),
             'rentabilidad' => RentabilidadUnidad::route('/{record}/rentabilidad'),
+            'etiquetas' => EtiquetasUnidades::route('/etiquetas'),
         ];
     }
 
@@ -79,6 +81,6 @@ class UnidadResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['stock_no', 'vin'];
+        return ['stock_no', 'vin', 'codigo_qr'];
     }
 }

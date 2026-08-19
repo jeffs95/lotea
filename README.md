@@ -195,6 +195,27 @@ duplicarlo. Anular la orden le devuelve ese costo a la unidad.
 caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
 cuota el crédito se cancela solo.
 
+## El QR del parabrisas
+
+Cada unidad nace con un código corto único (`WVD299`) impreso junto a un QR que se pega en
+el parabrisas. La ruta es `/u/{codigo}` y decide a dónde va cada quien:
+
+- **Un cliente en el patio** cae en la ficha pública, con fotos, precio y WhatsApp.
+- **Alguien del concesionario**, con su sesión abierta, cae en la ficha interna con el botón
+  de vender.
+
+Una sola etiqueta, sin que nadie tenga que saber cuál escanear. Si la unidad todavía no está
+publicada, en lugar de un 404 el cliente ve un aviso con el botón de WhatsApp; y si el
+concesionario está suspendido, su QR deja de responder.
+
+El código no usa vocales ni los caracteres que se confunden al dictarlo por teléfono (O/0,
+I/1, S/5). La hoja de etiquetas se imprime desde el listado de unidades y **no lleva el
+precio**: el precio cambia y nadie va a reimprimir cuarenta etiquetas. Lo que cambia lo
+muestra el QR, que siempre está al día.
+
+En la pantalla de venta, el buscador de unidad acepta ese mismo código, así que un lector de
+códigos conectado al puerto USB funciona sin configurar nada.
+
 ## Estado
 
 Terminado: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el tablero del

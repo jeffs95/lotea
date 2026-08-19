@@ -4,7 +4,10 @@ namespace App\Filament\Resources\Unidades\Tables;
 
 use App\Enums\EstadoUnidad;
 use App\Filament\Resources\Unidades\Schemas\UnidadForm;
+use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -100,9 +103,24 @@ class UnidadesTable
                 ActionGroup::make([
                     EditAction::make(),
                     \App\Filament\Resources\Unidades\Actions\CambiarEstadoAction::make(),
+
+                    Action::make('etiqueta')
+                        ->label('Imprimir etiqueta')
+                        ->icon('heroicon-o-qr-code')
+                        ->url(fn ($record) => EtiquetasUnidades::getUrl().'?unidades='.$record->id)
+                        ->openUrlInNewTab(),
                 ]),
             ])
             ->toolbarActions([
+                BulkAction::make('etiquetas')
+                    ->label('Imprimir etiquetas')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('gray')
+                    ->deselectRecordsAfterCompletion()
+                    ->action(fn ($records) => redirect()->to(
+                        EtiquetasUnidades::getUrl().'?unidades='.$records->pluck('id')->implode(',')
+                    )),
+
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

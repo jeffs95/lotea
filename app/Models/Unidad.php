@@ -41,6 +41,13 @@ class Unidad extends Model implements HasMedia
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Unidad $unidad) {
+            $unidad->codigo_qr ??= \App\Support\CodigoDeUnidad::generar();
+        });
+    }
+
     /**
      * Tres colecciones distintas a propósito.
      *

@@ -32,9 +32,28 @@ class VentaForm
                             ->all())
                         ->required()
                         ->searchable()
+                        ->getSearchResultsUsing(fn (string $search) => Unidad::query()
+                            ->enInventario()
+                            ->where(fn ($q) => $q
+                                ->where('stock_no', 'ilike', "%{$search}%")
+                                ->orWhere('codigo_qr', 'ilike', '%'.\App\Support\CodigoDeUnidad::normalizar($search).'%')
+                                ->orWhereHas('marca', fn ($m) => $m->where('nombre', 'ilike', "%{$search}%"))
+                                ->orWhereHas('linea', fn ($l) => $l->where('nombre', 'ilike', "%{$search}%")))
+                            ->with(['marca', 'linea'])
+                            ->limit(20)
+                            ->get()
+                            ->mapWithKeys(fn (Unidad $u) => [$u->id => "{$u->stock_no} · {$u->descripcion}"])
+                            ->all())
+                        ->getOptionLabelUsing(fn ($value) => ($u = Unidad::find($value))
+                            ? "{$u->stock_no} · {$u->descripcion}"
+                            : null)
                         ->live()
                         ->disabled(fn ($record) => $record?->estaCerrada())
                         ->native(false)
+                        ->helperText('Podés buscar por stock, marca o el código del parabrisas.')
+                        // Llega precargada cuando se entra desde el QR o desde
+                        // la ficha de la unidad.
+                        ->default(fn () => request()->integer('unidad') ?: null)
                         ->afterStateUpdated(function ($state, callable $set) {
                             $unidad = Unidad::find($state);
                             $set('precio_venta', $unidad?->precio_lista);
@@ -64,7 +83,8 @@ class VentaForm
                     Select::make('sucursal_id')
                         ->label('Sucursal')
                         ->relationship('sucursal', 'nombre')
-                        ->native(false),
+                        ->native(false)
+                        ->default(fn () => Unidad::find(request()->integer('unidad'))?->sucursal_id),
 
                     TextInput::make('numero')
                         ->label('No.')
@@ -87,7 +107,13 @@ class VentaForm
                         ->disabled(fn ($record) => $record?->estaAnulada())
                         ->helperText('Al pasar a «Cerrada» se marca la unidad como vendida.'),
 
-                    TextInput::make('precio_venta')->label('Precio pactado')->numeric()->required()->prefix('Q')->live(onBlur: true),
+                    TextInput::make('precio_venta')
+                        ->label('Precio pactado')
+                        ->numeric()
+                        ->required()
+                        ->prefix('Q')
+                        ->live(onBlur: true)
+                        ->default(fn () => Unidad::find(request()->integer('unidad'))?->precio_lista),
                     TextInput::make('descuento')->label('Descuento')->numeric()->default(0)->prefix('Q')->live(onBlur: true),
 
                     Select::make('forma_pago')

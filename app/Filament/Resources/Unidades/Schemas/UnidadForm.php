@@ -9,6 +9,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -62,6 +64,25 @@ class UnidadForm
                             ->preload()
                             ->native(false),
                     ]),
+
+                    Section::make('Código para el parabrisas')
+                        ->description('El mismo QR lleva al cliente a la ficha pública y a ustedes a esta pantalla.')
+                        ->columns(2)
+                        ->visibleOn('edit')
+                        ->schema([
+                            TextInput::make('codigo_qr')
+                                ->label('Código')
+                                ->disabled()
+                                ->extraInputAttributes(['style' => 'font-family: ui-monospace, monospace; letter-spacing: .2em; font-weight: 700']),
+
+                            Placeholder::make('qr')
+                                ->hiddenLabel()
+                                ->content(fn ($record) => $record
+                                    ? new HtmlString(
+                                        '<img src="'.\App\Support\QrDeUnidad::dataUri($record, 140).'" alt="QR" style="height:140px;width:140px">'
+                                    )
+                                    : null),
+                        ]),
 
                     Section::make()->columns(4)->schema([
                         Select::make('marca_id')
