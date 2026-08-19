@@ -195,6 +195,20 @@ duplicarlo. Anular la orden le devuelve ese costo a la unidad.
 caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
 cuota el crédito se cancela solo.
 
+## Se puede registrar en cualquier punto del ciclo
+
+No todos los concesionarios registran el carro cuando lo compran en subasta: hay quien lo
+hace cuando ya lo tiene enfrente en el patio, y al empezar a usar el sistema **todos** cargan
+de golpe el inventario que ya tenían.
+
+Por eso el alta pregunta en qué estado entra la unidad, y no la fuerza a nacer como
+*Comprada*. Se ofrecen solo los estados de inventario: nadie registra un carro que ya vendió.
+
+Cuando el estado elegido implica que la unidad ya está en el patio, se sellan sus fechas hito
+a partir de la fecha de compra, y así **sus días en inventario no arrancan en cero** — ya
+llevaba tiempo ahí antes de que existiera la ficha. El historial deja constancia de que entró
+directo en esa etapa, sin inventar las anteriores.
+
 ## La placa
 
 `unidades.placa` y `unidades.tipo_placa` son **nullable a propósito**: una unidad que viene de

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Unidades\Schemas;
 
 use App\Actions\GenerarStockNo;
+use App\Enums\EstadoUnidad;
 use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
@@ -22,6 +23,14 @@ use Illuminate\Support\Str;
 
 class UnidadForm
 {
+    /** ¿El estado elegido implica que la unidad ya está físicamente aquí? */
+    protected static function yaEstaEnElPatio(callable $get): bool
+    {
+        $estado = EstadoUnidad::tryFrom((string) $get('estado'));
+
+        return $estado !== null && in_array($estado->etapa(), ['preparacion', 'venta'], true);
+    }
+
     /** El tipo elegido en el formulario, o automóvil mientras no se elija. */
     protected static function tipo(callable $get): TipoVehiculo
     {
@@ -230,6 +239,31 @@ class UnidadForm
                 ]),
 
                 Tab::make('Origen y título')->schema([
+                    Section::make('¿En qué punto entra al sistema?')
+                        ->description('No todos los carros se registran al comprarlos: puede que ya lo tengas en el patio, o que estés cargando el inventario que ya tenías.')
+                        ->columns(2)
+                        ->visibleOn('create')
+                        ->schema([
+                            Select::make('estado')
+                                ->label('Estado actual de la unidad')
+                                ->options(fn () => collect(EstadoUnidad::cases())
+                                    ->filter(fn (EstadoUnidad $e) => $e->esInventario())
+                                    ->mapWithKeys(fn (EstadoUnidad $e) => [$e->value => $e->getLabel()])
+                                    ->all())
+                                ->default(EstadoUnidad::Comprada->value)
+                                ->required()
+                                ->live()
+                                ->native(false)
+                                ->helperText('El historial arranca aquí: las etapas anteriores no quedan registradas.'),
+
+                            DatePicker::make('fecha_recepcion')
+                                ->label('Llegó al patio el')
+                                ->native(false)
+                                ->displayFormat('d/m/Y')
+                                ->visible(fn (callable $get) => self::yaEstaEnElPatio($get))
+                                ->helperText('Con esto se calculan sus días en el patio.'),
+                        ]),
+
                     Section::make()->columns(3)->schema([
                         Select::make('tipo_titulo')
                             ->label('Tipo de título')
