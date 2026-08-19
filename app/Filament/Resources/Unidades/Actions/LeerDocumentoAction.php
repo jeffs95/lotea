@@ -113,15 +113,15 @@ class LeerDocumentoAction
 
         $nuevos = array_filter($nuevos, fn ($valor) => $valor !== null);
 
-        // La placa no es campo de la unidad: se guarda como nota para no perderla.
-        if (filled($datos['placa'] ?? null)) {
-            $nuevos['notas'] = 'Placa según documento: '.$datos['placa'];
-        }
-
         foreach ($datos as $campo => $valor) {
-            if (! in_array($campo, ['marca', 'linea', 'placa'], true)) {
+            if (! in_array($campo, ['marca', 'linea'], true)) {
                 $nuevos[$campo] = $valor;
             }
+        }
+
+        // El tipo sale de la letra de la placa, no de lo que diga el modelo.
+        if (filled($nuevos['placa'] ?? null)) {
+            $nuevos['tipo_placa'] = \App\Enums\TipoPlaca::desdeLaPlaca($nuevos['placa'])?->value;
         }
 
         $livewire->form->fill([...$livewire->data, ...$nuevos]);

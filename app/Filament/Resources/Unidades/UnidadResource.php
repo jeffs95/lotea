@@ -81,6 +81,6 @@ class UnidadResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return ['stock_no', 'vin', 'codigo_qr'];
+        return ['stock_no', 'vin', 'codigo_qr', 'placa'];
     }
 }

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\EstadoUnidad;
+use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use App\Models\Marca;
@@ -95,6 +96,7 @@ class UnidadesDemoSeeder extends Seeder
                 // inventario.
                 'publicado' => $estado->admitePreventa(),
                 'slug' => Str::slug("{$marca} {$linea} {$anio} stock ".($i + 1)),
+                ...$this->placaSiYaSeNacionalizo($estado, TipoVehiculo::Automovil, $i),
             ]);
 
             $this->historial($unidad, $fechaCompra, $estado);
@@ -145,10 +147,33 @@ class UnidadesDemoSeeder extends Seeder
                 'costo_presupuestado' => round($precio * 0.68, 2),
                 'publicado' => $estado->admitePreventa(),
                 'slug' => Str::slug("{$marca} {$linea} {$anio} stock m".($i + 1)),
+                ...$this->placaSiYaSeNacionalizo($estado, TipoVehiculo::Motocicleta, $i),
             ]);
 
             $this->historial($unidad, $fechaCompra, $estado);
         }
+    }
+
+    /**
+     * La placa aparece al nacionalizar: una unidad que va en el barco o está
+     * en aduana todavía no la tiene.
+     *
+     * @return array<string, string>
+     */
+    protected function placaSiYaSeNacionalizo(EstadoUnidad $estado, TipoVehiculo $tipo, int $i): array
+    {
+        if (! in_array($estado->etapa(), ['preparacion', 'venta', 'cerrada'], true)) {
+            return [];
+        }
+
+        $letra = TipoPlaca::sugeridaPara($tipo);
+        $numero = str_pad((string) (100 + $i * 37), 3, '0', STR_PAD_LEFT);
+        $letras = substr('ABCDEFGHJKLMNPQRSTUVWXYZ', $i % 20, 3);
+
+        return [
+            'placa' => "{$letra->value}{$numero}{$letras}",
+            'tipo_placa' => $letra->value,
+        ];
     }
 
     protected function historial(Unidad $unidad, $fechaCompra, EstadoUnidad $estado): void

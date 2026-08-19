@@ -45,9 +45,12 @@ class UnidadesTable
 
                 TextColumn::make('descripcion')
                     ->label('Unidad')
-                    ->description(fn ($record) => $record->vin)
+                    ->description(fn ($record) => $record->placa
+                        ? $record->placa.' · '.$record->vin
+                        : $record->vin)
                     ->searchable(query: fn ($query, string $search) => $query
                         ->where('vin', 'ilike', "%{$search}%")
+                        ->orWhere('placa', 'ilike', "%{$search}%")
                         ->orWhere('version', 'ilike', "%{$search}%")),
 
                 TextColumn::make('estado')

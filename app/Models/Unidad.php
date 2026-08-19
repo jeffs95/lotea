@@ -35,6 +35,7 @@ class Unidad extends Model implements HasMedia
         return [
             'estado' => EstadoUnidad::class,
             'tipo_vehiculo' => \App\Enums\TipoVehiculo::class,
+            'tipo_placa' => \App\Enums\TipoPlaca::class,
             'estado_desde' => 'datetime',
             'fecha_compra' => 'date',
             'fecha_recepcion' => 'date',
@@ -181,6 +182,11 @@ class Unidad extends Model implements HasMedia
         }
 
         return bcsub((string) $this->precio_para_margen, (string) $this->costo_total, 2);
+    }
+
+    public function tienePlaca(): bool
+    {
+        return filled($this->placa);
     }
 
     public function esMoto(): bool

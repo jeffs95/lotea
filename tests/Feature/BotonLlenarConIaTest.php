@@ -91,7 +91,8 @@ class BotonLlenarConIaTest extends TestCase
                 'transmision' => 'automatica',
                 'cilindros' => 4,
                 'puertas' => 5,
-                'notas' => 'Placa según documento: P123ABC',
+                'placa' => 'P123ABC',
+                'tipo_placa' => 'P',
             ]);
     }
 

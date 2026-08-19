@@ -195,6 +195,23 @@ duplicarlo. Anular la orden le devuelve ese costo a la unidad.
 caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
 cuota el crédito se cancela solo.
 
+## La placa
+
+`unidades.placa` y `unidades.tipo_placa` son **nullable a propósito**: una unidad que viene de
+subasta no tiene placa guatemalteca hasta que se nacionaliza, y hasta entonces el campo vacío
+es su estado normal, no un error.
+
+El tipo se deduce de la letra inicial (`App\Enums\TipoPlaca`): de `P123ABC` sale Particular,
+de `M456XYZ` Motocicleta. Importa porque el uso al que está inscrito el vehículo cambia su
+precio de reventa: una placa de alquiler o comercial no vale lo mismo que una particular.
+
+> Los códigos del enum están en un solo lugar para poder corregirlos. **Confirmalos con la
+> SAT** antes de vender el sistema: los puse de memoria y no los verifiqué contra una fuente.
+
+Se puede buscar por placa en el listado de unidades, en la búsqueda global y en el selector
+de unidad de una venta — el cliente llama y dice la placa, no el VIN. **No se publica en el
+portal**: no ayuda a vender y es un dato del dueño anterior.
+
 ## Automóviles, motos y pesados
 
 Cada unidad tiene un **tipo de vehículo** y la ficha técnica cambia con él, porque una moto

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Unidades\Schemas;
 
 use App\Actions\GenerarStockNo;
+use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use Filament\Forms\Components\Select;
@@ -73,6 +74,32 @@ class UnidadForm
                             ->preload()
                             ->native(false),
                     ]),
+
+                    Section::make('Placa')
+                        ->description('Se llena cuando la unidad se nacionaliza. Una que viene de subasta todavía no tiene.')
+                        ->columns(2)
+                        ->schema([
+                            TextInput::make('placa')
+                                ->maxLength(20)
+                                ->extraInputAttributes(['style' => 'text-transform: uppercase'])
+                                ->dehydrateStateUsing(fn (?string $state) => filled($state)
+                                    ? Str::upper(Str::squish($state))
+                                    : null)
+                                ->live(onBlur: true)
+                                ->placeholder('P123ABC')
+                                // El tipo sale de la letra inicial: nadie debería
+                                // tener que elegirlo a mano.
+                                ->afterStateUpdated(fn (?string $state, callable $set) => $set(
+                                    'tipo_placa',
+                                    TipoPlaca::desdeLaPlaca($state)?->value,
+                                )),
+
+                            Select::make('tipo_placa')
+                                ->label('Tipo de placa')
+                                ->options(TipoPlaca::opciones())
+                                ->native(false)
+                                ->helperText('Se deduce de la letra inicial. El uso inscrito cambia el precio de reventa.'),
+                        ]),
 
                     Section::make('Código para el parabrisas')
                         ->description('El mismo QR lleva al cliente a la ficha pública y a ustedes a esta pantalla.')

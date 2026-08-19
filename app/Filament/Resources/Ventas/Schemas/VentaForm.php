@@ -36,6 +36,7 @@ class VentaForm
                             ->enInventario()
                             ->where(fn ($q) => $q
                                 ->where('stock_no', 'ilike', "%{$search}%")
+                                ->orWhere('placa', 'ilike', "%{$search}%")
                                 ->orWhere('codigo_qr', 'ilike', '%'.\App\Support\CodigoDeUnidad::normalizar($search).'%')
                                 ->orWhereHas('marca', fn ($m) => $m->where('nombre', 'ilike', "%{$search}%"))
                                 ->orWhereHas('linea', fn ($l) => $l->where('nombre', 'ilike', "%{$search}%")))
