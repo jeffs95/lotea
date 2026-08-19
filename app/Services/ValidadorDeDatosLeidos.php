@@ -35,7 +35,9 @@ class ValidadorDeDatosLeidos
             'carroceria' => self::deLista($datos['carroceria'] ?? null, array_keys(UnidadForm::CARROCERIAS)),
             'tipo_titulo' => self::deLista($datos['tipo_titulo'] ?? null, array_keys(UnidadForm::TIPOS_TITULO)),
             'tipo_dano' => self::texto($datos['tipo_dano'] ?? null, 80),
-            'placa' => self::texto($datos['placa'] ?? null, 20),
+            // La placa es un identificador, no un nombre: no se le aplica
+            // capitalización o P123ABC termina como P123Abc.
+            'placa' => self::identificador($datos['placa'] ?? null, 20),
         ], fn ($valor) => $valor !== null && $valor !== '');
     }
 
@@ -49,6 +51,15 @@ class ValidadorDeDatosLeidos
         $limpio = Str::upper(preg_replace('/[^A-Za-z0-9]/', '', $valor));
 
         return preg_match('/^[A-HJ-NPR-Z0-9]{17}$/', $limpio) ? $limpio : null;
+    }
+
+    protected static function identificador(mixed $valor, int $largo): ?string
+    {
+        if (! is_string($valor) || trim($valor) === '') {
+            return null;
+        }
+
+        return Str::limit(Str::upper(Str::squish($valor)), $largo, '');
     }
 
     protected static function texto(mixed $valor, int $largo): ?string

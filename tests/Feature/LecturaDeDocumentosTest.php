@@ -83,6 +83,14 @@ class LecturaDeDocumentosTest extends TestCase
         $this->assertSame('Blanco Perla', $limpio['color']);
     }
 
+    /** Una placa no es un nombre: P123ABC no puede volverse P123Abc. */
+    public function test_no_capitaliza_la_placa(): void
+    {
+        $limpio = ValidadorDeDatosLeidos::limpiar(['placa' => ' p123abc ']);
+
+        $this->assertSame('P123ABC', $limpio['placa']);
+    }
+
     // ---- El catálogo ----
 
     public function test_reutiliza_la_marca_y_la_linea_que_ya_existen(): void

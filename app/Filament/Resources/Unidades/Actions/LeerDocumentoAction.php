@@ -8,7 +8,7 @@ use App\Services\LectorDeDocumentos;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Utilities\Set;
+use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
@@ -43,13 +43,24 @@ class LeerDocumentoAction
                     ->required()
                     ->helperText(self::ayuda()),
             ])
-            ->action(function (array $data, Set $set) {
-                $relativa = $data['documento'];
+            // $livewire y no el utilitario `set`: esta acción vive en el
+            // encabezado de la página, donde no hay componente de formulario
+            // desde el cual construirlo.
+            ->action(function (array $data, Page $livewire) {
+                // FileUpload guarda su estado como array (uuid => ruta) incluso
+                // cuando es de un solo archivo.
+                $relativa = self::rutaDelArchivo($data['documento'] ?? null);
+
+                if ($relativa === null) {
+                    Notification::make()->title('No se recibió el archivo')->danger()->send();
+
+                    return;
+                }
 
                 try {
                     $resultado = app(LectorDeDocumentos::class)->leer(Storage::disk('local')->path($relativa));
 
-                    self::volcarEnElFormulario($resultado['datos'], $set);
+                    self::volcarEnElFormulario($resultado['datos'], $livewire);
                     self::avisar($resultado);
                 } catch (RuntimeException $e) {
                     Notification::make()->title('No se pudo leer')->body($e->getMessage())->danger()->send();
@@ -68,32 +79,49 @@ class LeerDocumentoAction
             });
     }
 
-    /** @param array<string, mixed> $datos */
-    protected static function volcarEnElFormulario(array $datos, Set $set): void
+    /** @param  array<string, string>|string|null  $valor */
+    protected static function rutaDelArchivo(array|string|null $valor): ?string
     {
-        $catalogo = app(ResolverCatalogoVehiculo::class)->ejecutar(
+        if (is_string($valor)) {
+            return $valor !== '' ? $valor : null;
+        }
+
+        if (is_array($valor)) {
+            $primera = collect($valor)->filter(fn ($ruta) => is_string($ruta) && $ruta !== '')->first();
+
+            return $primera ?: null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Escribe lo leído sobre el formulario que ya está en pantalla, sin pisar
+     * lo que la persona haya escrito antes.
+     *
+     * @param  array<string, mixed>  $datos
+     */
+    protected static function volcarEnElFormulario(array $datos, Page $livewire): void
+    {
+        $nuevos = app(ResolverCatalogoVehiculo::class)->ejecutar(
             $datos['marca'] ?? null,
             $datos['linea'] ?? null,
         );
 
-        foreach ($catalogo as $campo => $valor) {
-            if ($valor !== null) {
-                $set($campo, $valor);
-            }
-        }
+        $nuevos = array_filter($nuevos, fn ($valor) => $valor !== null);
 
         // La placa no es campo de la unidad: se guarda como nota para no perderla.
         if (filled($datos['placa'] ?? null)) {
-            $set('notas', 'Placa según documento: '.$datos['placa']);
+            $nuevos['notas'] = 'Placa según documento: '.$datos['placa'];
         }
 
         foreach ($datos as $campo => $valor) {
-            if (in_array($campo, ['marca', 'linea', 'placa'], true)) {
-                continue;
+            if (! in_array($campo, ['marca', 'linea', 'placa'], true)) {
+                $nuevos[$campo] = $valor;
             }
-
-            $set($campo, $valor);
         }
+
+        $livewire->form->fill([...$livewire->data, ...$nuevos]);
     }
 
     /** @param array{datos: array, tipo_documento: ?string, aviso: ?string} $resultado */
