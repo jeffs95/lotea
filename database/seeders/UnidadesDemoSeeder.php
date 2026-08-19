@@ -68,10 +68,8 @@ class UnidadesDemoSeeder extends Seeder
                 'fecha_compra' => $fechaCompra,
                 'precio_lista' => $precio,
                 'precio_minimo' => round($precio * 0.92, 2),
-                // Costo aproximado mientras no exista el módulo de costeo. En
-                // cuanto entren los gastos reales, este número lo calcula el
-                // sistema y deja de sembrarse.
-                'costo_total' => round($precio * (0.62 + (($i % 5) * 0.02)), 2),
+                // El costo real lo calcula CostosDemoSeeder a partir de los
+                // gastos; aquí solo se siembra el presupuesto del comprador.
                 'costo_presupuestado' => round($precio * 0.66, 2),
                 'publicado' => in_array($estado, [EstadoUnidad::Publicada, EstadoUnidad::Reservada], true),
                 'slug' => Str::slug("{$marca} {$linea} {$anio} stock ".($i + 1)),

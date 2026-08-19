@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Unidades;
 use App\Filament\Resources\Unidades\Pages\CreateUnidad;
 use App\Filament\Resources\Unidades\Pages\EditUnidad;
 use App\Filament\Resources\Unidades\Pages\ListUnidades;
+use App\Filament\Resources\Unidades\Pages\RentabilidadUnidad;
+use App\Filament\Resources\Unidades\RelationManagers\CostosRelationManager;
 use App\Filament\Resources\Unidades\RelationManagers\TransicionesRelationManager;
 use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use App\Filament\Resources\Unidades\Tables\UnidadesTable;
@@ -43,9 +45,21 @@ class UnidadResource extends Resource
         return UnidadesTable::configure($table);
     }
 
+    /** Pestañas dentro de la ficha de una unidad. */
+    public static function getRecordSubNavigation(\Filament\Resources\Pages\Page $page): array
+    {
+        return $page->generateNavigationItems([
+            EditUnidad::class,
+            RentabilidadUnidad::class,
+        ]);
+    }
+
     public static function getRelations(): array
     {
-        return [TransicionesRelationManager::class];
+        return [
+            CostosRelationManager::class,
+            TransicionesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -54,6 +68,7 @@ class UnidadResource extends Resource
             'index' => ListUnidades::route('/'),
             'create' => CreateUnidad::route('/nueva'),
             'edit' => EditUnidad::route('/{record}/editar'),
+            'rentabilidad' => RentabilidadUnidad::route('/{record}/rentabilidad'),
         ];
     }
 

@@ -78,10 +78,28 @@ dormido y los días de rotación.
 Desde `EMBARCADA` la unidad ya se puede publicar: la preventa es negocio real y es lo que
 recorta los días de inventario.
 
+## El costeo
+
+Cada gasto se guarda en la moneda en que se pagó, con el tipo de cambio del documento y el
+monto en quetzales. Convertir "al final" es como se pierde margen sin darse cuenta.
+
+Dos reglas del módulo de dinero:
+
+- **Nada se borra.** Un gasto equivocado se anula con motivo, usuario y fecha
+  (`App\Actions\AnularCosto`). Si se pudiera borrar, cualquiera podría maquillar el margen
+  de una unidad sin dejar rastro.
+- **El reparto cuadra exacto.** `App\Actions\ProrratearGasto` divide el flete de un
+  contenedor entre sus unidades y le entrega el centavo residual a la primera, para que la
+  suma de las porciones dé exactamente el total.
+
+La ficha de rentabilidad (`/unidades/{id}/rentabilidad`) es el estado de resultados de un
+solo carro, y está detrás del permiso `ver_costos_unidad`: el vendedor que conoce el costo
+negocia contra su propio patrón.
+
 ## Estado
 
-Fases 1 y 2 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida,
-el tablero del patio y los widgets de capital.
+Fases 1, 2 y 3 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida,
+el tablero del patio, y el costeo con multimoneda, prorrateo y presupuestado vs real.
 
-Lo siguiente es el **costeo** (`costos_unidad`, multimoneda, prorrateo, presupuestado vs
-real), que es el corazón del producto y la pantalla con la que se vende.
+Lo siguiente es el **portal público**: catálogo con filtros, ficha de vehículo con galería
+y leads que caen en el CRM.

@@ -95,6 +95,11 @@ class Unidad extends Model implements HasMedia
         return $this->hasMany(UnidadTransicion::class)->latest('ocurrio_en');
     }
 
+    public function costos(): HasMany
+    {
+        return $this->hasMany(CostoUnidad::class);
+    }
+
     /** Cómo se nombra el carro en pantalla: "Toyota RAV4 2019". */
     public function getDescripcionAttribute(): string
     {
