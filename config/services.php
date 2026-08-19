@@ -26,6 +26,12 @@ return [
         'key' => env('OPENROUTER_API_KEY'),
         'modelo' => env('OPENROUTER_MODELO', 'qwen/qwen2.5-vl-72b-instruct'),
         'url' => env('OPENROUTER_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+
+        // Precio publicado por OpenRouter, por millón de tokens. Cambia con el
+        // tiempo: actualizalo aquí y el cálculo de costo se ajusta solo.
+        'precio_entrada' => env('OPENROUTER_PRECIO_ENTRADA', 0.25),
+        'precio_salida' => env('OPENROUTER_PRECIO_SALIDA', 0.75),
+        'tipo_cambio' => env('OPENROUTER_TIPO_CAMBIO', 7.70),
     ],
 
     'resend' => [

@@ -46,7 +46,53 @@ class Empresa extends Model implements HasName
 
     public function unidades(): HasMany
     {
-        return $this->hasMany(Unidad::class);
+        return $this->sinScopeDeEmpresa($this->hasMany(Unidad::class));
+    }
+
+    public function lecturasIa(): HasMany
+    {
+        return $this->sinScopeDeEmpresa($this->hasMany(LecturaIa::class));
+    }
+
+    /**
+     * Quita el filtro por empresa activa de una relación de esta empresa.
+     *
+     * La relación ya acota por empresa_id, así que el scope encima no agrega
+     * seguridad: solo hace que `$otraEmpresa->unidades` devuelva vacío cuando
+     * el contexto activo es distinto, que es exactamente lo que necesita el
+     * panel central para ver a todos los clientes.
+     */
+    protected function sinScopeDeEmpresa(HasMany $relacion): HasMany
+    {
+        return $relacion->withoutGlobalScope(\App\Models\Scopes\EmpresaScope::class);
+    }
+
+    /** ¿Este cliente contrató el módulo? */
+    public function tieneModulo(string $modulo): bool
+    {
+        return (bool) $this->plan?->permite($modulo);
+    }
+
+    public function lecturasIaDelMes(?string $periodo = null): int
+    {
+        return $this->lecturasIa()->exitosas()->delMes($periodo)->count();
+    }
+
+    public function costoIaDelMes(?string $periodo = null): float
+    {
+        return (float) $this->lecturasIa()->delMes($periodo)->sum('costo_usd');
+    }
+
+    /** Le queda cupo este mes, o el plan no tiene tope. */
+    public function puedeLeerConIa(): bool
+    {
+        if (! $this->tieneModulo('ia')) {
+            return false;
+        }
+
+        $tope = $this->plan?->max_lecturas_ia;
+
+        return $tope === null || $this->lecturasIaDelMes() < $tope;
     }
 
     public function estaSuspendida(): bool
@@ -88,16 +134,16 @@ class Empresa extends Model implements HasName
 
     public function sucursales(): HasMany
     {
-        return $this->hasMany(Sucursal::class);
+        return $this->sinScopeDeEmpresa($this->hasMany(Sucursal::class));
     }
 
     public function categoriasCosto(): HasMany
     {
-        return $this->hasMany(CategoriaCosto::class);
+        return $this->sinScopeDeEmpresa($this->hasMany(CategoriaCosto::class));
     }
 
     public function proveedores(): HasMany
     {
-        return $this->hasMany(Proveedor::class);
+        return $this->sinScopeDeEmpresa($this->hasMany(Proveedor::class));
     }
 }

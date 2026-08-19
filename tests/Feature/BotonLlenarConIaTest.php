@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\CrearEmpresa;
 use App\Filament\Resources\Unidades\Pages\CreateUnidad;
 use App\Models\Empresa;
+use App\Models\Plan;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Tenancy;
@@ -34,7 +35,15 @@ class BotonLlenarConIaTest extends TestCase
     {
         parent::setUp();
 
-        $this->empresa = (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle']);
+        // El botón es un add-on: sin el módulo contratado no existe.
+        $plan = Plan::create([
+            'nombre' => 'Con IA',
+            'slug' => 'con-ia',
+            'precio_mensual' => 1295,
+            'modulos' => ['unidades', 'ia'],
+        ]);
+
+        $this->empresa = (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle', 'plan_id' => $plan->id]);
         Tenancy::usar($this->empresa);
 
         foreach (['ViewAny:Unidad', 'View:Unidad', 'Create:Unidad', 'Update:Unidad'] as $permiso) {

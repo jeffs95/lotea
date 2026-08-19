@@ -18,6 +18,7 @@ class PlanesSeeder extends Seeder
             'max_usuarios' => 3,
             'max_unidades_activas' => 40,
             'modulos' => ['unidades', 'importacion', 'costeo', 'portal'],
+            'max_lecturas_ia' => null,
             'orden' => 10,
         ],
         [
@@ -28,7 +29,10 @@ class PlanesSeeder extends Seeder
             'max_sucursales' => 3,
             'max_usuarios' => 10,
             'max_unidades_activas' => 150,
-            'modulos' => ['unidades', 'importacion', 'costeo', 'portal', 'taller', 'ventas', 'comisiones', 'cartera'],
+            'modulos' => ['unidades', 'importacion', 'costeo', 'portal', 'taller', 'ventas', 'comisiones', 'cartera', 'ia'],
+            // Un tope generoso pero real: 200 lecturas al mes cubren de sobra
+            // a un patio de 60 carros y protegen el crédito.
+            'max_lecturas_ia' => 200,
             'orden' => 20,
         ],
         [
@@ -39,7 +43,8 @@ class PlanesSeeder extends Seeder
             'max_sucursales' => null,
             'max_usuarios' => null,
             'max_unidades_activas' => null,
-            'modulos' => ['unidades', 'importacion', 'costeo', 'portal', 'taller', 'ventas', 'comisiones', 'cartera', 'nomina', 'inversionistas', 'reportes'],
+            'modulos' => ['unidades', 'importacion', 'costeo', 'portal', 'taller', 'ventas', 'comisiones', 'cartera', 'nomina', 'inversionistas', 'reportes', 'ia'],
+            'max_lecturas_ia' => 600,
             'orden' => 30,
         ],
     ];

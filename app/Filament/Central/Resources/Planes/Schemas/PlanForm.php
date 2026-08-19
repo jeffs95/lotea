@@ -24,6 +24,7 @@ class PlanForm
         'nomina' => 'Nómina',
         'inversionistas' => 'Inversionistas',
         'reportes' => 'Reportes avanzados',
+        'ia' => 'Lectura de documentos con IA',
     ];
 
     public static function configure(Schema $schema): Schema
@@ -55,6 +56,12 @@ class PlanForm
                     TextInput::make('max_sucursales')->label('Sucursales')->numeric()->placeholder('Sin límite'),
                     TextInput::make('max_usuarios')->label('Usuarios')->numeric()->placeholder('Sin límite'),
                     TextInput::make('max_unidades_activas')->label('Unidades en inventario')->numeric()->placeholder('Sin límite'),
+
+                    TextInput::make('max_lecturas_ia')
+                        ->label('Lecturas de IA al mes')
+                        ->numeric()
+                        ->placeholder('Sin límite')
+                        ->helperText('Tope para que un cliente desbocado no te coma el crédito.'),
                 ]),
 
             Section::make('Qué incluye')

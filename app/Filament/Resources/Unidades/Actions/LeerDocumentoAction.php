@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Unidades\Actions;
 
+use App\Actions\RegistrarLecturaIa;
 use App\Actions\ResolverCatalogoVehiculo;
 use App\Services\ConversorDeDocumentos;
 use App\Services\LectorDeDocumentos;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\BasePage;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +33,10 @@ class LeerDocumentoAction
             ->modalHeading('Leer los documentos del vehículo')
             ->modalDescription('Tarjeta de circulación, título americano, hoja del lote de subasta. Podés subir varios: se leen juntos y se combinan, porque cada uno trae datos distintos del mismo carro.')
             ->modalSubmitActionLabel('Leer documentos')
-            ->visible(fn () => app(LectorDeDocumentos::class)->estaDisponible())
+            // El botón aparece si el cliente contrató el módulo, no si hay
+            // llave configurada: que falte la llave es problema del proveedor,
+            // y el cliente que paga tiene que ver lo que paga.
+            ->visible(fn () => Filament::getTenant()?->tieneModulo('ia') ?? false)
             ->schema([
                 FileUpload::make('documento')
                     ->label('Fotos o PDF de los documentos')
@@ -60,17 +65,30 @@ class LeerDocumentoAction
                     return;
                 }
 
+                if ($problema = self::motivoParaNoLeer()) {
+                    Notification::make()->title($problema)->warning()->persistent()->send();
+                    Storage::disk('local')->delete($relativas);
+
+                    return;
+                }
+
                 try {
                     $resultado = app(LectorDeDocumentos::class)->leer(
                         array_map(fn (string $ruta) => Storage::disk('local')->path($ruta), $relativas),
                     );
 
+                    app(RegistrarLecturaIa::class)->exitosa($resultado['consumo'], count($resultado['datos']));
+
                     self::volcarEnElFormulario($resultado['datos'], $livewire);
                     self::avisar($resultado);
                 } catch (RuntimeException $e) {
+                    app(RegistrarLecturaIa::class)->fallida($e->getMessage(), count($relativas));
+
                     Notification::make()->title('No se pudo leer')->body($e->getMessage())->danger()->send();
                 } catch (Throwable $e) {
                     report($e);
+
+                    app(RegistrarLecturaIa::class)->fallida($e->getMessage(), count($relativas));
 
                     Notification::make()
                         ->title('Algo falló al leer el documento')
@@ -82,6 +100,32 @@ class LeerDocumentoAction
                     Storage::disk('local')->delete($relativas);
                 }
             });
+    }
+
+    /**
+     * Por qué no se puede leer ahora mismo, si es que hay un motivo.
+     *
+     * Se distingue el cupo agotado —que es del cliente y se resuelve con un
+     * upgrade— de la llave sin configurar, que es del proveedor y no es culpa
+     * de quien está tratando de trabajar.
+     */
+    protected static function motivoParaNoLeer(): ?string
+    {
+        $empresa = Filament::getTenant();
+
+        if ($empresa && ! $empresa->puedeLeerConIa()) {
+            $tope = $empresa->plan?->max_lecturas_ia;
+
+            return $tope
+                ? "Ya usaste las {$tope} lecturas de este mes. El mes entrante se reinicia, o podés subir de plan."
+                : 'La lectura con IA no está habilitada en tu plan.';
+        }
+
+        if (! app(LectorDeDocumentos::class)->estaDisponible()) {
+            return 'El servicio de lectura no está configurado. Avisale a soporte.';
+        }
+
+        return null;
     }
 
     /**

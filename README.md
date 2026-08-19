@@ -305,15 +305,31 @@ y el odómetro) y así el modelo puede cruzarlos. Cuando dos se contradicen, se 
 más formal —tarjeta, luego título, luego hoja de subasta— y **avisa la diferencia** en lugar
 de esconderla.
 
-Para activarlo, poné tu llave de [OpenRouter](https://openrouter.ai/keys) en el `.env`:
+### Es un add-on, no una función del sistema
+
+El botón aparece **solo si el plan del cliente incluye el módulo `ia`**, no si hay llave
+configurada: que falte la llave es problema del proveedor, y el cliente que paga tiene que
+ver lo que paga. Si la llave falta, el botón está pero avisa que hay que llamar a soporte.
+
+Cada plan puede llevar un tope de lecturas al mes (`planes.max_lecturas_ia`). Al alcanzarlo,
+el botón avisa que se agotó el cupo y sugiere subir de plan. Las lecturas que fallan **no
+consumen cupo**: el cliente no pidió que fallara.
+
+Poné tu llave de [OpenRouter](https://openrouter.ai/keys) en el `.env`:
 
 ```
 OPENROUTER_API_KEY=sk-or-v1-...
 OPENROUTER_MODELO=qwen/qwen2.5-vl-72b-instruct
+OPENROUTER_PRECIO_ENTRADA=0.25
+OPENROUTER_PRECIO_SALIDA=0.75
 ```
 
-**Sin llave configurada el botón no aparece**, así que un cliente que no contrate el add-on
-no ve la función.
+### Consumo y costo
+
+Cada lectura queda registrada en `lecturas_ia` con los tokens que reportó OpenRouter y el
+costo calculado a partir de ellos — no es un estimado. En el panel central se ve el consumo
+del mes por cliente y el costo por lectura, que es lo único que hace falta para saber si el
+precio del add-on deja margen.
 
 Lo que devuelve el modelo pasa por `App\Services\ValidadorDeDatosLeidos` antes de tocar el
 formulario: un VIN que no tenga 17 caracteres válidos se descarta, un año 2045 se descarta,

@@ -82,6 +82,33 @@ class ConcesionariosTable
                 // Sin summarizer: la mensualidad es un accesor y no una
                 // columna, así que no se puede sumar en SQL. El MRR total está
                 // en el escritorio.
+                // Lo que te está costando el add-on este mes, cliente por cliente.
+                TextColumn::make('consumo_ia')
+                    ->label('IA este mes')
+                    ->alignEnd()
+                    ->state(fn (Empresa $record) => $record->tieneModulo('ia')
+                        ? $record->lecturasIaDelMes()
+                        : null)
+                    ->placeholder('sin el módulo')
+                    ->formatStateUsing(function (?int $state, Empresa $record) {
+                        if ($state === null) {
+                            return null;
+                        }
+
+                        $tope = $record->plan?->max_lecturas_ia;
+
+                        return $tope ? "{$state} / {$tope}" : (string) $state;
+                    })
+                    ->description(fn (Empresa $record) => $record->tieneModulo('ia')
+                        ? 'Q '.number_format(\App\Support\TarifaDeIa::enQuetzales($record->costoIaDelMes()), 2).' de costo'
+                        : null)
+                    ->color(function (?int $state, Empresa $record) {
+                        $tope = $record->plan?->max_lecturas_ia;
+
+                        return $tope && $state !== null && $state >= $tope * 0.9 ? 'warning' : null;
+                    })
+                    ->toggleable(),
+
                 TextColumn::make('mensualidad')
                     ->label('Mensualidad')
                     ->money('GTQ', locale: 'es_GT')

@@ -35,7 +35,7 @@ class LectorDeDocumentos
      * contradicen, que es justo lo que hay que saber.
      *
      * @param  array<int, string>|string  $rutas
-     * @return array{datos: array<string, mixed>, documentos: array<int, string>, aviso: ?string}
+     * @return array{datos: array<string, mixed>, documentos: array<int, string>, aviso: ?string, consumo: array{tokens_entrada: int, tokens_salida: int, documentos: int, modelo: string}}
      */
     public function leer(array|string $rutas): array
     {
@@ -49,11 +49,24 @@ class LectorDeDocumentos
             throw new RuntimeException('No se pudo leer ningún archivo. Probá con fotos en JPG o PNG.');
         }
 
-        return $this->interpretar($this->preguntar($imagenes));
+        [$texto, $uso] = $this->preguntar($imagenes);
+
+        return [
+            ...$this->interpretar($texto),
+            'consumo' => [
+                'tokens_entrada' => (int) ($uso['prompt_tokens'] ?? 0),
+                'tokens_salida' => (int) ($uso['completion_tokens'] ?? 0),
+                'documentos' => count($imagenes),
+                'modelo' => (string) config('services.openrouter.modelo'),
+            ],
+        ];
     }
 
-    /** @param array<int, string> $imagenes rutas de imágenes ya listas */
-    protected function preguntar(array $imagenes): string
+    /**
+     * @param  array<int, string>  $imagenes  rutas de imágenes ya listas
+     * @return array{0: string, 1: array<string, mixed>}  la respuesta y lo que consumió
+     */
+    protected function preguntar(array $imagenes): array
     {
         $contenido = [['type' => 'text', 'text' => $this->instrucciones()]];
 
@@ -101,7 +114,7 @@ class LectorDeDocumentos
             throw new RuntimeException('El servicio no devolvió nada legible.');
         }
 
-        return $texto;
+        return [$texto, $respuesta->json('usage') ?? []];
     }
 
     /** Lo que se le pide al modelo. Explícito para que no invente. */
