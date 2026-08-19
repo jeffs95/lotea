@@ -106,6 +106,11 @@ class Unidad extends Model implements HasMedia
         return $this->hasMany(Venta::class);
     }
 
+    public function ordenesTrabajo(): HasMany
+    {
+        return $this->hasMany(OrdenTrabajo::class);
+    }
+
     /** La venta que efectivamente cerró, si ya se vendió. */
     public function venta(): HasOne
     {
