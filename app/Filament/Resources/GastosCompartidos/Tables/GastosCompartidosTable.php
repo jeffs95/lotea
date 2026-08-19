@@ -5,12 +5,16 @@ namespace App\Filament\Resources\GastosCompartidos\Tables;
 use App\Models\GastoCompartido;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class GastosCompartidosTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['categoria', 'proveedor']))
             ->defaultSort('fecha', 'desc')
             ->columns([
                 TextColumn::make('fecha')->date('d/m/Y')->sortable(),

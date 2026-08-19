@@ -20,12 +20,16 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class VentasTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['cliente', 'vendedor', 'unidad.marca', 'unidad.linea']))
             ->defaultSort('fecha', 'desc')
             ->columns([
                 TextColumn::make('numero')->label('No.')->searchable()->weight('bold'),

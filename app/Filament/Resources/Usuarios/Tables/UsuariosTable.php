@@ -6,12 +6,16 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class UsuariosTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['roles']))
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->label('Nombre')->searchable()->sortable(),

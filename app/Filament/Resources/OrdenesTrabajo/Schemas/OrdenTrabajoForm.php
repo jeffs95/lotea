@@ -48,9 +48,9 @@ class OrdenTrabajoForm
                         ->label('Responsable')
                         ->options(fn () => Empleado::activos()
                             ->where('area', 'taller')
-                            ->get()
-                            ->mapWithKeys(fn (Empleado $e) => [$e->id => $e->nombre_completo])
-                            ->all())
+                            ->selectRaw("id, trim(nombres || ' ' || apellidos) as nombre")
+                            ->orderBy('nombres')
+                            ->pluck('nombre', 'id'))
                         ->searchable()
                         ->native(false),
 

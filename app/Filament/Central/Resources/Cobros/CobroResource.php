@@ -36,7 +36,7 @@ class CobroResource extends Resource
     /** Lo vencido en rojo: es la plata que ya debería estar en la cuenta. */
     public static function getNavigationBadge(): ?string
     {
-        $vencidos = Cobro::porCobrar()->whereDate('vence_en', '<', now())->count();
+        $vencidos = Cobro::porCobrar()->whereDate('vence_en', '<', today())->count();
 
         return $vencidos > 0 ? (string) $vencidos : null;
     }

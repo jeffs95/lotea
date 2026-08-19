@@ -12,12 +12,16 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class EmpleadosTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['sucursal']))
             ->defaultSort('apellidos')
             ->columns([
                 TextColumn::make('codigo')->label('Código')->badge()->color('gray')->searchable(),

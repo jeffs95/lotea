@@ -9,12 +9,16 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PlanesPagoTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['cliente', 'venta.unidad.marca', 'venta.unidad.linea', 'cuotas']))
             ->defaultSort('fecha', 'desc')
             ->columns([
                 TextColumn::make('numero')->label('No.')->weight('bold')->searchable(),

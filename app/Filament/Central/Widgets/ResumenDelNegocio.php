@@ -21,7 +21,7 @@ class ResumenDelNegocio extends StatsOverviewWidget
 
         $suspendidas = Empresa::whereNotNull('suspendida_en')->count();
 
-        $vencido = Cobro::porCobrar()->whereDate('vence_en', '<', now());
+        $vencido = Cobro::porCobrar()->whereDate('vence_en', '<', today());
         $montoVencido = (float) (clone $vencido)->sum('monto');
 
         // Sin contexto de empresa el scope no filtra, pero lo pedimos

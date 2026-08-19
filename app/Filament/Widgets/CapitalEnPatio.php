@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\EstadoUnidad;
 use App\Models\Unidad;
+use Illuminate\Support\Facades\DB;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -15,18 +16,26 @@ class CapitalEnPatio extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
 
+    /** Desde cuántos días en el patio el capital se considera dormido. */
+    public const DIAS_DE_RIESGO = 120;
+
     protected function getStats(): array
     {
         $inventario = Unidad::enInventario();
 
         $unidades = (clone $inventario)->count();
         $capital = (float) (clone $inventario)->sum('costo_total');
-        $enRiesgo = (clone $inventario)->get()->filter(fn (Unidad $u) => ($u->dias_inventario ?? 0) > 120);
 
-        $diasPromedio = (clone $inventario)->get()
-            ->map->dias_inventario
-            ->filter()
-            ->avg();
+        // Todo en SQL: antes se traía el inventario completo a memoria para
+        // filtrarlo y promediarlo, y con doscientas unidades eso se nota.
+        $enRiesgo = (clone $inventario)->whereDate('fecha_compra', '<', now()->subDays(self::DIAS_DE_RIESGO));
+
+        $unidadesEnRiesgo = (clone $enRiesgo)->count();
+        $capitalEnRiesgo = (float) (clone $enRiesgo)->sum('costo_total');
+
+        $diasPromedio = (clone $inventario)
+            ->whereNotNull('fecha_compra')
+            ->avg(DB::raw('extract(day from (coalesce(fecha_venta, now()) - fecha_compra))'));
 
         return [
             Stat::make('Capital en patio', 'Q '.number_format($capital, 2))
@@ -44,10 +53,10 @@ class CapitalEnPatio extends StatsOverviewWidget
                     default => 'success',
                 }),
 
-            Stat::make('Capital dormido', 'Q '.number_format((float) $enRiesgo->sum('costo_total'), 2))
-                ->description($enRiesgo->count().($enRiesgo->count() === 1 ? ' unidad' : ' unidades').' con más de 120 días')
+            Stat::make('Capital dormido', 'Q '.number_format($capitalEnRiesgo, 2))
+                ->description($unidadesEnRiesgo.($unidadesEnRiesgo === 1 ? ' unidad' : ' unidades').' con más de '.self::DIAS_DE_RIESGO.' días')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color($enRiesgo->isEmpty() ? 'success' : 'danger'),
+                ->color($unidadesEnRiesgo === 0 ? 'success' : 'danger'),
 
             Stat::make('En camino', (string) Unidad::whereIn('estado', self::estadosDe('importacion'))->count())
                 ->description('Unidades en tránsito o aduana')

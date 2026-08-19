@@ -48,10 +48,15 @@ class Cobro extends Model
         return in_array($this->estado, ['pagado', 'condonado'], true);
     }
 
-    /** Vencido de verdad: no pagado y con la fecha ya pasada. */
+    /**
+     * Vencido de verdad: no pagado y con la fecha ya pasada.
+     *
+     * El día del vencimiento todavía no cuenta: el cliente tiene ese día
+     * completo para pagar.
+     */
     public function estaVencido(): bool
     {
-        return ! $this->estaPagado() && $this->vence_en->isPast();
+        return ! $this->estaPagado() && $this->vence_en->isBefore(today());
     }
 
     public function getDiasDeMoraAttribute(): int

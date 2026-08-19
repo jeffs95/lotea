@@ -54,18 +54,23 @@ class PlanPago extends Model
         return $this->hasMany(Cuota::class)->orderBy('numero');
     }
 
-    /** Lo que falta por cobrar: capital e intereses de lo no pagado. */
+    /**
+     * Lo que falta por cobrar: capital e intereses de lo no pagado.
+     *
+     * Se calcula sobre la relación y no con sum() en la base, para que una
+     * tabla que ya precargó las cuotas no vuelva a consultarlas por fila.
+     */
     public function getSaldoAttribute(): string
     {
-        $total = (string) $this->cuotas()->sum('total');
-        $pagado = (string) $this->cuotas()->sum('pagado');
+        $total = (string) $this->cuotas->sum('total');
+        $pagado = (string) $this->cuotas->sum('pagado');
 
         return bcsub($total, $pagado, 2);
     }
 
     public function getSaldoCapitalAttribute(): string
     {
-        $pendientes = $this->cuotas()->where('estado', '!=', 'pagada')->get();
+        $pendientes = $this->cuotas->where('estado', '!=', 'pagada');
 
         return (string) $pendientes->reduce(
             fn ($acc, Cuota $c) => bcadd($acc, bcsub((string) $c->capital, (string) $c->capitalCubierto(), 2), 2),
@@ -76,10 +81,9 @@ class PlanPago extends Model
     /** @return \Illuminate\Support\Collection<int, Cuota> */
     public function cuotasVencidas()
     {
-        return $this->cuotas()
-            ->where('estado', '!=', 'pagada')
-            ->whereDate('vence_en', '<', now())
-            ->get();
+        return $this->cuotas
+            ->filter(fn (Cuota $cuota) => $cuota->estaVencida())
+            ->values();
     }
 
     public function estaEnMora(): bool
@@ -96,7 +100,7 @@ class PlanPago extends Model
 
     public function getCuotasPagadasAttribute(): int
     {
-        return $this->cuotas()->where('estado', 'pagada')->count();
+        return $this->cuotas->where('estado', 'pagada')->count();
     }
 
     public function estaCancelado(): bool

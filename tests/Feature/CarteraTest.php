@@ -193,6 +193,30 @@ class CarteraTest extends TestCase
         $this->assertEqualsWithDelta($esperado, (float) $cuota->moraAlDia(), 1);
     }
 
+    /**
+     * La que vence hoy no está vencida: el cliente tiene el día completo.
+     *
+     * Marcarla en mora desde la medianoche es cobrarle un día que no debe.
+     */
+    public function test_la_cuota_que_vence_hoy_todavia_no_esta_vencida(): void
+    {
+        $plan = $this->financiar(['primera_cuota' => today()->toDateString(), 'tasa_mora_anual' => 36.5]);
+        $cuota = $plan->cuotas()->first();
+
+        $this->assertFalse($cuota->estaVencida());
+        $this->assertSame(0, $cuota->dias_de_atraso);
+        $this->assertEquals(0, $cuota->moraAlDia());
+        $this->assertFalse($plan->estaEnMora());
+    }
+
+    public function test_la_de_ayer_si_esta_vencida(): void
+    {
+        $plan = $this->financiar(['primera_cuota' => today()->subDay()->toDateString(), 'tasa_mora_anual' => 36.5]);
+
+        $this->assertTrue($plan->cuotas()->first()->estaVencida());
+        $this->assertTrue($plan->estaEnMora());
+    }
+
     public function test_una_cuota_al_dia_no_tiene_mora(): void
     {
         $plan = $this->financiar(['primera_cuota' => now()->addMonth()->toDateString(), 'tasa_mora_anual' => 36.5]);

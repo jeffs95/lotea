@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Unidades\RelationManagers;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * El historial de la unidad. Solo lectura: se escribe desde la acción de
@@ -19,6 +20,9 @@ class TransicionesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['usuario']))
             ->defaultSort('ocurrio_en', 'desc')
             ->columns([
                 TextColumn::make('ocurrio_en')->label('Fecha')->dateTime('d/m/Y H:i')->sortable(),

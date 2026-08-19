@@ -62,9 +62,15 @@ class Cuota extends Model
         return bccomp($sobrante, '0.00', 2) > 0 ? $sobrante : '0.00';
     }
 
+    /**
+     * Vencida es la que se pasó de fecha, no la que vence hoy.
+     *
+     * El cliente tiene todo el día del vencimiento para pagar: marcarla en
+     * mora desde la medianoche es cobrarle mora por un día que no debe.
+     */
     public function estaVencida(): bool
     {
-        return ! $this->estaPagada() && $this->vence_en->isPast();
+        return ! $this->estaPagada() && $this->vence_en->isBefore(today());
     }
 
     public function getDiasDeAtrasoAttribute(): int
@@ -90,7 +96,7 @@ class Cuota extends Model
 
     public function scopeVencidas(Builder $query): Builder
     {
-        return $query->where('estado', '!=', 'pagada')->whereDate('vence_en', '<', now());
+        return $query->where('estado', '!=', 'pagada')->whereDate('vence_en', '<', today());
     }
 
     public function scopePendientes(Builder $query): Builder

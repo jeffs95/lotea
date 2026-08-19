@@ -12,12 +12,16 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TicketsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['usuario', 'empresa']))
             ->defaultSort('created_at', 'asc')   // lo más viejo primero: es lo que más arde
             ->emptyStateHeading('Bandeja vacía')
             ->emptyStateDescription('Ningún cliente reportó problemas.')

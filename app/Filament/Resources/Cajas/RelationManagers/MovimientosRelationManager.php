@@ -12,6 +12,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /** El estado de cuenta de la caja. Solo lectura: se registra con las acciones. */
 class MovimientosRelationManager extends RelationManager
@@ -23,6 +24,9 @@ class MovimientosRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['contraparte']))
             ->defaultSort('fecha', 'desc')
             ->columns([
                 TextColumn::make('fecha')->date('d/m/Y')->sortable(),

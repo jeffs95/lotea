@@ -21,6 +21,7 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /** El trabajo de la orden: horas, repuestos y lo que se mandó afuera. */
 class LineasRelationManager extends RelationManager
@@ -49,7 +50,10 @@ class LineasRelationManager extends RelationManager
 
             Select::make('empleado_id')
                 ->label('Mecánico')
-                ->options(fn () => Empleado::mecanicos()->get()->mapWithKeys(fn (Empleado $e) => [$e->id => $e->nombre_completo])->all())
+                ->options(fn () => Empleado::mecanicos()
+                    ->selectRaw("id, trim(nombres || ' ' || apellidos) as nombre")
+                    ->orderBy('nombres')
+                    ->pluck('nombre', 'id'))
                 ->searchable()
                 ->native(false)
                 ->live()
@@ -95,6 +99,9 @@ class LineasRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['empleado', 'proveedor']))
             ->recordTitleAttribute('descripcion')
             ->defaultGroup('tipo')
             ->columns([

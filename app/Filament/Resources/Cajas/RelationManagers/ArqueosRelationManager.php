@@ -6,6 +6,7 @@ use App\Models\Arqueo;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ArqueosRelationManager extends RelationManager
 {
@@ -16,6 +17,9 @@ class ArqueosRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            // Precarga: sin esto cada fila dispara una consulta por
+            // relación, y con doscientas filas son cientos de consultas.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['usuario']))
             ->columns([
                 TextColumn::make('realizado_en')->label('Fecha')->dateTime('d/m/Y H:i'),
                 TextColumn::make('saldo_sistema')->label('Sistema')->money('GTQ', locale: 'es_GT')->alignEnd(),
