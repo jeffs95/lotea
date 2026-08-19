@@ -9,10 +9,12 @@
         "php": "^8.3",
         "bezhansalleh/filament-shield": "^4.3",
         "filament/filament": "^5.7",
+        "filament/spatie-laravel-media-library-plugin": "^5.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "laraveles/spanish": "^1.5",
         "spatie/laravel-activitylog": "^4.12",
+        "spatie/laravel-medialibrary": "^11.23",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {

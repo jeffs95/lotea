@@ -4,16 +4,16 @@ namespace Database\Seeders;
 
 use App\Actions\CrearEmpresa;
 use App\Models\Empresa;
+use App\Models\Unidad;
 use App\Models\User;
 use App\Support\Tenancy;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(CatalogosSeeder::class);
+        $this->call([CatalogosSeeder::class, PermisosPropiosSeeder::class]);
 
         $empresa = Empresa::firstWhere('slug', 'autos-del-valle') ?? (new CrearEmpresa)->ejecutar([
             'nombre' => 'Autos del Valle, S.A.',
@@ -32,9 +32,12 @@ class DatabaseSeeder extends Seeder
 
         $dueno->empresas()->syncWithoutDetaching([$empresa->id]);
 
-        Tenancy::comoEmpresa($empresa, function () use ($dueno, $empresa) {
-            app(PermissionRegistrar::class)->setPermissionsTeamId($empresa->id);
+        Tenancy::comoEmpresa($empresa, function () use ($dueno) {
             $dueno->assignRole('dueno');
+
+            if (Unidad::count() === 0) {
+                $this->call(UnidadesDemoSeeder::class);
+            }
         });
     }
 }

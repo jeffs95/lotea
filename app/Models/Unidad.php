@@ -9,10 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Unidad extends Model
+class Unidad extends Model implements HasMedia
 {
-    use HasFactory, PerteneceAEmpresa, SoftDeletes;
+    use HasFactory, InteractsWithMedia, PerteneceAEmpresa, SoftDeletes;
 
     protected $table = 'unidades';
 
@@ -35,6 +38,41 @@ class Unidad extends Model
             'destacado' => 'boolean',
             'tiene_llaves' => 'boolean',
         ];
+    }
+
+    /**
+     * Tres colecciones distintas a propósito.
+     *
+     * Las fotos de subasta son la prueba de cómo venía el carro: cuando llega
+     * al patio con un daño que no estaba en el anuncio, esa comparación es la
+     * diferencia entre reclamar y comerse la pérdida.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('fotos_subasta');
+        $this->addMediaCollection('fotos');
+        $this->addMediaCollection('documentos');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('miniatura')
+            ->width(320)
+            ->height(240)
+            ->format('webp')
+            ->nonQueued();
+
+        // 30 fotos por carro × 40 carros × N clientes: el peso del almacenamiento
+        // es un costo real del negocio, no un detalle técnico.
+        $this->addMediaConversion('web')
+            ->width(1400)
+            ->format('webp')
+            ->performOnCollections('fotos', 'fotos_subasta');
+    }
+
+    public function getFotoPrincipalAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('fotos', 'miniatura') ?: null;
     }
 
     public function sucursal(): BelongsTo

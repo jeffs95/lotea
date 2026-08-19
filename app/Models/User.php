@@ -47,7 +47,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->activo;
+        return (bool) $this->activo;
     }
 
     /** Empresas entre las que puede cambiar con el selector del panel. */
