@@ -68,8 +68,16 @@ return [
     |
     */
 
+    /*
+     * Desactivado a propósito.
+     *
+     * Un rol con todos los permisos y sin empresa ve los datos de todos los
+     * concesionarios a la vez. El acceso de Lotea al panel central ya se
+     * resuelve con users.es_operador, que no depende de roles y por lo tanto
+     * ningún cliente puede otorgárselo a sí mismo desde su pantalla de Roles.
+     */
     'super_admin' => [
-        'enabled' => true,
+        'enabled' => false,
         'name' => 'super_admin',
         'define_via_gate' => false,
         'intercept_gate' => 'before',
@@ -86,8 +94,12 @@ return [
     |
     */
 
+    /*
+     * También desactivado: los roles del concesionario los crea CrearEmpresa
+     * con los diez del negocio, y un rol suelto sin empresa solo confunde.
+     */
     'panel_user' => [
-        'enabled' => true,
+        'enabled' => false,
         'name' => 'panel_user',
     ],
 

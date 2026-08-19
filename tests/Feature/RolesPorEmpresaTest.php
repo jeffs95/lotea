@@ -32,6 +32,22 @@ class RolesPorEmpresaTest extends TestCase
         $this->assertSame(0, Role::whereNull('empresa_id')->count());
     }
 
+    /**
+     * Ningún rol puede existir sin empresa.
+     *
+     * Un rol global con todos los permisos ve los datos de todos los
+     * concesionarios; Shield creaba dos así (super_admin y panel_user) y
+     * quedaron desactivados en su config.
+     */
+    public function test_no_existe_ningun_rol_global(): void
+    {
+        (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle']);
+
+        $this->assertSame(0, Role::whereNull('empresa_id')->count());
+        $this->assertFalse(config('filament-shield.super_admin.enabled'));
+        $this->assertFalse(config('filament-shield.panel_user.enabled'));
+    }
+
     public function test_un_rol_en_una_empresa_no_da_permisos_en_la_otra(): void
     {
         $accion = new CrearEmpresa;
