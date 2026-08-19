@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\AnularCosto;
 use App\Actions\CrearEmpresa;
+use App\Actions\ProrratearGasto;
 use App\Actions\RegistrarCosto;
 use App\Actions\RegistrarGastoCompartido;
 use App\Models\CategoriaCosto;
@@ -211,6 +212,56 @@ class CosteoDeUnidadTest extends TestCase
         // 75% y 25% del flete, sobre 75,000 y 25,000 de costo previo.
         $this->assertEquals(81000, $this->unidad->fresh()->costo_total);
         $this->assertEquals(27000, $barata->fresh()->costo_total);
+    }
+
+    /**
+     * Si el flete llegó más caro de lo que decía la cotización, se vuelve a
+     * repartir. Las porciones viejas son un cálculo derivado, no un hecho:
+     * tienen que irse, no sumarse encima.
+     */
+    public function test_volver_a_repartir_reemplaza_el_reparto_anterior(): void
+    {
+        $unidades = collect([$this->unidad])->concat(Unidad::factory()->count(1)->create());
+
+        $gasto = app(RegistrarGastoCompartido::class)->ejecutar([
+            'categoria_costo_id' => $this->categoria('flete_maritimo')->id,
+            'descripcion' => 'Flete contenedor',
+            'monto' => 2000,
+        ], $unidades);
+
+        app(ProrratearGasto::class)->ejecutar($gasto, $unidades);
+
+        $this->assertSame(2, $gasto->porciones()->count());
+        $this->assertEquals(2000, $gasto->porciones()->sum('monto_base'));
+        $this->assertEquals(1000, $this->unidad->fresh()->costo_total);
+    }
+
+    public function test_repartir_por_valor_sin_costos_previos_reparte_parejo(): void
+    {
+        $otra = Unidad::factory()->create();
+
+        app(RegistrarGastoCompartido::class)->ejecutar([
+            'categoria_costo_id' => $this->categoria('flete_maritimo')->id,
+            'descripcion' => 'Flete de dos carros recién comprados',
+            'monto' => 3000,
+            'criterio' => 'por_valor',
+        ], [$this->unidad, $otra]);
+
+        $this->assertEquals(1500, $this->unidad->fresh()->costo_total);
+        $this->assertEquals(1500, $otra->fresh()->costo_total);
+    }
+
+    public function test_no_se_puede_repartir_un_gasto_entre_cero_unidades(): void
+    {
+        $gasto = app(RegistrarGastoCompartido::class)->ejecutar([
+            'categoria_costo_id' => $this->categoria('flete_maritimo')->id,
+            'descripcion' => 'Flete sin asignar',
+            'monto' => 2000,
+        ], [$this->unidad]);
+
+        $this->expectException(DomainException::class);
+
+        app(ProrratearGasto::class)->ejecutar($gasto, []);
     }
 
     public function test_los_costos_de_una_empresa_no_se_ven_desde_otra(): void

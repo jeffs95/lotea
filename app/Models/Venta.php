@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Venta extends Model
 {
@@ -92,6 +93,21 @@ class Venta extends Model
     public function planPago(): HasOne
     {
         return $this->hasOne(PlanPago::class);
+    }
+
+    /**
+     * Lo que el cliente ya entregó por este carro: enganche, abonos, el pago
+     * completo. Es la contraparte del enlace que deja CobrarVentaEnCaja.
+     */
+    public function movimientosCaja(): MorphMany
+    {
+        return $this->morphMany(MovimientoCaja::class, 'origen');
+    }
+
+    /** Suma de los cobros vigentes, en quetzales. */
+    public function getCobradoAttribute(): string
+    {
+        return (string) $this->movimientosCaja()->vigentes()->sum('monto_base');
     }
 
     public function esACreditoPropio(): bool
