@@ -6,6 +6,7 @@ use App\Models\Concerns\EsCatalogoCompartido;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Linea extends Model
 {
@@ -23,5 +24,10 @@ class Linea extends Model
     public function marca(): BelongsTo
     {
         return $this->belongsTo(Marca::class);
+    }
+
+    public function unidades(): HasMany
+    {
+        return $this->hasMany(Unidad::class);
     }
 }

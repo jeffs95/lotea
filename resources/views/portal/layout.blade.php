@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>@yield('titulo', $empresa->nombre_comercial ?? $empresa->nombre)</title>
+    <meta name="description" content="@yield('descripcion', 'Vehículos de importación con garantía en ' . ($empresa->nombre_comercial ?? $empresa->nombre) . '.')">
+
+    {{-- Que se vea bien cuando lo comparten por WhatsApp, que es como circula todo aquí --}}
+    <meta property="og:type" content="@yield('og_tipo', 'website')">
+    <meta property="og:title" content="@yield('titulo', $empresa->nombre_comercial ?? $empresa->nombre)">
+    <meta property="og:description" content="@yield('descripcion', 'Vehículos de importación con garantía.')">
+    <meta property="og:image" content="@yield('og_imagen', '')">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta name="twitter:card" content="summary_large_image">
+
+    @yield('schema')
+
+    @vite(['resources/css/app.css'])
+
+    <style>:root { --acento: {{ $empresa->color_primario ?: '#f59e0b' }}; }</style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans text-gray-900 antialiased">
+
+    <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+            <a href="{{ \App\Support\PortalUrl::inicio($empresa) }}" class="flex items-center gap-2">
+                @if ($empresa->logo_path)
+                    <img src="{{ asset('storage/' . $empresa->logo_path) }}" alt="{{ $empresa->nombre }}" class="h-9 w-auto">
+                @else
+                    <span class="grid h-9 w-9 place-items-center rounded-lg text-sm font-bold text-white" style="background: var(--acento)">
+                        {{ \Illuminate\Support\Str::of($empresa->nombre_comercial ?? $empresa->nombre)->substr(0, 2)->upper() }}
+                    </span>
+                @endif
+                <span class="text-lg font-bold tracking-tight">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</span>
+            </a>
+
+            <nav class="flex items-center gap-4 text-sm">
+                <a href="{{ \App\Support\PortalUrl::catalogo($empresa) }}" class="font-medium text-gray-600 hover:text-gray-900">
+                    Vehículos
+                </a>
+                @if ($empresa->telefono)
+                    <a href="tel:{{ $empresa->telefono }}" class="hidden font-medium text-gray-600 hover:text-gray-900 sm:block">
+                        {{ $empresa->telefono }}
+                    </a>
+                @endif
+                <a
+                    href="https://wa.me/502{{ preg_replace('/\D/', '', $empresa->telefono ?? '') }}"
+                    target="_blank" rel="noopener"
+                    class="rounded-lg px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                    style="background: var(--acento)"
+                >WhatsApp</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        @yield('contenido')
+    </main>
+
+    <footer class="mt-16 border-t border-gray-200 bg-white">
+        <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
+            <div>
+                <p class="text-base font-bold">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</p>
+                @if ($empresa->direccion)
+                    <p class="mt-2 text-sm text-gray-600">{{ $empresa->direccion }}</p>
+                @endif
+            </div>
+
+            <div class="text-sm text-gray-600">
+                <p class="font-semibold text-gray-900">Contacto</p>
+                @if ($empresa->telefono)<p class="mt-2">{{ $empresa->telefono }}</p>@endif
+                @if ($empresa->email)<p>{{ $empresa->email }}</p>@endif
+            </div>
+
+            <div class="text-sm text-gray-600">
+                <p class="font-semibold text-gray-900">Sucursales</p>
+                @foreach ($empresa->sucursales()->where('activa', true)->get() as $sucursal)
+                    <p class="mt-2">{{ $sucursal->nombre }}</p>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="border-t border-gray-100 py-4 text-center text-xs text-gray-400">
+            © {{ date('Y') }} {{ $empresa->nombre }} · Hecho con Lotea
+        </div>
+    </footer>
+</body>
+</html>

@@ -71,7 +71,10 @@ class UnidadesDemoSeeder extends Seeder
                 // El costo real lo calcula CostosDemoSeeder a partir de los
                 // gastos; aquí solo se siembra el presupuesto del comprador.
                 'costo_presupuestado' => round($precio * 0.66, 2),
-                'publicado' => in_array($estado, [EstadoUnidad::Publicada, EstadoUnidad::Reservada], true),
+                // Se publica todo lo que ya se puede vender, incluidas las que
+                // vienen en camino: la preventa es la que recorta los días de
+                // inventario.
+                'publicado' => $estado->admitePreventa(),
                 'slug' => Str::slug("{$marca} {$linea} {$anio} stock ".($i + 1)),
             ]);
 

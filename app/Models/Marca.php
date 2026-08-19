@@ -22,4 +22,9 @@ class Marca extends Model
     {
         return $this->hasMany(Linea::class);
     }
+
+    public function unidades(): HasMany
+    {
+        return $this->hasMany(Unidad::class);
+    }
 }

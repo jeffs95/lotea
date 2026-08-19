@@ -96,10 +96,30 @@ La ficha de rentabilidad (`/unidades/{id}/rentabilidad`) es el estado de resulta
 solo carro, y está detrás del permiso `ver_costos_unidad`: el vendedor que conoce el costo
 negocia contra su propio patrón.
 
+## El portal público
+
+Cada concesionario tiene su propio sitio, servido desde el mismo Laravel:
+
+- **En producción** se resuelve por el dominio del cliente (`empresas.dominio`).
+- **En desarrollo**, o mientras no compran dominio, por `/v/{slug}`.
+
+Las dos formas pasan por `ResolverEmpresaDelPortal`, que fija la empresa activa antes de
+tocar un registro. Los enlaces se generan con `App\Support\PortalUrl`, que sabe cuál de las
+dos usar.
+
+El catálogo muestra solo unidades publicadas, incluidas las que vienen en camino: la
+preventa se habilita desde `EMBARCADA` y sale marcada como **Próximamente**.
+
+Cada ficha lleva `schema.org/Car`, Open Graph para que se vea bien al compartir por
+WhatsApp, calculadora de cuota y un botón de WhatsApp con el mensaje ya escrito y el número
+de stock adentro. Los formularios caen en `leads` con el cronómetro de primera respuesta
+corriendo.
+
 ## Estado
 
-Fases 1, 2 y 3 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida,
-el tablero del patio, y el costeo con multimoneda, prorrateo y presupuestado vs real.
+Fases 1 a 5 terminadas: fundación y tenancy, catálogos, la unidad con su ciclo de vida, el
+tablero del patio, el costeo con multimoneda y prorrateo, y el portal público con CRM de
+prospectos.
 
-Lo siguiente es el **portal público**: catálogo con filtros, ficha de vehículo con galería
-y leads que caen en el CRM.
+Falta de la v1: ventas y comisiones, taller con órdenes de trabajo, y cartera de crédito
+propio.
