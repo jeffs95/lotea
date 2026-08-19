@@ -15,8 +15,8 @@ use Illuminate\Auth\Access\HandlesAuthorization;
  * tarde y por WhatsApp. Cualquiera abre un reporte; cada quien ve solo los
  * suyos, y los operadores de Lotea ven todos.
  *
- * OJO: `php artisan shield:generate` sobreescribe las policies. Si volvés a
- * correrlo, revisá que este archivo siga como está.
+ * TicketResource está excluido de Shield en config/filament-shield.php para
+ * que `shield:generate` no vuelva a pisar este archivo.
  */
 class TicketPolicy
 {
