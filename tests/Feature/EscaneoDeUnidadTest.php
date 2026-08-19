@@ -36,9 +36,8 @@ class EscaneoDeUnidadTest extends TestCase
 
         Tenancy::usar($this->empresa);
 
-        $this->unidad = Unidad::factory()->create([
+        $this->unidad = Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'slug' => 'toyota-rav4-2019-stock-1',
         ]);
     }

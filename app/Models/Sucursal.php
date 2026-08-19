@@ -22,4 +22,9 @@ class Sucursal extends Model
             'activa' => 'boolean',
         ];
     }
+
+    public function scopeActivas(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('activa', true);
+    }
 }

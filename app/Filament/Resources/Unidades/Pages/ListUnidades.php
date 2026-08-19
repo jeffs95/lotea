@@ -43,6 +43,12 @@ class ListUnidades extends ListRecords
             'cerradas' => Tab::make('Vendidas')
                 ->modifyQueryUsing(fn ($query) => $query->whereIn('estado', self::estadosDe('cerrada'))),
 
+            // Lo que quedó a medias en el levantamiento: el trabajo pendiente.
+            'incompletas' => Tab::make('Por completar')
+                ->modifyQueryUsing(fn ($query) => $query->enInventario()->incompletas())
+                ->badge(fn () => Unidad::enInventario()->incompletas()->count())
+                ->badgeColor('warning'),
+
             'todas' => Tab::make('Todas'),
         ];
     }

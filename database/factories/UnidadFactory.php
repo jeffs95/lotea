@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\EstadoUnidad;
+use App\Models\Unidad;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UnidadFactory extends Factory
 {
-    protected $model = \App\Models\Unidad::class;
+    protected $model = Unidad::class;
 
     public function definition(): array
     {
@@ -22,5 +23,47 @@ class UnidadFactory extends Factory
             'estado_desde' => now(),
             'fecha_compra' => now()->subDays(fake()->numberBetween(1, 120)),
         ];
+    }
+
+    /**
+     * Unidad lista para el portal: con precio y con una foto de verdad.
+     *
+     * El modelo despublica sola a la que no cumpla, así que pedirle a la
+     * factory `'publicado' => true` a secas devolvería una unidad no publicada
+     * y el test mentiría. Este state hace el trabajo completo.
+     */
+    public function publicada(): static
+    {
+        return $this
+            ->state(fn () => [
+                'estado' => EstadoUnidad::Publicada,
+                'precio_lista' => fake()->numberBetween(80, 200) * 1000,
+            ])
+            ->afterCreating(function (Unidad $unidad) {
+                $unidad->addMediaFromString($this->imagenMinima())
+                    ->usingFileName('foto-'.$unidad->id.'.png')
+                    ->toMediaCollection('fotos');
+
+                $unidad->refresh()->update(['publicado' => true]);
+            });
+    }
+
+    /**
+     * Una imagen chica pero real.
+     *
+     * Un PNG de 1x1 no sirve: medialibrary genera sus conversiones y no puede
+     * redimensionar algo de ese tamaño.
+     */
+    protected function imagenMinima(): string
+    {
+        $imagen = imagecreatetruecolor(160, 120);
+        imagefill($imagen, 0, 0, imagecolorallocate($imagen, 210, 210, 215));
+
+        ob_start();
+        imagepng($imagen);
+        $binario = ob_get_clean();
+        imagedestroy($imagen);
+
+        return $binario;
     }
 }

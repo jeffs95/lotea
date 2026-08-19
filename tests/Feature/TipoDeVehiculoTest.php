@@ -165,10 +165,9 @@ class TipoDeVehiculoTest extends TestCase
 
     public function test_el_portal_muestra_la_ficha_de_la_moto_sin_puertas(): void
     {
-        $moto = Unidad::factory()->create([
+        $moto = Unidad::factory()->publicada()->create([
             'tipo_vehiculo' => TipoVehiculo::Motocicleta,
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'slug' => 'honda-cb190r-2022',
             'cilindrada_cc' => 184,
             'carroceria' => 'naked',
@@ -186,18 +185,16 @@ class TipoDeVehiculoTest extends TestCase
 
     public function test_el_catalogo_se_puede_filtrar_por_tipo(): void
     {
-        Unidad::factory()->create([
+        Unidad::factory()->publicada()->create([
             'tipo_vehiculo' => TipoVehiculo::Motocicleta,
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'stock_no' => 'MOTO-1',
             'slug' => 'una-moto',
         ]);
 
-        Unidad::factory()->create([
+        Unidad::factory()->publicada()->create([
             'tipo_vehiculo' => TipoVehiculo::Automovil,
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'stock_no' => 'AUTO-1',
             'slug' => 'un-auto',
         ]);

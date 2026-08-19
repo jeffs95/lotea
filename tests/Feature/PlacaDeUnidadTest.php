@@ -100,9 +100,8 @@ class PlacaDeUnidadTest extends TestCase
     /** El dato del dueño anterior no tiene por qué salir en el escaparate. */
     public function test_la_placa_no_se_publica_en_el_portal(): void
     {
-        $unidad = Unidad::factory()->create([
+        $unidad = Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'slug' => 'con-placa',
             'placa' => 'P987ZZZ',
         ]);

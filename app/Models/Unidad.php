@@ -56,6 +56,14 @@ class Unidad extends Model implements HasMedia
         static::creating(function (Unidad $unidad) {
             $unidad->codigo_qr ??= \App\Support\CodigoDeUnidad::generar();
         });
+
+        // Vale para cualquier camino —formulario, importación, un script— y no
+        // solo para la pantalla que lo pide.
+        static::saving(function (Unidad $unidad) {
+            if ($unidad->publicado && ! $unidad->puedePublicarse()) {
+                $unidad->publicado = false;
+            }
+        });
     }
 
     /**
@@ -184,6 +192,72 @@ class Unidad extends Model implements HasMedia
         return bcsub((string) $this->precio_para_margen, (string) $this->costo_total, 2);
     }
 
+    /**
+     * Lo que le falta a la ficha para estar cerrada.
+     *
+     * En un levantamiento de inventario se captura lo que se puede y se
+     * completa después; esta lista es la que guía ese trabajo pendiente.
+     *
+     * @return array<int, string>
+     */
+    public function loQueFalta(): array
+    {
+        $falta = [];
+
+        if (blank($this->vin)) {
+            $falta[] = 'VIN';
+        }
+
+        if (blank($this->anio)) {
+            $falta[] = 'año';
+        }
+
+        if (blank($this->marca_id)) {
+            $falta[] = 'marca';
+        }
+
+        if (blank($this->precio_lista)) {
+            $falta[] = 'precio';
+        }
+
+        if (! $this->tieneAlgunaFoto()) {
+            $falta[] = 'fotos';
+        }
+
+        return $falta;
+    }
+
+    public function estaCompleta(): bool
+    {
+        return $this->loQueFalta() === [];
+    }
+
+    /**
+     * Publicar un carro sin foto ni precio le hace daño a la imagen del
+     * concesionario: el cliente entra a la ficha y no encuentra lo único que
+     * fue a buscar.
+     */
+    public function puedePublicarse(): bool
+    {
+        return filled($this->precio_lista) && $this->tieneAlgunaFoto();
+    }
+
+    /**
+     * Las de subasta cuentan: un carro en preventa todavía no tiene fotos del
+     * patio y publicarlo con las del anuncio es mejor que sin ninguna.
+     */
+    public function tieneAlgunaFoto(): bool
+    {
+        return $this->getMedia('fotos')->isNotEmpty()
+            || $this->getMedia('fotos_subasta')->isNotEmpty();
+    }
+
+    /** @return array<int, string> */
+    public function loQueFaltaParaPublicar(): array
+    {
+        return array_values(array_intersect($this->loQueFalta(), ['precio', 'fotos']));
+    }
+
     public function tienePlaca(): bool
     {
         return filled($this->placa);
@@ -192,6 +266,22 @@ class Unidad extends Model implements HasMedia
     public function esMoto(): bool
     {
         return $this->tipo_vehiculo === \App\Enums\TipoVehiculo::Motocicleta;
+    }
+
+    /**
+     * Fichas a medio llenar.
+     *
+     * Se filtra en SQL lo que se puede (VIN, año, marca, precio) y las fotos
+     * se revisan con una subconsulta a media, para no traer todo a memoria.
+     */
+    public function scopeIncompletas($query)
+    {
+        return $query->where(fn ($q) => $q
+            ->whereNull('vin')
+            ->orWhereNull('anio')
+            ->orWhereNull('marca_id')
+            ->orWhereNull('precio_lista')
+            ->orWhereDoesntHave('media', fn ($m) => $m->whereIn('collection_name', ['fotos', 'fotos_subasta'])));
     }
 
     public function scopeEnInventario($query)

@@ -38,9 +38,8 @@ class VentaDeUnidadTest extends TestCase
 
         Tenancy::usar((new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle']));
 
-        $this->unidad = Unidad::factory()->create([
+        $this->unidad = Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'precio_lista' => 148000,
         ]);
 

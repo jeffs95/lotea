@@ -71,9 +71,8 @@ class CicloDeVidaDeLaUnidadTest extends TestCase
 
     public function test_al_venderse_deja_de_estar_publicada(): void
     {
-        $unidad = Unidad::factory()->create([
+        $unidad = Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
         ]);
 
         (new CambiarEstadoUnidad)->ejecutar($unidad, EstadoUnidad::Vendida);

@@ -195,6 +195,33 @@ duplicarlo. Anular la orden le devuelve ese costo a la unidad.
 caja, la mora se calcula al día (no se guarda, porque cambia cada día) y al cobrar la última
 cuota el crédito se cancela solo.
 
+## Levantar el inventario de un patio
+
+Un concesionario que empieza a usar Lotea normalmente **no tiene ningún control digital**: los
+carros están en el patio, los precios en la cabeza del dueño y las conversaciones en WhatsApp.
+No hay Excel que importar. Así que el sistema es la herramienta que hace el levantamiento.
+
+**Levantar inventario** (`/app/{empresa}/levantamiento`) es una pantalla pensada para el
+celular, para usarla caminando el patio: se elige el patio una vez, y por cada carro se lee su
+documento con IA, se confirma, se pone el precio, se toman las fotos y se guarda con un botón
+grande que deja el formulario listo para el siguiente. Un carro por minuto y medio contra los
+cinco o seis del alta de escritorio.
+
+Lo que se captura entra directo como **Lista** y publicado, porque son carros que ya están en
+venta. Al terminar, la pantalla ofrece imprimir las etiquetas QR de todo lo capturado, así el
+patio queda indexado el mismo día.
+
+### Fichas incompletas
+
+El VIN y el año son opcionales: en un recorrido vas a encontrar carros sin documentos a la
+vista y detenerse por eso es lo que hace que nadie termine de cargar su inventario. La unidad
+nace con lo que haya y queda listada en la pestaña **Por completar**, que dice exactamente qué
+le falta a cada una.
+
+Lo que **no** es negociable para publicar es el precio y al menos una foto — las de subasta
+cuentan, para poder publicar preventas. El modelo despublica sola cualquier unidad que no
+cumpla, por cualquier vía que se intente.
+
 ## Se puede registrar en cualquier punto del ciclo
 
 No todos los concesionarios registran el carro cuando lo compran en subasta: hay quien lo

@@ -36,9 +36,8 @@ class PortalPublicoTest extends TestCase
 
     protected function publicar(array $atributos = []): Unidad
     {
-        return Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->create([
+        return Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
-            'publicado' => true,
             'precio_lista' => 148000,
             'slug' => 'toyota-rav4-2019-stock-1',
             ...$atributos,
@@ -81,9 +80,8 @@ class PortalPublicoTest extends TestCase
 
         $otra = (new CrearEmpresa)->ejecutar(['nombre' => 'Importadora Zona 11']);
 
-        Tenancy::comoEmpresa($otra, fn () => Unidad::factory()->create([
+        Tenancy::comoEmpresa($otra, fn () => Unidad::factory()->publicada()->create([
             'stock_no' => 'AJENA-9',
-            'publicado' => true,
             'estado' => EstadoUnidad::Publicada,
         ]));
 

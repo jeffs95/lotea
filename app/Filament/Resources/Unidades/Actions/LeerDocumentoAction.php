@@ -8,7 +8,7 @@ use App\Services\LectorDeDocumentos;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\Page;
+use Filament\Pages\BasePage;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
@@ -49,8 +49,9 @@ class LeerDocumentoAction
             ])
             // $livewire y no el utilitario `set`: esta acción vive en el
             // encabezado de la página, donde no hay componente de formulario
-            // desde el cual construirlo.
-            ->action(function (array $data, Page $livewire) {
+            // desde el cual construirlo. BasePage y no Resources\Pages\Page,
+            // para que sirva igual en la pantalla de levantamiento.
+            ->action(function (array $data, BasePage $livewire) {
                 $relativas = self::rutasDeArchivos($data['documento'] ?? null);
 
                 if ($relativas === []) {
@@ -104,7 +105,7 @@ class LeerDocumentoAction
      *
      * @param  array<string, mixed>  $datos
      */
-    protected static function volcarEnElFormulario(array $datos, Page $livewire): void
+    protected static function volcarEnElFormulario(array $datos, BasePage $livewire): void
     {
         $nuevos = app(ResolverCatalogoVehiculo::class)->ejecutar(
             $datos['marca'] ?? null,
