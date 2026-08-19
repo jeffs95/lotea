@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Enums\EstadoUnidad;
+use App\Enums\TipoPlaca;
+use App\Enums\TipoVehiculo;
 use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
+use App\Support\CodigoDeUnidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -48,8 +51,8 @@ class Unidad extends Model implements HasMedia
     {
         return [
             'estado' => EstadoUnidad::class,
-            'tipo_vehiculo' => \App\Enums\TipoVehiculo::class,
-            'tipo_placa' => \App\Enums\TipoPlaca::class,
+            'tipo_vehiculo' => TipoVehiculo::class,
+            'tipo_placa' => TipoPlaca::class,
             'estado_desde' => 'datetime',
             'fecha_compra' => 'date',
             'fecha_recepcion' => 'date',
@@ -68,7 +71,7 @@ class Unidad extends Model implements HasMedia
     protected static function booted(): void
     {
         static::creating(function (Unidad $unidad) {
-            $unidad->codigo_qr ??= \App\Support\CodigoDeUnidad::generar();
+            $unidad->codigo_qr ??= CodigoDeUnidad::generar();
         });
 
         // Vale para cualquier camino —formulario, importación, un script— y no
@@ -279,7 +282,7 @@ class Unidad extends Model implements HasMedia
 
     public function esMoto(): bool
     {
-        return $this->tipo_vehiculo === \App\Enums\TipoVehiculo::Motocicleta;
+        return $this->tipo_vehiculo === TipoVehiculo::Motocicleta;
     }
 
     /**

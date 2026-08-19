@@ -6,7 +6,6 @@ use App\Enums\EstadoUnidad;
 use App\Models\CategoriaCosto;
 use App\Models\Unidad;
 use App\Models\Venta;
-use App\Support\Tenancy;
 use DomainException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Central\Resources\Cobros;
 
+use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use App\Filament\Central\Resources\Cobros\Pages\ListCobros;
 use App\Filament\Central\Resources\Cobros\Schemas\CobroForm;
 use App\Filament\Central\Resources\Cobros\Tables\CobrosTable;
 use App\Models\Cobro;
 use BackedEnum;
-use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;

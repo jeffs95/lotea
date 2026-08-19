@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class PlanPago extends Model
 {
@@ -78,7 +79,7 @@ class PlanPago extends Model
         );
     }
 
-    /** @return \Illuminate\Support\Collection<int, Cuota> */
+    /** @return Collection<int, Cuota> */
     public function cuotasVencidas()
     {
         return $this->cuotas

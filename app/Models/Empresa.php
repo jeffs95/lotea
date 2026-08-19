@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\EmpresaScope;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -64,7 +65,7 @@ class Empresa extends Model implements HasName
      */
     protected function sinScopeDeEmpresa(HasMany $relacion): HasMany
     {
-        return $relacion->withoutGlobalScope(\App\Models\Scopes\EmpresaScope::class);
+        return $relacion->withoutGlobalScope(EmpresaScope::class);
     }
 
     /** ¿Este cliente contrató el módulo? */

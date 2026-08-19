@@ -5,10 +5,11 @@ namespace App\Filament\Resources\Ventas\Schemas;
 use App\Actions\GenerarNumeroVenta;
 use App\Models\Unidad;
 use App\Models\Venta;
+use App\Support\CodigoDeUnidad;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -37,7 +38,7 @@ class VentaForm
                             ->where(fn ($q) => $q
                                 ->where('stock_no', 'ilike', "%{$search}%")
                                 ->orWhere('placa', 'ilike', "%{$search}%")
-                                ->orWhere('codigo_qr', 'ilike', '%'.\App\Support\CodigoDeUnidad::normalizar($search).'%')
+                                ->orWhere('codigo_qr', 'ilike', '%'.CodigoDeUnidad::normalizar($search).'%')
                                 ->orWhereHas('marca', fn ($m) => $m->where('nombre', 'ilike', "%{$search}%"))
                                 ->orWhereHas('linea', fn ($l) => $l->where('nombre', 'ilike', "%{$search}%")))
                             ->with(['marca', 'linea'])

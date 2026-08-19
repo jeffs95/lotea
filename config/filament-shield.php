@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use App\Filament\Resources\Tickets\TicketResource;
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
@@ -210,8 +211,8 @@ return [
             // El soporte tiene su propia regla: cualquiera puede pedir ayuda
             // y cada quien ve solo lo suyo. Está en App\Policies\TicketPolicy,
             // escrita a mano; si Shield la regenera, la pisa.
-            \App\Filament\Resources\Tickets\TicketResource::class,
-            \App\Filament\Central\Resources\Tickets\TicketResource::class,
+            TicketResource::class,
+            App\Filament\Central\Resources\Tickets\TicketResource::class,
         ],
     ],
 

@@ -69,7 +69,7 @@ class CatalogoDePermisos
 
     /**
      * @param  Collection<int, string>  $concedidos  nombres de permisos que el usuario tiene
-     * @return Collection<string, array>  módulo => lista de acciones con su estado
+     * @return Collection<string, array> módulo => lista de acciones con su estado
      */
     public static function agrupar(Collection $todos, Collection $concedidos): Collection
     {

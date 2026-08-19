@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\CrearEmpresa;
 use App\Enums\EstadoUnidad;
+use App\Enums\TipoPlaca;
 use App\Filament\Pages\Levantamiento;
 use App\Models\Empresa;
 use App\Models\Marca;
@@ -132,7 +133,7 @@ class LevantamientoTest extends TestCase
         $unidad = Unidad::latest('id')->first();
 
         $this->assertSame('P123ABC', $unidad->placa);
-        $this->assertSame(\App\Enums\TipoPlaca::Particular, $unidad->tipo_placa);
+        $this->assertSame(TipoPlaca::Particular, $unidad->tipo_placa);
     }
 
     public function test_el_formulario_queda_limpio_para_el_siguiente_carro(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\CrearEmpresa;
 use App\Models\Empleado;
 use App\Support\Tenancy;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -82,7 +83,7 @@ class EmpleadosTest extends TestCase
     {
         Empleado::factory()->create(['codigo' => 'EMP-001']);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Empleado::factory()->create(['codigo' => 'EMP-001']);
     }

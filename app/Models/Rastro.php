@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Scopes\EmpresaScope;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -68,7 +69,7 @@ class Rastro extends Activity
             $valor === null, $valor === '' => 'vacío',
             $valor === true, $valor === 1, $valor === '1' => 'sí',
             $valor === false, $valor === 0, $valor === '0' => 'no',
-            is_string($valor) && strlen($valor) > 24 => \Illuminate\Support\Str::limit($valor, 24),
+            is_string($valor) && strlen($valor) > 24 => Str::limit($valor, 24),
             default => (string) $valor,
         };
     }

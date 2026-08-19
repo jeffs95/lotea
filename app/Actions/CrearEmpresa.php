@@ -76,7 +76,7 @@ class CrearEmpresa
 
             // El alta corre desde consola o desde el panel central, donde no hay
             // empresa activa: la fijamos para que el trait rellene empresa_id.
-            Tenancy::comoEmpresa($empresa, function () use ($empresa, $sucursalPrincipal) {
+            Tenancy::comoEmpresa($empresa, function () use ($sucursalPrincipal) {
                 Sucursal::create([
                     'codigo' => 'PRIN',
                     'nombre' => $sucursalPrincipal,

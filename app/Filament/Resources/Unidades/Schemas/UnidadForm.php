@@ -7,18 +7,19 @@ use App\Enums\EstadoUnidad;
 use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
+use App\Support\QrDeUnidad;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Placeholder;
-use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class UnidadForm
@@ -50,7 +51,6 @@ class UnidadForm
     public const TRACCIONES = ['4x2' => '4x2', '4x4' => '4x4', 'awd' => 'AWD'];
 
     public const TIPOS_TITULO = ['clean' => 'Clean', 'salvage' => 'Salvage', 'rebuilt' => 'Rebuilt'];
-
 
     public static function configure(Schema $schema): Schema
     {
@@ -124,7 +124,7 @@ class UnidadForm
                                 ->hiddenLabel()
                                 ->content(fn ($record) => $record
                                     ? new HtmlString(
-                                        '<img src="'.\App\Support\QrDeUnidad::dataUri($record, 140).'" alt="QR" style="height:140px;width:140px">'
+                                        '<img src="'.QrDeUnidad::dataUri($record, 140).'" alt="QR" style="height:140px;width:140px">'
                                     )
                                     : null),
                         ]),

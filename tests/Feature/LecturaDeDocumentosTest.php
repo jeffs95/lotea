@@ -6,13 +6,13 @@ use App\Actions\CrearEmpresa;
 use App\Actions\ResolverCatalogoVehiculo;
 use App\Models\Linea;
 use App\Models\Marca;
+use App\Services\ConversorDeDocumentos;
 use App\Services\LectorDeDocumentos;
 use App\Services\ValidadorDeDatosLeidos;
 use App\Support\Tenancy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -169,8 +169,7 @@ class LecturaDeDocumentosTest extends TestCase
         config(['services.openrouter.key' => 'llave-de-prueba']);
 
         Http::fake([
-            '*' => Http::response(['choices' => [['message' => ['content' =>
-                "```json\n".json_encode(['datos' => ['anio' => 2020]])."\n```",
+            '*' => Http::response(['choices' => [['message' => ['content' => "```json\n".json_encode(['datos' => ['anio' => 2020]])."\n```",
             ]]]]),
         ]);
 
@@ -302,7 +301,7 @@ class LecturaDeDocumentosTest extends TestCase
         Http::assertSent(function (Request $peticion) {
             $imagenes = collect($peticion->data()['messages'][0]['content'])->where('type', 'image_url')->count();
 
-            return $imagenes === \App\Services\ConversorDeDocumentos::IMAGENES_MAXIMAS;
+            return $imagenes === ConversorDeDocumentos::IMAGENES_MAXIMAS;
         });
     }
 

@@ -13,10 +13,12 @@ use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use App\Filament\Resources\Unidades\Tables\UnidadesTable;
 use App\Models\Unidad;
 use BackedEnum;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class UnidadResource extends Resource
 {
@@ -47,7 +49,7 @@ class UnidadResource extends Resource
     }
 
     /** Pestañas dentro de la ficha de una unidad. */
-    public static function getRecordSubNavigation(\Filament\Resources\Pages\Page $page): array
+    public static function getRecordSubNavigation(Page $page): array
     {
         return $page->generateNavigationItems([
             EditUnidad::class,
@@ -74,7 +76,7 @@ class UnidadResource extends Resource
         ];
     }
 
-    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    public static function getGlobalSearchResultTitle(Model $record): string
     {
         return "{$record->stock_no} · {$record->descripcion}";
     }

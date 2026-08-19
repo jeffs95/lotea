@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
@@ -39,7 +40,7 @@ class TicketResource extends Resource
     protected static ?string $recordTitleAttribute = 'asunto';
 
     /** Cada quien ve solo sus propios reportes; la policy hace el resto. */
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('user_id', auth()->id());
     }

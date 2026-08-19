@@ -6,6 +6,7 @@ use App\Actions\AnularCosto;
 use App\Actions\CrearEmpresa;
 use App\Actions\RegistrarCosto;
 use App\Actions\RegistrarMovimientoCaja;
+use App\Filament\Pages\Auditoria;
 use App\Models\Caja;
 use App\Models\CategoriaCosto;
 use App\Models\Empresa;
@@ -187,6 +188,6 @@ class AuditoriaTest extends TestCase
     /** La pantalla muestra montos: no es para cualquiera. */
     public function test_solo_quien_ve_costos_entra_a_la_auditoria(): void
     {
-        $this->assertFalse(\App\Filament\Pages\Auditoria::canAccess());
+        $this->assertFalse(Auditoria::canAccess());
     }
 }

@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Ventas\Pages;
 
 use App\Actions\RegistrarVenta;
 use App\Filament\Resources\Ventas\VentaResource;
-use App\Models\Venta;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 

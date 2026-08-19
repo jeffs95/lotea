@@ -6,6 +6,7 @@ use App\Actions\AltaDeConcesionario;
 use App\Actions\CrearEmpresa;
 use App\Actions\GenerarCobrosDelMes;
 use App\Actions\SuspenderConcesionario;
+use App\Filament\Central\Resources\Concesionarios\Pages\CreateConcesionario;
 use App\Models\CategoriaCosto;
 use App\Models\Cobro;
 use App\Models\Empresa;
@@ -13,12 +14,11 @@ use App\Models\Plan;
 use App\Models\Sucursal;
 use App\Models\User;
 use App\Support\Tenancy;
-use App\Filament\Central\Resources\Concesionarios\Pages\CreateConcesionario;
 use Database\Seeders\PlanesSeeder;
-use Filament\Facades\Filament;
-use Livewire\Livewire;
 use DomainException;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -207,7 +207,7 @@ class PanelCentralTest extends TestCase
 
         $this->actingAs($usuario)->get("/app/{$empresa->slug}")->assertNotFound();
         $this->assertFalse($usuario->canAccessTenant($empresa->fresh()));
-        $this->assertCount(0, $usuario->getTenants(\Filament\Facades\Filament::getPanel('admin')));
+        $this->assertCount(0, $usuario->getTenants(Filament::getPanel('admin')));
     }
 
     public function test_el_portal_publico_de_un_suspendido_no_responde(): void

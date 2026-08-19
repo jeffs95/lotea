@@ -2,6 +2,7 @@
 
 namespace App\Filament\Central\Resources\Planes;
 
+use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use App\Filament\Central\Resources\Planes\Pages\CreatePlan;
 use App\Filament\Central\Resources\Planes\Pages\EditPlan;
 use App\Filament\Central\Resources\Planes\Pages\ListPlanes;
@@ -9,7 +10,6 @@ use App\Filament\Central\Resources\Planes\Schemas\PlanForm;
 use App\Filament\Central\Resources\Planes\Tables\PlanesTable;
 use App\Models\Plan;
 use BackedEnum;
-use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;

@@ -8,6 +8,7 @@ use App\Models\Proveedor;
 use App\Models\Sucursal;
 use App\Models\User;
 use App\Support\Tenancy;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RuntimeException;
 use Tests\TestCase;
@@ -124,7 +125,7 @@ class AislamientoEntreEmpresasTest extends TestCase
         $usuario = User::factory()->create();
         $usuario->empresas()->attach($this->unaEmpresa);
 
-        $panel = \Filament\Facades\Filament::getPanel('admin');
+        $panel = Filament::getPanel('admin');
 
         $this->assertSame(
             [$this->unaEmpresa->id],
@@ -138,7 +139,7 @@ class AislamientoEntreEmpresasTest extends TestCase
         $usuario->empresas()->attach([$this->unaEmpresa->id, $this->otraEmpresa->id]);
         $this->otraEmpresa->update(['activa' => false]);
 
-        $panel = \Filament\Facades\Filament::getPanel('admin');
+        $panel = Filament::getPanel('admin');
 
         $this->assertSame([$this->unaEmpresa->id], $usuario->getTenants($panel)->pluck('id')->all());
     }

@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Cajas\Pages;
 
-use App\Filament\Resources\Cajas\CajaResource;
 use App\Filament\Resources\Cajas\Actions\AccionesDeCaja;
+use App\Filament\Resources\Cajas\CajaResource;
 use Filament\Resources\Pages\EditRecord;
 
 class EditCaja extends EditRecord

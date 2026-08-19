@@ -11,6 +11,7 @@ use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * "No puedo agregar un vehículo".
@@ -159,7 +160,7 @@ class DiagnosticoDePermisos extends Page
         }
 
         return Tenancy::comoEmpresa($empresa, function () use ($consulta, $usuario) {
-            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
 
             return $consulta($usuario->fresh());
         });

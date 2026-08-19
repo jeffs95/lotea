@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Rastro;
+use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
@@ -95,7 +96,7 @@ class Auditoria extends Page implements HasTable
 
                 SelectFilter::make('causer_id')
                     ->label('Quién')
-                    ->options(fn () => \App\Models\User::whereIn(
+                    ->options(fn () => User::whereIn(
                         'id',
                         Rastro::query()->whereNotNull('causer_id')->distinct()->pluck('causer_id')
                     )->pluck('name', 'id')),

@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Caja;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CajaFactory extends Factory
 {
-    protected $model = \App\Models\Caja::class;
+    protected $model = Caja::class;
 
     public function definition(): array
     {

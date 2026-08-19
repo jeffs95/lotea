@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Actions\CrearEmpresa;
 use App\Models\Empresa;
+use App\Models\Plan;
 use App\Models\Unidad;
 use App\Models\User;
 use App\Support\Tenancy;
@@ -16,7 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([CatalogosSeeder::class, PermisosPropiosSeeder::class, PlanesSeeder::class, OperadorSeeder::class]);
 
         $empresa = Empresa::firstWhere('slug', 'autos-del-valle') ?? (new CrearEmpresa)->ejecutar([
-            'plan_id' => \App\Models\Plan::firstWhere('slug', 'pro')?->id,
+            'plan_id' => Plan::firstWhere('slug', 'pro')?->id,
             'nombre' => 'Autos del Valle, S.A.',
             'nombre_comercial' => 'Autos del Valle',
             'nit' => '1234567-8',

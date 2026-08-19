@@ -4,9 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Enums\EstadoUnidad;
 use App\Models\Unidad;
-use Illuminate\Support\Facades\DB;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Lo primero que el dueño quiere saber al abrir el sistema: cuánta plata

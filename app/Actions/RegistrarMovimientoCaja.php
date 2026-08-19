@@ -4,6 +4,8 @@ namespace App\Actions;
 
 use App\Models\Caja;
 use App\Models\MovimientoCaja;
+use App\Models\TipoCambio;
+use Carbon\CarbonInterface;
 use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -52,8 +54,8 @@ class RegistrarMovimientoCaja
 
     protected function tipoCambioDelDia(mixed $fecha): string
     {
-        $tasa = \App\Models\TipoCambio::where('moneda', 'USD')
-            ->where('fecha', '<=', $fecha instanceof \Carbon\CarbonInterface ? $fecha->toDateString() : $fecha)
+        $tasa = TipoCambio::where('moneda', 'USD')
+            ->where('fecha', '<=', $fecha instanceof CarbonInterface ? $fecha->toDateString() : $fecha)
             ->orderByDesc('fecha')
             ->value('tasa');
 

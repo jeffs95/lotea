@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Unidades\Tables;
 
 use App\Enums\EstadoUnidad;
-use App\Filament\Resources\Unidades\Schemas\UnidadForm;
+use App\Enums\TipoVehiculo;
+use App\Filament\Resources\Unidades\Actions\CambiarEstadoAction;
 use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
+use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -109,14 +111,14 @@ class UnidadesTable
                     ->multiple(),
                 SelectFilter::make('sucursal')->relationship('sucursal', 'nombre'),
                 SelectFilter::make('marca')->relationship('marca', 'nombre')->searchable()->preload(),
-                SelectFilter::make('tipo_vehiculo')->label('Tipo')->options(\App\Enums\TipoVehiculo::opciones()),
+                SelectFilter::make('tipo_vehiculo')->label('Tipo')->options(TipoVehiculo::opciones()),
                 SelectFilter::make('tipo_titulo')->label('Título')->options(UnidadForm::TIPOS_TITULO),
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make(),
-                    \App\Filament\Resources\Unidades\Actions\CambiarEstadoAction::make(),
+                    CambiarEstadoAction::make(),
 
                     Action::make('etiqueta')
                         ->label('Imprimir etiqueta')

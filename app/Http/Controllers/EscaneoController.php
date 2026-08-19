@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\Unidad;
 use App\Support\CodigoDeUnidad;
 use App\Support\PortalUrl;
@@ -41,7 +42,7 @@ class EscaneoController
             Tenancy::usar($empresa);
 
             return redirect()->to(
-                \App\Filament\Resources\Unidades\UnidadResource::getUrl('edit', [
+                UnidadResource::getUrl('edit', [
                     'record' => $unidad,
                     'tenant' => $empresa,
                 ])

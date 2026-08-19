@@ -5,10 +5,11 @@ namespace App\Filament\Resources\OrdenesTrabajo\Schemas;
 use App\Models\Empleado;
 use App\Models\OrdenTrabajo;
 use App\Models\Unidad;
+use App\Support\Tenancy;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -38,7 +39,7 @@ class OrdenTrabajoForm
                         ->label('No.')
                         ->required()
                         ->maxLength(20)
-                        ->default(fn () => 'OT-'.str_pad((string) (OrdenTrabajo::where('empresa_id', \App\Support\Tenancy::empresaId())->count() + 1), 4, '0', STR_PAD_LEFT))
+                        ->default(fn () => 'OT-'.str_pad((string) (OrdenTrabajo::where('empresa_id', Tenancy::empresaId())->count() + 1), 4, '0', STR_PAD_LEFT))
                         ->disabled(fn ($record) => $record !== null)
                         ->dehydrated(),
 

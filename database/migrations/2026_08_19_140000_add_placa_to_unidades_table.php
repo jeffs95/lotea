@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TipoPlaca;
 use App\Models\Unidad;
 use App\Support\Tenancy;
 use Illuminate\Database\Migrations\Migration;
@@ -50,7 +51,7 @@ return new class extends Migration
 
                     $unidad->forceFill([
                         'placa' => $placa,
-                        'tipo_placa' => \App\Enums\TipoPlaca::desdeLaPlaca($placa)?->value,
+                        'tipo_placa' => TipoPlaca::desdeLaPlaca($placa)?->value,
                         'notas' => Str::of($unidad->notas)
                             ->replaceMatches('/Placa según documento:\s*[A-Za-z0-9-]+\.?\s*/u', '')
                             ->trim()

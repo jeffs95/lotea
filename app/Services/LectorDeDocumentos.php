@@ -64,7 +64,7 @@ class LectorDeDocumentos
 
     /**
      * @param  array<int, string>  $imagenes  rutas de imágenes ya listas
-     * @return array{0: string, 1: array<string, mixed>}  la respuesta y lo que consumió
+     * @return array{0: string, 1: array<string, mixed>} la respuesta y lo que consumió
      */
     protected function preguntar(array $imagenes): array
     {

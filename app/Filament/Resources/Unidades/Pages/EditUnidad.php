@@ -2,10 +2,8 @@
 
 namespace App\Filament\Resources\Unidades\Pages;
 
-use App\Enums\EstadoUnidad;
 use App\Filament\Resources\Unidades\Actions\CambiarEstadoAction;
 use App\Filament\Resources\Unidades\Actions\LeerDocumentoAction;
-use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Filament\Resources\Ventas\VentaResource;
 use Filament\Actions\Action;

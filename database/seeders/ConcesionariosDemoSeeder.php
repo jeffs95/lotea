@@ -20,19 +20,19 @@ class ConcesionariosDemoSeeder extends Seeder
     {
         $este = $this->alta(
             ['nombre' => 'Importadora del Sur, S.A.', 'nombre_comercial' => 'Importadora del Sur', 'slug' => 'importadora-del-sur',
-             'nit' => '9988776-5', 'telefono' => '7767-1122', 'email' => 'info@importadoradelsur.gt',
-             'contacto_nombre' => 'Ana Pérez', 'contacto_telefono' => '5566-7788',
-             'sucursal_principal' => 'Patio Xela'],
+                'nit' => '9988776-5', 'telefono' => '7767-1122', 'email' => 'info@importadoradelsur.gt',
+                'contacto_nombre' => 'Ana Pérez', 'contacto_telefono' => '5566-7788',
+                'sucursal_principal' => 'Patio Xela'],
             ['name' => 'Ana Pérez', 'email' => 'ana@importadoradelsur.gt', 'password' => 'password'],
             'pro',
         );
 
         $moroso = $this->alta(
             ['nombre' => 'Vehículos del Norte', 'nombre_comercial' => 'Autos del Norte', 'slug' => 'autos-del-norte',
-             'nit' => '5544332-1', 'telefono' => '7930-4455',
-             'contacto_nombre' => 'Luis Barrientos', 'contacto_telefono' => '4411-2233',
-             'notas_internas' => 'Paga tarde todos los meses. Hay que llamarle el día 5.',
-             'sucursal_principal' => 'Patio Cobán'],
+                'nit' => '5544332-1', 'telefono' => '7930-4455',
+                'contacto_nombre' => 'Luis Barrientos', 'contacto_telefono' => '4411-2233',
+                'notas_internas' => 'Paga tarde todos los meses. Hay que llamarle el día 5.',
+                'sucursal_principal' => 'Patio Cobán'],
             ['name' => 'Luis Barrientos', 'email' => 'luis@autosdelnorte.gt', 'password' => 'password'],
             'basico',
         );

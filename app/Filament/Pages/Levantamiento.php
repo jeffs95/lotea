@@ -2,20 +2,22 @@
 
 namespace App\Filament\Pages;
 
-use App\Actions\ResolverCatalogoVehiculo;
+use App\Actions\GenerarStockNo;
 use App\Enums\EstadoUnidad;
+use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Filament\Resources\Unidades\Actions\LeerDocumentoAction;
 use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\Linea;
+use App\Models\Marca;
 use App\Models\Sucursal;
 use App\Models\Unidad;
 use App\Models\UnidadTransicion;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -89,7 +91,7 @@ class Levantamiento extends Page implements HasForms
                             ->label('Marca')
                             // options() y no relationship(): esta página no
                             // tiene un registro del cual colgar la relación.
-                            ->options(fn () => \App\Models\Marca::orderBy('nombre')->pluck('nombre', 'id'))
+                            ->options(fn () => Marca::orderBy('nombre')->pluck('nombre', 'id'))
                             ->searchable()
                             ->required()
                             ->live()
@@ -179,14 +181,14 @@ class Levantamiento extends Page implements HasForms
 
         $unidad = Unidad::create([
             'sucursal_id' => $this->sucursalId,
-            'stock_no' => app(\App\Actions\GenerarStockNo::class)->ejecutar(),
+            'stock_no' => app(GenerarStockNo::class)->ejecutar(),
             'tipo_vehiculo' => $datos['tipo_vehiculo'],
             'marca_id' => $datos['marca_id'],
             'linea_id' => $datos['linea_id'] ?? null,
             'anio' => $datos['anio'] ?? null,
             'vin' => filled($datos['vin'] ?? null) ? strtoupper($datos['vin']) : null,
             'placa' => filled($datos['placa'] ?? null) ? strtoupper($datos['placa']) : null,
-            'tipo_placa' => \App\Enums\TipoPlaca::desdeLaPlaca($datos['placa'] ?? null)?->value,
+            'tipo_placa' => TipoPlaca::desdeLaPlaca($datos['placa'] ?? null)?->value,
             'precio_lista' => $datos['precio_lista'],
             // Se levanta lo que ya está en el patio y en venta.
             'estado' => EstadoUnidad::Lista,

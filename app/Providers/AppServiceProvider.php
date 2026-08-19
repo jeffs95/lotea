@@ -4,10 +4,10 @@ namespace App\Providers;
 
 use App\Listeners\RegistrarUltimoAcceso;
 use App\Listeners\SincronizarEmpresaActiva;
-use Illuminate\Auth\Events\Login;
 use Filament\Events\TenantSet;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;

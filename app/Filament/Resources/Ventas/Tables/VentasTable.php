@@ -14,8 +14,8 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -158,7 +158,7 @@ class VentasTable
                                     .number_format((float) $plan->cuota_mensual, 2).'.')
                                 ->success()
                                 ->actions([
-                                    \Filament\Actions\Action::make('verPlan')
+                                    Action::make('verPlan')
                                         ->label('Ver el plan')
                                         ->url(PlanPagoResource::getUrl('edit', ['record' => $plan])),
                                 ])

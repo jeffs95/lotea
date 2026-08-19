@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Unidades\Pages;
 
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\CostoUnidad;
+use App\Models\Venta;
 use BackedEnum;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -129,7 +130,7 @@ class RentabilidadUnidad extends Page
         return (float) ($this->record->precio_para_margen ?? 0);
     }
 
-    public function getVenta(): ?\App\Models\Venta
+    public function getVenta(): ?Venta
     {
         return $this->record->venta;
     }

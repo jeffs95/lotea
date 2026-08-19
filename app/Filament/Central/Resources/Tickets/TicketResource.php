@@ -2,11 +2,11 @@
 
 namespace App\Filament\Central\Resources\Tickets;
 
+use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use App\Filament\Central\Resources\Tickets\Pages\ListTickets;
 use App\Filament\Central\Resources\Tickets\Tables\TicketsTable;
 use App\Models\Ticket;
 use BackedEnum;
-use App\Filament\Central\Concerns\EsRecursoDeLotea;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

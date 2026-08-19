@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Actions\CrearEmpresa;
 use App\Filament\Resources\Unidades\Pages\CreateUnidad;
 use App\Models\Empresa;
+use App\Models\Marca;
 use App\Models\Plan;
 use App\Models\Role;
 use App\Models\User;
@@ -120,7 +121,7 @@ class BotonLlenarConIaTest extends TestCase
 
         $this->assertNotNull($estado['marca_id']);
         $this->assertNotNull($estado['linea_id']);
-        $this->assertSame('Mazda', \App\Models\Marca::find($estado['marca_id'])->nombre);
+        $this->assertSame('Mazda', Marca::find($estado['marca_id'])->nombre);
     }
 
     /** Lo que la persona ya escribió no se pierde al leer el documento. */

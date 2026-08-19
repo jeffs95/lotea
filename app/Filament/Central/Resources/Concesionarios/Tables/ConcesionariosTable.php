@@ -4,7 +4,8 @@ namespace App\Filament\Central\Resources\Concesionarios\Tables;
 
 use App\Actions\SuspenderConcesionario;
 use App\Models\Empresa;
-use App\Support\Tenancy;
+use App\Support\PortalUrl;
+use App\Support\TarifaDeIa;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -16,6 +17,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class ConcesionariosTable
 {
@@ -79,7 +81,7 @@ class ConcesionariosTable
                     ->since()
                     ->color(fn ($state) => match (true) {
                         $state === null => 'danger',
-                        \Illuminate\Support\Carbon::parse($state)->lt(now()->subDays(14)) => 'warning',
+                        Carbon::parse($state)->lt(now()->subDays(14)) => 'warning',
                         default => null,
                     }),
 
@@ -104,7 +106,7 @@ class ConcesionariosTable
                         return $tope ? "{$state} / {$tope}" : (string) $state;
                     })
                     ->description(fn (Empresa $record) => $record->tieneModulo('ia')
-                        ? 'Q '.number_format(\App\Support\TarifaDeIa::enQuetzales($record->costoIaDelMes()), 2).' de costo'
+                        ? 'Q '.number_format(TarifaDeIa::enQuetzales($record->costoIaDelMes()), 2).' de costo'
                         : null)
                     ->color(function (?int $state, Empresa $record) {
                         $tope = $record->plan?->max_lecturas_ia;
@@ -146,7 +148,7 @@ class ConcesionariosTable
                     Action::make('verPortal')
                         ->label('Ver su portal')
                         ->icon('heroicon-o-globe-alt')
-                        ->url(fn (Empresa $record) => \App\Support\PortalUrl::inicio($record))
+                        ->url(fn (Empresa $record) => PortalUrl::inicio($record))
                         ->openUrlInNewTab(),
 
                     Action::make('suspender')

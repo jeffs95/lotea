@@ -4,7 +4,6 @@ namespace App\Actions;
 
 use App\Models\GastoCompartido;
 use App\Models\Unidad;
-use App\Support\Tenancy;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -6,12 +6,12 @@ use App\Actions\RegistrarVenta;
 use App\Enums\EstadoUnidad;
 use App\Models\Cliente;
 use App\Models\Empresa;
-use App\Models\Unidad;
 use App\Models\Role;
+use App\Models\Unidad;
 use App\Models\User;
-use Spatie\Permission\Models\Permission;
 use App\Support\Tenancy;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 /**
  * Cierra las ventas de las unidades que en la demo ya están entregadas, para

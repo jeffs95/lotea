@@ -6,7 +6,6 @@ use App\Models\Empresa;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Illuminate\Support\Carbon;
 
 /**
  * Los clientes que dejaron de entrar.

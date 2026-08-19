@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Portal;
 
 use App\Models\Lead;
 use App\Models\Unidad;
-use App\Support\PortalUrl;
-use App\Support\Tenancy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 

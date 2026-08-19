@@ -2,8 +2,15 @@
 
 namespace App\Models\Concerns;
 
+use App\Models\CostoUnidad;
+use App\Models\Cuota;
+use App\Models\GastoCompartido;
+use App\Models\MovimientoCaja;
+use App\Models\OrdenTrabajo;
+use App\Models\PagoCuota;
+use App\Models\Unidad;
+use App\Models\Venta;
 use App\Support\Tenancy;
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Contracts\Activity;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -63,14 +70,14 @@ trait DejaRastro
     public static function nombreLegible(): string
     {
         return match (static::class) {
-            \App\Models\CostoUnidad::class => 'gasto de unidad',
-            \App\Models\GastoCompartido::class => 'gasto compartido',
-            \App\Models\Venta::class => 'venta',
-            \App\Models\MovimientoCaja::class => 'movimiento de caja',
-            \App\Models\PagoCuota::class => 'pago de cuota',
-            \App\Models\Cuota::class => 'cuota',
-            \App\Models\OrdenTrabajo::class => 'orden de trabajo',
-            \App\Models\Unidad::class => 'unidad',
+            CostoUnidad::class => 'gasto de unidad',
+            GastoCompartido::class => 'gasto compartido',
+            Venta::class => 'venta',
+            MovimientoCaja::class => 'movimiento de caja',
+            PagoCuota::class => 'pago de cuota',
+            Cuota::class => 'cuota',
+            OrdenTrabajo::class => 'orden de trabajo',
+            Unidad::class => 'unidad',
             default => class_basename(static::class),
         };
     }

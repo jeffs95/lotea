@@ -4,11 +4,12 @@ namespace App\Filament\Resources\Unidades\Actions;
 
 use App\Actions\RegistrarLecturaIa;
 use App\Actions\ResolverCatalogoVehiculo;
+use App\Enums\TipoPlaca;
 use App\Services\ConversorDeDocumentos;
 use App\Services\LectorDeDocumentos;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\BasePage;
 use Illuminate\Support\Facades\Storage;
@@ -166,7 +167,7 @@ class LeerDocumentoAction
 
         // El tipo sale de la letra de la placa, no de lo que diga el modelo.
         if (filled($nuevos['placa'] ?? null)) {
-            $nuevos['tipo_placa'] = \App\Enums\TipoPlaca::desdeLaPlaca($nuevos['placa'])?->value;
+            $nuevos['tipo_placa'] = TipoPlaca::desdeLaPlaca($nuevos['placa'])?->value;
         }
 
         $livewire->form->fill([...$livewire->data, ...$nuevos]);

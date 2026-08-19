@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Venta extends Model
 {
@@ -88,7 +89,7 @@ class Venta extends Model
         return $this->belongsTo(Sucursal::class);
     }
 
-    public function planPago(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function planPago(): HasOne
     {
         return $this->hasOne(PlanPago::class);
     }

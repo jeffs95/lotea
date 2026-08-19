@@ -2,8 +2,8 @@
 
 namespace App\Filament\Central\Resources\Cobros\Pages;
 
-use App\Filament\Central\Resources\Cobros\CobroResource;
 use App\Actions\GenerarCobrosDelMes;
+use App\Filament\Central\Resources\Cobros\CobroResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;

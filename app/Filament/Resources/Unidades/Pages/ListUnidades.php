@@ -6,8 +6,8 @@ use App\Enums\EstadoUnidad;
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\Unidad;
 use Filament\Actions\CreateAction;
-use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 
 class ListUnidades extends ListRecords
 {

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Marcas\Tables;
 
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
