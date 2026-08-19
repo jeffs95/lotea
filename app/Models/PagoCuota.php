@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,11 +11,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PagoCuota extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $table = 'pagos_cuota';
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'mora' => 0,
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['monto', 'mora', 'anulado_en', 'motivo_anulacion'];
 
     protected function casts(): array
     {

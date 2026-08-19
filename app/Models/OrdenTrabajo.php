@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +12,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrdenTrabajo extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $table = 'ordenes_trabajo';
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'tipo' => 'preparacion',
+        'estado' => 'abierta',
+        'total_mano_obra' => 0,
+        'total_repuestos' => 0,
+        'total_terceros' => 0,
+        'costos_descargados' => false,
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['estado', 'total_mano_obra', 'total_repuestos', 'total_terceros', 'costos_descargados', 'motivo_anulacion'];
 
     public const TIPOS = [
         'preparacion' => 'Preparación para venta',

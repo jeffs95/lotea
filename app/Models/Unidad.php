@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EstadoUnidad;
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,18 +17,31 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Unidad extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, PerteneceAEmpresa, SoftDeletes;
+    use DejaRastro, HasFactory, InteractsWithMedia, PerteneceAEmpresa, SoftDeletes;
 
     protected $table = 'unidades';
 
     protected $guarded = ['id'];
 
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['estado', 'precio_lista', 'precio_minimo', 'costo_total', 'publicado', 'vin', 'placa'];
+
     /**
-     * Sin esto el tipo llega null en memoria hasta refrescar desde la base, y
-     * cualquier `$unidad->tipo_vehiculo->carrocerias()` revienta.
+     * Los valores por omisión, declarados también acá.
+     *
+     * La base los tiene, pero el modelo no los conocía: al primer update
+     * Eloquent los veía pasar de null a su default y los anotaba como cambios
+     * reales, ensuciando el rastro de auditoría con movimientos que nadie hizo.
      */
     protected $attributes = [
         'tipo_vehiculo' => 'automovil',
+        'estado' => 'comprada',
+        'odometro_unidad' => 'mi',
+        'tiene_llaves' => true,
+        'publicado' => false,
+        'destacado' => false,
+        'costo_total' => 0,
+        'costo_presupuestado' => 0,
     ];
 
     protected function casts(): array

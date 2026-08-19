@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +12,21 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class MovimientoCaja extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $table = 'movimientos_caja';
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'moneda' => 'GTQ',
+        'tipo_cambio' => 1,
+        'categoria' => 'otro',
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['tipo', 'monto', 'monto_base', 'caja_id', 'anulado_en', 'motivo_anulacion'];
 
     public const TIPOS = ['ingreso' => 'Ingreso', 'egreso' => 'Egreso'];
 

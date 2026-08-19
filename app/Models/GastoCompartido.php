@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,11 +12,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class GastoCompartido extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $table = 'gastos_compartidos';
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'moneda' => 'GTQ',
+        'tipo_cambio' => 1,
+        'criterio' => 'partes_iguales',
+        'es_presupuesto' => false,
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['monto', 'monto_base', 'criterio', 'anulado_en', 'motivo_anulacion'];
 
     public const CRITERIOS = [
         'partes_iguales' => 'Partes iguales',

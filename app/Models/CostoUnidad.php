@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,11 +11,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CostoUnidad extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $table = 'costos_unidad';
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'moneda' => 'GTQ',
+        'tipo_cambio' => 1,
+        'es_presupuesto' => false,
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['monto', 'monto_base', 'moneda', 'tipo_cambio', 'categoria_costo_id', 'es_presupuesto', 'anulado_en', 'motivo_anulacion'];
 
     protected function casts(): array
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,9 +11,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Venta extends Model
 {
-    use HasFactory, PerteneceAEmpresa;
+    use DejaRastro, HasFactory, PerteneceAEmpresa;
 
     protected $guarded = ['id'];
+
+    /** Los defaults de la base, para que no aparezcan como cambios fantasma. */
+    protected $attributes = [
+        'estado' => 'cotizacion',
+        'descuento' => 0,
+        'forma_pago' => 'contado',
+        'comision_base' => 'margen',
+        'comision_porcentaje' => 0,
+        'comision_monto' => 0,
+        'comision_pagada' => false,
+    ];
+
+    /** Lo que se sigue en el rastro: lo que mueve plata o cambia el negocio. */
+    protected array $camposAuditados = ['estado', 'precio_venta', 'descuento', 'precio_final', 'comision_monto', 'forma_pago', 'anulada_en', 'motivo_anulacion'];
 
     public const ESTADOS = [
         'cotizacion' => 'Cotización',

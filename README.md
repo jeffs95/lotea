@@ -129,6 +129,23 @@ cierre (`Unidad::$precio_para_margen`).
 vendedor con el dueño: si regala precio, se corta su propia comisión. Hay un test que lo
 comprueba.
 
+## Auditoría del dinero
+
+Todo lo que mueve plata deja rastro: gastos de unidad, gastos compartidos, ventas, movimientos
+de caja, pagos de cuota, órdenes de trabajo y los precios y estados de las unidades. Cada
+registro guarda quién, cuándo, y el valor viejo junto al nuevo.
+
+Se consulta en **Auditoría** (`/app/{empresa}/auditoria`), detrás del permiso
+`ver_costos_unidad` porque muestra montos. Es solo lectura: el rastro no se edita ni se borra,
+porque un registro que se puede alterar no prueba nada.
+
+Cada modelo declara en `$camposAuditados` lo que vale la pena seguir. Auditar todas las
+columnas llena la tabla de ruido y esconde lo que importa.
+
+> Los modelos auditados declaran también sus valores por omisión en `$attributes`. Sin eso
+> Eloquent ve pasar cada default de `null` a su valor al primer `update` y lo anota como un
+> cambio que nadie hizo.
+
 ## Los dos paneles
 
 | Panel | Ruta | Quién entra |
