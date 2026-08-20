@@ -25,10 +25,7 @@ class AddOnDeIaTest extends TestCase
 
     protected function empresaCon(array $modulos, ?int $tope = null): Empresa
     {
-        $plan = Plan::create([
-            'nombre' => 'Plan de prueba '.uniqid(),
-            'slug' => 'prueba-'.uniqid(),
-            'precio_mensual' => 1000,
+        $plan = Plan::factory()->create([
             'modulos' => $modulos,
             'max_lecturas_ia' => $tope,
         ]);

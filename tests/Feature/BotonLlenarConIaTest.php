@@ -37,12 +37,7 @@ class BotonLlenarConIaTest extends TestCase
         parent::setUp();
 
         // El botón es un add-on: sin el módulo contratado no existe.
-        $plan = Plan::create([
-            'nombre' => 'Con IA',
-            'slug' => 'con-ia',
-            'precio_mensual' => 1295,
-            'modulos' => ['unidades', 'ia'],
-        ]);
+        $plan = Plan::factory()->conIa()->create();
 
         $this->empresa = (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle', 'plan_id' => $plan->id]);
         Tenancy::usar($this->empresa);
