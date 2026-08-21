@@ -3,8 +3,10 @@
 namespace App\Filament\Central\Resources\Concesionarios\Schemas;
 
 use App\Models\Plan;
+use App\Support\MarcaDelCliente;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -106,7 +108,48 @@ class ConcesionarioForm
                         ->placeholder('autosdelvalle.com')
                         ->helperText('Mientras no lo tenga, su portal vive en /v/{slug}.'),
 
-                    ColorPicker::make('color_primario')->label('Color de marca')->default('#f59e0b'),
+                    ColorPicker::make('color_primario')
+                        ->label('Color de marca')
+                        ->default(MarcaDelCliente::COLOR_POR_DEFECTO)
+                        ->hex()
+                        // Con un valor que no sea hex, la paleta del panel no
+                        // se puede generar y el cliente se queda sin panel.
+                        ->rule('regex:/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/')
+                        ->helperText('Pinta su panel y su portal.'),
+                ]),
+
+            Section::make('Su marca')
+                ->description('Lo que el cliente ve en su panel y en su portal. Si no sube nada, usa las iniciales sobre el color de marca.')
+                ->columns(3)
+                ->schema([
+                    FileUpload::make('logo_path')
+                        ->label('Logo')
+                        ->image()
+                        ->disk('public')
+                        ->directory('marcas')
+                        ->visibility('public')
+                        ->imageEditor()
+                        ->maxSize(2048)
+                        ->helperText('PNG con fondo transparente. Se ve a 32 px de alto.'),
+
+                    FileUpload::make('logo_oscuro_path')
+                        ->label('Logo para fondo oscuro')
+                        ->image()
+                        ->disk('public')
+                        ->directory('marcas')
+                        ->visibility('public')
+                        ->imageEditor()
+                        ->maxSize(2048)
+                        ->helperText('Opcional. Si no lo sube, en modo oscuro se usa el normal.'),
+
+                    FileUpload::make('favicon_path')
+                        ->label('Favicon')
+                        ->image()
+                        ->disk('public')
+                        ->directory('marcas')
+                        ->visibility('public')
+                        ->maxSize(512)
+                        ->helperText('Cuadrado, 64x64 o más. Es lo que ve en la pestaña.'),
                 ]),
 
             Section::make('Notas internas')

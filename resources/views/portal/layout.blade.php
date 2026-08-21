@@ -19,18 +19,22 @@
 
     @vite(['resources/css/app.css'])
 
-    <style>:root { --acento: {{ $empresa->color_primario ?: '#f59e0b' }}; }</style>
+    @if ($empresa->favicon_url)
+        <link rel="icon" href="{{ $empresa->favicon_url }}">
+    @endif
+
+    <style>:root { --acento: {{ $empresa->color_de_marca }}; }</style>
 </head>
 <body class="min-h-screen bg-gray-50 font-sans text-gray-900 antialiased">
 
     <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/90 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
             <a href="{{ \App\Support\PortalUrl::inicio($empresa) }}" class="flex items-center gap-2">
-                @if ($empresa->logo_path)
-                    <img src="{{ asset('storage/' . $empresa->logo_path) }}" alt="{{ $empresa->nombre }}" class="h-9 w-auto">
+                @if ($empresa->logo_url)
+                    <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nombre }}" class="h-9 w-auto">
                 @else
                     <span class="grid h-9 w-9 place-items-center rounded-lg text-sm font-bold text-white" style="background: var(--acento)">
-                        {{ \Illuminate\Support\Str::of($empresa->nombre_comercial ?? $empresa->nombre)->substr(0, 2)->upper() }}
+                        {{ $empresa->iniciales }}
                     </span>
                 @endif
                 <span class="text-lg font-bold tracking-tight">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</span>

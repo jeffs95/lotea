@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\LimpiarContextoDeEmpresa;
+use App\Support\AvatarDeIniciales;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,6 +34,9 @@ class CentralPanelProvider extends PanelProvider
             ->id('central')
             ->path('central')
             ->login()
+            // Iniciales dibujadas en casa: el proveedor por defecto de Filament
+            // le manda el nombre de cada usuario a ui-avatars.com.
+            ->defaultAvatarProvider(AvatarDeIniciales::class)
             ->brandName('Lotea · Central')
             ->colors([
                 // Azul y no ámbar: que se note de un vistazo en qué panel estás.

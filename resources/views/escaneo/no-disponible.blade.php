@@ -9,14 +9,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Consultá por esta unidad · {{ $empresa->nombre_comercial ?? $empresa->nombre }}</title>
+    @if ($empresa->favicon_url)
+        <link rel="icon" href="{{ $empresa->favicon_url }}">
+    @endif
     @vite(['resources/css/app.css'])
-    <style>:root { --acento: {{ $empresa->color_primario ?: '#f59e0b' }}; }</style>
+    <style>:root { --acento: {{ $empresa->color_de_marca }}; }</style>
 </head>
 <body class="flex min-h-screen items-center justify-center bg-gray-50 px-4 font-sans">
     <div class="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
-        <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl text-lg font-bold text-white" style="background: var(--acento)">
-            {{ \Illuminate\Support\Str::of($empresa->nombre_comercial ?? $empresa->nombre)->substr(0, 2)->upper() }}
-        </span>
+        @if ($empresa->logo_url)
+            <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->getFilamentName() }}" class="mx-auto h-12 w-auto">
+        @else
+            <span class="mx-auto grid h-12 w-12 place-items-center rounded-xl text-lg font-bold text-white" style="background: var(--acento)">
+                {{ $empresa->iniciales }}
+            </span>
+        @endif
 
         <h1 class="mt-5 text-xl font-bold text-gray-900">Este vehículo todavía no está publicado</h1>
 

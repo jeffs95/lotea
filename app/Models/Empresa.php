@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Scopes\EmpresaScope;
+use App\Support\AvatarDeIniciales;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * El tenant. Cada empresa es un concesionario cliente de Lotea y no ve
@@ -20,6 +22,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Empresa extends Model implements HasName
 {
     use HasFactory, SoftDeletes;
+
+    /** El ámbar de Lotea, para quien no eligió color propio. */
+    public const COLOR_POR_DEFECTO = '#f59e0b';
 
     protected $table = 'empresas';
 
@@ -126,6 +131,62 @@ class Empresa extends Model implements HasName
     public function getFilamentName(): string
     {
         return $this->nombre_comercial ?: $this->nombre;
+    }
+
+    /**
+     * El color con el que se pinta su panel y su portal.
+     *
+     * Se valida aquí porque de este hex sale la paleta del panel: un valor con
+     * basura no se puede convertir y dejaría al cliente sin panel.
+     */
+    public function getColorDeMarcaAttribute(): string
+    {
+        return is_string($this->color_primario)
+            && preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $this->color_primario)
+                ? $this->color_primario
+                : self::COLOR_POR_DEFECTO;
+    }
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->archivoDeMarca($this->logo_path);
+    }
+
+    /** Su logo sobre el fondo oscuro del panel; si no subió uno, el normal. */
+    public function getLogoOscuroUrlAttribute(): ?string
+    {
+        return $this->archivoDeMarca($this->logo_oscuro_path) ?? $this->logo_url;
+    }
+
+    public function getFaviconUrlAttribute(): ?string
+    {
+        return $this->archivoDeMarca($this->favicon_path);
+    }
+
+    /** Las dos letras que se muestran cuando no hay logo. */
+    public function getInicialesAttribute(): string
+    {
+        return AvatarDeIniciales::de($this->getFilamentName());
+    }
+
+    /**
+     * La URL de un archivo de marca, relativa al dominio que se esté sirviendo.
+     *
+     * Relativa a propósito. El portal del cliente corre en su propio dominio, y
+     * una URL absoluta pondría «lotea» en el src del logo del cliente, que es
+     * exactamente lo que la marca blanca no debe hacer. De paso funciona igual
+     * en cualquier host y puerto.
+     *
+     * Se comprueba que el archivo esté: uno borrado a mano dejaría una imagen
+     * rota en todas las pantallas del cliente.
+     */
+    protected function archivoDeMarca(?string $ruta): ?string
+    {
+        if (blank($ruta) || ! Storage::disk('public')->exists($ruta)) {
+            return null;
+        }
+
+        return parse_url(Storage::disk('public')->url($ruta), PHP_URL_PATH);
     }
 
     public function usuarios(): BelongsToMany
