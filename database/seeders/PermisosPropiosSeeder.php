@@ -17,6 +17,7 @@ class PermisosPropiosSeeder extends Seeder
     public const PERMISOS = [
         'ver_costos_unidad' => 'Ver el costo y la utilidad de las unidades',
         'ver_precio_minimo' => 'Ver el precio mínimo autorizado',
+        'administrar_marca' => 'Cambiar el logo y los colores de la empresa',
     ];
 
     public function run(): void

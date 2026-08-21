@@ -57,13 +57,14 @@ class CatalogoDePermisos
     public const PROPIOS = [
         'ver_costos_unidad' => ['modulo' => 'Dinero', 'accion' => 'Ver costos y márgenes'],
         'ver_precio_minimo' => ['modulo' => 'Dinero', 'accion' => 'Ver el precio mínimo autorizado'],
+        'administrar_marca' => ['modulo' => 'La empresa', 'accion' => 'Cambiar el logo y los colores'],
     ];
 
     /** El orden en que conviene leerlos en una llamada. */
     public const ORDEN = [
         'Unidades', 'Ventas', 'Clientes', 'Prospectos', 'Dinero', 'Gastos compartidos',
         'Tablero del patio', 'Rentabilidad', 'Proveedores', 'Sucursales',
-        'Categorías de costo', 'Marcas y líneas', 'Usuarios', 'Roles',
+        'Categorías de costo', 'Marcas y líneas', 'La empresa', 'Usuarios', 'Roles',
         'Escritorio: capital en patio', 'Escritorio: unidades estancadas',
     ];
 
