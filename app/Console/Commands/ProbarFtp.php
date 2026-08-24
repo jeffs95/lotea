@@ -36,6 +36,10 @@ class ProbarFtp extends Command
             return self::FAILURE;
         }
 
+        if ($disco === 'ftp_documentos' && ! $this->asegurarLaRaiz()) {
+            return self::FAILURE;
+        }
+
         $ruta = 'lotea-prueba/'.now()->format('Ymd-His').'.txt';
         $contenido = 'Prueba de escritura de Lotea.';
 
@@ -50,7 +54,13 @@ class ProbarFtp extends Command
                 return self::FAILURE;
             }
 
-            $this->paso('Borrar', fn () => Storage::disk($disco)->delete($ruta));
+            $this->paso('Borrar', function () use ($disco, $ruta) {
+                Storage::disk($disco)->delete($ruta);
+
+                // Borrar el archivo deja la carpeta: sin esto, cada prueba
+                // suma un directorio vacío al FTP.
+                return Storage::disk($disco)->deleteDirectory(dirname($ruta));
+            });
         } catch (Throwable $e) {
             $this->newLine();
             $this->error('No se pudo: '.$e->getMessage());
@@ -63,6 +73,54 @@ class ProbarFtp extends Command
         $this->info('El disco responde. Las subidas van a funcionar.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Crea la carpeta raíz de Lotea si todavía no está.
+     *
+     * Flysystem no crea su propio root: si FTP_ROOT apunta a una carpeta que no
+     * existe, la primera subida falla con «creating parent directory failed» y
+     * nadie entiende por qué. Este FTP lo comparte toda la DGT —tiene ahí
+     * EXPEDIENTE, KARDEX, PERMISOS y una docena más— así que la carpeta propia
+     * no es un lujo.
+     */
+    protected function asegurarLaRaiz(): bool
+    {
+        $config = config('filesystems.disks.ftp_documentos');
+        $raiz = trim((string) $config['root'], '/');
+
+        if ($raiz === '') {
+            $this->warn('FTP_ROOT está vacío: Lotea escribiría en la raíz compartida del FTP.');
+
+            return true;
+        }
+
+        $conexion = @ftp_connect($config['host'], (int) $config['port'], (int) $config['timeout']);
+
+        if (! $conexion || ! @ftp_login($conexion, $config['username'], $config['password'])) {
+            $this->error('No se pudo entrar al FTP. Revisá host, usuario y contraseña.');
+
+            return false;
+        }
+
+        @ftp_pasv($conexion, (bool) $config['passive']);
+
+        if (@ftp_chdir($conexion, '/'.$raiz)) {
+            $this->line("  Carpeta   <fg=green>/{$raiz}</> ya existe");
+            @ftp_close($conexion);
+
+            return true;
+        }
+
+        $creada = @ftp_mkdir($conexion, '/'.$raiz) !== false;
+
+        $creada
+            ? $this->line("  Carpeta   <fg=green>/{$raiz}</> creada")
+            : $this->error("No existe /{$raiz} y el usuario no la puede crear. Pedila al administrador del FTP.");
+
+        @ftp_close($conexion);
+
+        return $creada;
     }
 
     protected function paso(string $nombre, callable $accion): mixed

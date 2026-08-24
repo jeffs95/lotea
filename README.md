@@ -78,8 +78,17 @@ diga `LOTEA_DISCO_ARCHIVOS`:
 php artisan lotea:probar-ftp
 ```
 
-Escribe un archivo, lo lee, lo borra y dice cuánto tardó cada paso. Es lo primero que hay que
-correr al configurar un servidor nuevo o cuando algo huele a VPN caída.
+Crea la carpeta raíz si falta, escribe un archivo, lo lee, lo borra y dice cuánto tardó cada
+paso. Es lo primero que hay que correr al configurar un servidor nuevo.
+
+> Flysystem no crea su propio `root`. Si `FTP_ROOT` apunta a una carpeta que no existe, la
+> primera subida falla con «creating parent directory failed» y no hay forma de adivinar por
+> qué. Por eso el comando la crea.
+
+Las conversiones (`miniatura`, `web`) se generan **al subir la foto**, no en una cola. El portal
+muestra la conversión `web`: si se encolara y nadie levantara un worker, el catálogo saldría con
+las tarjetas rotas sin ningún error visible. Cuesta medio segundo por foto y ahorra montar
+supervisor. Con un worker corriendo se puede poner `MEDIA_CONVERSIONES_EN_COLA=true`.
 
 Todo cuelga de la carpeta que diga `FTP_ROOT`, que por defecto es `/SAS-LOTEA`. Importa
 ponerla: ese FTP se comparte con otros sistemas que tienen ahí sus propias carpetas

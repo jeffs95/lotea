@@ -23,6 +23,14 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!-- Los tests jamás tocan el FTP: escribirían basura en el servidor
+             compartido de la DGT. Los que ejercitan ese camino se fingen el
+             disco con Storage::fake. -->
+        <env name="LOTEA_DISCO_ARCHIVOS" value="public" force="true"/>
+        <env name="FTP_HOST" value="" force="true"/>
+        <env name="FTP_USERNAME" value="" force="true"/>
+        <env name="FTP_PASSWORD" value="" force="true"/>
+
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="lotea_test"/>
         <env name="DB_URL" value=""/>

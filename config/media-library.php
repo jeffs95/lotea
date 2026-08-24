@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\RutaDeArchivos;
 use App\Support\UrlDeMediaRelativa;
 use Spatie\ImageOptimizer\Optimizers\Avifenc;
 use Spatie\ImageOptimizer\Optimizers\Cwebp;
@@ -24,7 +25,6 @@ use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
 use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use Spatie\MediaLibrary\Support\FileRemover\DefaultFileRemover;
-use App\Support\RutaDeArchivos;
 use Spatie\MediaLibraryPro\Models\TemporaryUpload;
 
 return [
@@ -92,7 +92,16 @@ return [
     /*
      * By default all conversions will be performed on a queue.
      */
-    'queue_conversions_by_default' => env('QUEUE_CONVERSIONS_BY_DEFAULT', true),
+    /*
+     * En falso a propósito: las conversiones se generan al subir la foto, no
+     * en una cola.
+     *
+     * El portal muestra la conversión `web`; si se encola y nadie levanta un
+     * worker, el catálogo sale con las tarjetas rotas y el dueño no tiene cómo
+     * saber por qué. Cuesta medio segundo por foto y ahorra montar supervisor
+     * para que el sistema funcione. Si algún día hay worker, se pone en true.
+     */
+    'queue_conversions_by_default' => env('MEDIA_CONVERSIONES_EN_COLA', false),
 
     /*
      * Should database transactions be run after database commits?
