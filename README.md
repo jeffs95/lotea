@@ -57,7 +57,7 @@ lee el entorno:
 
 | Variable | Por defecto |
 |---|---|
-| `LOTEA_OPERADOR_EMAIL` | `jeffersonjuarez0101@gmail.com` |
+| `LOTEA_OPERADOR_EMAIL` | `admin@lotea.gt` |
 | `LOTEA_OPERADOR_PASSWORD` | `password` |
 
 `APP_URL` tiene que coincidir con el puerto donde corre el servidor. Si no, los archivos ya
@@ -91,9 +91,8 @@ las tarjetas rotas sin ningún error visible. Cuesta medio segundo por foto y ah
 supervisor. Con un worker corriendo se puede poner `MEDIA_CONVERSIONES_EN_COLA=true`.
 
 Todo cuelga de la carpeta que diga `FTP_ROOT`, que por defecto es `/SAS-LOTEA`. Importa
-ponerla: ese FTP se comparte con otros sistemas que tienen ahí sus propias carpetas
-(`PERMISO_TEMPORAL`, `PERMISO_EXPRESS`, `RATIFICACION`, `JURIDICO`), y sin una raíz propia
-Lotea les llenaría la suya de carpetas sueltas.
+ponerla: si el FTP se comparte con otros sistemas, sin una raíz propia Lotea les llenaría la
+suya de carpetas sueltas, porque medialibrary guarda en directorios numerados.
 
 Dentro, los archivos se ordenan por concesionario y unidad:
 
@@ -455,3 +454,10 @@ con comisiones, empleados, caja por sucursal, taller y cartera de crédito propi
 
 Del plan original queda pendiente: nómina de Guatemala, inversionistas por unidad,
 inventario de repuestos, reportes avanzados y el "qué comprar".
+
+## Licencia
+
+Software propietario. © 2026 Jefferson Juárez. Todos los derechos reservados.
+
+El código está a la vista para mostrar cómo está construido; eso no concede permiso para
+usarlo, copiarlo ni desplegarlo. Para licenciarlo, hablemos.
