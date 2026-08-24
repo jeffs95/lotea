@@ -1,0 +1,271 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Actions\CrearEmpresa;
+use App\Enums\EstadoUnidad;
+use App\Models\Empresa;
+use App\Models\Unidad;
+use App\Models\User;
+use App\Support\AlmacenDeArchivos;
+use App\Support\Tenancy;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Tests\TestCase;
+
+/**
+ * Los archivos viviendo fuera del servidor web.
+ *
+ * Un disco FTP no tiene URL pública, así que las fotos y los documentos pasan
+ * por una ruta que decide quién puede verlos. Eso cierra algo que estaba mal:
+ * con el disco público, el título de un carro quedaba accesible a quien diera
+ * con la URL.
+ *
+ * El disco se finge como local sin URL, que es como se comporta el FTP para
+ * este código: no hace falta un servidor de verdad para probar la lógica.
+ */
+class ArchivosEnFtpTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected Empresa $empresa;
+
+    protected Empresa $otraEmpresa;
+
+    protected Unidad $unidad;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['media-library.disk_name' => 'ftp_documentos']);
+
+        Storage::fake('ftp_documentos');
+        Storage::fake(AlmacenDeArchivos::DISCO_CACHE);
+
+        $this->empresa = (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Valle']);
+        $this->otraEmpresa = (new CrearEmpresa)->ejecutar(['nombre' => 'Autos del Norte']);
+
+        Tenancy::usar($this->empresa);
+
+        $this->unidad = Unidad::factory()->publicada()->create([
+            'estado' => EstadoUnidad::Publicada,
+            'precio_lista' => 120000,
+        ]);
+    }
+
+    protected function agregar(string $coleccion): Media
+    {
+        return $this->unidad
+            ->addMediaFromString('contenido de prueba')
+            ->usingFileName(str($coleccion)->slug().'.pdf')
+            ->toMediaCollection($coleccion);
+    }
+
+    protected function usuarioDe(Empresa $empresa): User
+    {
+        $usuario = User::factory()->create();
+        $usuario->empresas()->attach($empresa);
+
+        return $usuario;
+    }
+
+    public function test_el_archivo_se_guarda_en_el_disco_configurado(): void
+    {
+        $media = $this->agregar('documentos');
+
+        Storage::disk('ftp_documentos')->assertExists(AlmacenDeArchivos::rutaDe($media));
+        Storage::disk('public')->assertMissing(AlmacenDeArchivos::rutaDe($media));
+    }
+
+    public function test_la_url_de_una_foto_apunta_a_la_ruta_que_la_sirve(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $this->assertSame("/archivo/{$foto->getKey()}", $foto->getUrl());
+        $this->assertSame("/archivo/{$foto->getKey()}/web", $foto->getUrl('web'));
+    }
+
+    public function test_cualquiera_ve_las_fotos_de_una_unidad_publicada(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $this->get($foto->getUrl())->assertSuccessful();
+    }
+
+    /** El catálogo es lo que se vende; el navegador no tiene que volver a pedirlo. */
+    public function test_las_fotos_publicas_se_sirven_con_cache_larga(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $respuesta = $this->get($foto->getUrl());
+
+        $this->assertStringContainsString('max-age=31536000', $respuesta->headers->get('Cache-Control'));
+        $this->assertStringContainsString('public', $respuesta->headers->get('Cache-Control'));
+    }
+
+    /**
+     * Antes esto era una URL pública. El título de un carro y su tarjeta de
+     * circulación traen el nombre y el NIT del dueño.
+     */
+    public function test_un_desconocido_no_puede_abrir_un_documento(): void
+    {
+        $documento = $this->agregar('documentos');
+
+        $this->get($documento->getUrl())->assertForbidden();
+    }
+
+    /** Son la prueba de cómo venía el carro: no van en el catálogo. */
+    public function test_un_desconocido_no_ve_las_fotos_de_subasta(): void
+    {
+        $foto = $this->agregar('fotos_subasta');
+
+        $this->get($foto->getUrl())->assertForbidden();
+    }
+
+    public function test_un_desconocido_no_ve_las_fotos_de_lo_que_no_esta_publicado(): void
+    {
+        $this->unidad->update(['publicado' => false]);
+
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $this->get($foto->getUrl())->assertForbidden();
+    }
+
+    public function test_la_gente_del_concesionario_si_abre_sus_documentos(): void
+    {
+        $documento = $this->agregar('documentos');
+
+        $this->actingAs($this->usuarioDe($this->empresa))
+            ->get($documento->getUrl())
+            ->assertSuccessful();
+    }
+
+    /** El aislamiento, otra vez: los papeles de un cliente son de ese cliente. */
+    public function test_otro_concesionario_no_abre_los_documentos_ajenos(): void
+    {
+        $documento = $this->agregar('documentos');
+
+        $this->actingAs($this->usuarioDe($this->otraEmpresa))
+            ->get($documento->getUrl())
+            ->assertForbidden();
+    }
+
+    public function test_los_documentos_no_se_cachean_en_el_navegador(): void
+    {
+        $documento = $this->agregar('documentos');
+
+        $respuesta = $this->actingAs($this->usuarioDe($this->empresa))->get($documento->getUrl());
+
+        $this->assertStringContainsString('private', $respuesta->headers->get('Cache-Control'));
+    }
+
+    /**
+     * La copia local es lo que hace viable el portal: sin ella, veinte carros
+     * con tres fotos serían sesenta lecturas del FTP por visitante.
+     *
+     * Se comprueba borrando el archivo del origen después de la primera
+     * lectura: si la segunda sigue funcionando, salió de la copia.
+     */
+    public function test_la_primera_lectura_deja_copia_local_y_la_segunda_ya_no_toca_el_origen(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+        $ruta = AlmacenDeArchivos::rutaDe($foto);
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertMissing($ruta);
+
+        $this->get($foto->getUrl())->assertSuccessful();
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertExists($ruta);
+
+        Storage::disk('ftp_documentos')->delete($ruta);
+
+        $this->get($foto->getUrl())->assertSuccessful();
+    }
+
+    public function test_olvidar_la_copia_obliga_a_volver_a_bajarla(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+        $ruta = AlmacenDeArchivos::rutaDe($foto);
+
+        $this->get($foto->getUrl())->assertSuccessful();
+
+        AlmacenDeArchivos::olvidarCache($foto);
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertMissing($ruta);
+
+        $this->get($foto->getUrl())->assertSuccessful();
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertExists($ruta);
+    }
+
+    /** Alguien limpió el FTP a mano: es un 404, no un error del sistema. */
+    public function test_un_archivo_que_ya_no_esta_en_el_disco_da_404(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        Storage::disk('ftp_documentos')->delete(AlmacenDeArchivos::rutaDe($foto));
+
+        $this->get($foto->getUrl())->assertNotFound();
+    }
+
+    /** Si no, el disco se llena de fotos de carros que ya no existen. */
+    public function test_borrar_una_foto_borra_su_copia_local(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+        $ruta = AlmacenDeArchivos::rutaDe($foto);
+
+        $this->get($foto->getUrl())->assertSuccessful();
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertExists($ruta);
+
+        $foto->delete();
+
+        Storage::disk(AlmacenDeArchivos::DISCO_CACHE)->assertMissing($ruta);
+    }
+
+    public function test_el_logo_del_concesionario_tambien_vive_en_el_disco(): void
+    {
+        $ruta = UploadedFile::fake()->image('logo.png', 240, 80)->store('marcas', 'ftp_documentos');
+
+        $this->empresa->update(['logo_path' => $ruta]);
+
+        Storage::disk('ftp_documentos')->assertExists($ruta);
+
+        $this->assertSame(
+            "/marca/{$this->empresa->slug}/logo",
+            $this->empresa->fresh()->logo_url,
+        );
+    }
+
+    public function test_el_logo_se_sirve_a_cualquiera(): void
+    {
+        $ruta = UploadedFile::fake()->image('logo.png', 240, 80)->store('marcas', 'ftp_documentos');
+        $this->empresa->update(['logo_path' => $ruta]);
+
+        $this->get($this->empresa->fresh()->logo_url)->assertSuccessful();
+    }
+
+    public function test_un_logo_que_no_esta_en_el_disco_no_da_url(): void
+    {
+        $this->empresa->update(['logo_path' => 'marcas/borrado.png']);
+
+        $this->assertNull($this->empresa->fresh()->logo_url);
+        $this->get("/marca/{$this->empresa->slug}/logo")->assertNotFound();
+    }
+
+    public function test_no_se_puede_pedir_un_tipo_de_marca_inventado(): void
+    {
+        $this->get("/marca/{$this->empresa->slug}/pasaporte")->assertNotFound();
+    }
+
+    public function test_no_se_puede_pedir_una_conversion_inventada(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $this->get("/archivo/{$foto->getKey()}/../../etc/passwd")->assertNotFound();
+        $this->get("/archivo/{$foto->getKey()}/loquesea")->assertNotFound();
+    }
+}

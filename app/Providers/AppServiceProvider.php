@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Listeners\RegistrarUltimoAcceso;
 use App\Listeners\SincronizarEmpresaActiva;
+use App\Support\AlmacenDeArchivos;
 use Filament\Events\TenantSet;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -11,8 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -42,6 +45,11 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(TenantSet::class, SincronizarEmpresaActiva::class);
         Event::listen(Login::class, RegistrarUltimoAcceso::class);
+
+        // Al borrar un archivo hay que borrar también su copia local, o el
+        // disco se llena de fotos de carros que ya no existen.
+        Media::deleted(fn (Media $media) => Storage::disk(AlmacenDeArchivos::DISCO_CACHE)
+            ->deleteDirectory((string) $media->getKey()));
 
         // Con el locale 'es' a secas, Q95,700.00 se imprime "95.700,00 GTQ".
         // Guatemala usa el formato anglosajón para los números.

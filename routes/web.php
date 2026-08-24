@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\EscaneoController;
+use App\Http\Controllers\MarcaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,3 +14,18 @@ Route::get('/', function () {
  * alguien lo va a teclear a mano alguna vez.
  */
 Route::get('/u/{codigo}', EscaneoController::class)->name('escaneo');
+
+/**
+ * Las fotos y los documentos de las unidades.
+ *
+ * Viven en el FTP, que no tiene URL pública, así que pasan por aquí. El
+ * controlador decide quién puede ver cada uno: las fotos de lo publicado son
+ * del catálogo, lo demás es del concesionario.
+ */
+Route::get('/archivo/{media}/{conversion?}', ArchivoController::class)
+    ->whereNumber('media')
+    ->whereIn('conversion', ['miniatura', 'web'])
+    ->name('archivo');
+
+/** El logo y el favicon del concesionario, que viven en el mismo disco. */
+Route::get('/marca/{slug}/{tipo}', MarcaController::class)->name('marca');

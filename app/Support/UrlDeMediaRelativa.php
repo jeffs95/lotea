@@ -19,6 +19,15 @@ class UrlDeMediaRelativa extends DefaultUrlGenerator
 {
     public function getUrl(): string
     {
+        // Un disco FTP no tiene URL pública: esos archivos se piden a la ruta
+        // que los sirve, que además decide quién puede verlos.
+        if (! AlmacenDeArchivos::esLocalPublico()) {
+            return static::soloLaRuta(route('archivo', array_filter([
+                'media' => $this->media->getKey(),
+                'conversion' => $this->conversion?->getName(),
+            ])));
+        }
+
         return static::soloLaRuta(parent::getUrl());
     }
 

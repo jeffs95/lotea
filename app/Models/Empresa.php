@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\MarcaController;
 use App\Models\Scopes\EmpresaScope;
+use App\Support\AlmacenDeArchivos;
 use App\Support\AvatarDeIniciales;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * El tenant. Cada empresa es un concesionario cliente de Lotea y no ve
@@ -182,11 +183,48 @@ class Empresa extends Model implements HasName
      */
     protected function archivoDeMarca(?string $ruta): ?string
     {
-        if (blank($ruta) || ! Storage::disk('public')->exists($ruta)) {
+        if (blank($ruta) || ! AlmacenDeArchivos::disco()->exists($ruta)) {
             return null;
         }
 
-        return parse_url(Storage::disk('public')->url($ruta), PHP_URL_PATH);
+        // En un disco sin URL pública —el FTP— el archivo se pide a la ruta que
+        // lo sirve, igual que las fotos de las unidades.
+        if (! AlmacenDeArchivos::esLocalPublico()) {
+            $tipo = array_search($this->campoDeMarca($ruta), MarcaController::TIPOS, true);
+
+            return parse_url(route('marca', ['slug' => $this->slug, 'tipo' => $tipo]), PHP_URL_PATH);
+        }
+
+        return parse_url(AlmacenDeArchivos::disco()->url($ruta), PHP_URL_PATH);
+    }
+
+    /** Qué campo de marca corresponde a esta ruta guardada. */
+    protected function campoDeMarca(string $ruta): string
+    {
+        foreach (MarcaController::TIPOS as $campo) {
+            if ($this->{$campo} === $ruta) {
+                return $campo;
+            }
+        }
+
+        return 'logo_path';
+    }
+
+    /**
+     * El archivo de marca en disco local, listo para entregar.
+     *
+     * Lo usa MarcaController: si vive en el FTP, deja copia local en la primera
+     * lectura como hacen las fotos.
+     */
+    public function archivoDeMarcaLocal(string $campo): ?string
+    {
+        $ruta = $this->{$campo};
+
+        if (blank($ruta) || ! AlmacenDeArchivos::disco()->exists($ruta)) {
+            return null;
+        }
+
+        return AlmacenDeArchivos::archivoLocalDeRuta($ruta);
     }
 
     public function usuarios(): BelongsToMany

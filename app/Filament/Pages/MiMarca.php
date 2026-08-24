@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Empresa;
+use App\Support\AlmacenDeArchivos;
 use App\Support\MarcaDelCliente;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -73,7 +74,7 @@ class MiMarca extends Page implements HasForms
                         FileUpload::make('logo_path')
                             ->label('Logo')
                             ->image()
-                            ->disk('public')
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
@@ -83,7 +84,7 @@ class MiMarca extends Page implements HasForms
                         FileUpload::make('logo_oscuro_path')
                             ->label('Logo para fondo oscuro')
                             ->image()
-                            ->disk('public')
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
@@ -93,7 +94,7 @@ class MiMarca extends Page implements HasForms
                         FileUpload::make('favicon_path')
                             ->label('Icono de la pestaña')
                             ->image()
-                            ->disk('public')
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
                             ->maxSize(512)

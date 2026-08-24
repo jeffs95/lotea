@@ -64,6 +64,38 @@ lee el entorno:
 subidos se quedan cargando para siempre en los formularios: el navegador los pide a un puerto
 donde no hay nada escuchando.
 
+## Dónde viven los archivos
+
+Las fotos y los documentos de las unidades, y los logos de los concesionarios, van al disco que
+diga `LOTEA_DISCO_ARCHIVOS`:
+
+| Valor | Dónde |
+|---|---|
+| `public` (por defecto) | En el servidor, bajo `storage/app/public` |
+| `ftp_documentos` | En el FTP que definan las variables `FTP_*` |
+
+```bash
+php artisan lotea:probar-ftp
+```
+
+Escribe un archivo, lo lee, lo borra y dice cuánto tardó cada paso. Es lo primero que hay que
+correr al configurar un servidor nuevo o cuando algo huele a VPN caída.
+
+**Un disco FTP no tiene URL pública**, así que los archivos no se sirven directo: pasan por
+`/archivo/{media}` y `/marca/{slug}/{tipo}`. Eso trae dos cosas:
+
+- **Cada archivo se autoriza.** Las fotos de una unidad publicada son del catálogo y las ve
+  cualquiera; las fotos de subasta, los documentos y las fotos de lo que no está publicado solo
+  las ve gente del concesionario. Con el disco público, el título de un carro quedaba accesible
+  a quien diera con la URL.
+- **La primera lectura deja copia local** en `storage/app/cache-archivos`. El portal muestra
+  decenas de fotos por visita y pedirlas al FTP cada vez lo pondría de rodillas. Esa carpeta no
+  es la fuente de verdad: se puede borrar entera y se vuelve a llenar sola.
+
+> Si el FTP está en una red interna (una IP `172.17.x`), el servidor de Lotea tiene que estar
+> dentro de esa red o con VPN. La copia local salva las lecturas, pero **subir** siempre
+> necesita alcanzar el FTP.
+
 ## Subirlo a producción
 
 ```bash

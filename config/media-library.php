@@ -30,10 +30,13 @@ use Spatie\MediaLibraryPro\Models\TemporaryUpload;
 return [
 
     /*
-     * The disk on which to store added files and derived images by default. Choose
-     * one or more of the disks you've configured in config/filesystems.php.
+     * Dónde viven las fotos y los documentos de las unidades.
+     *
+     * En producción es `ftp_documentos`. Por defecto se queda en `public` para
+     * poder trabajar sin estar dentro de la red del FTP: cambiar de uno a otro
+     * es esta variable y nada más.
      */
-    'disk_name' => env('MEDIA_DISK', 'public'),
+    'disk_name' => env('LOTEA_DISCO_ARCHIVOS', 'public'),
 
     /*
      * The disk on which to store conversions (thumbnails, etc.) and responsive images
