@@ -25,3 +25,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Temporales que medialibrary crea al generar conversiones
+/storage/media-library
