@@ -104,6 +104,9 @@
 
             {{-- Resultados --}}
             <div>
+                {{-- Lo primero que mira el comprador: qué tipo de vehículo quiere --}}
+                @include('portal.componentes.segmentos', ['tipos' => $tipos, 'carrocerias' => $carrocerias])
+
                 <form method="GET" class="mb-5 flex justify-end">
                     @foreach (request()->except('orden', 'page') as $clave => $valor)
                         <input type="hidden" name="{{ $clave }}" value="{{ $valor }}">

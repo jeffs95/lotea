@@ -28,6 +28,16 @@ enum TipoVehiculo: string implements HasIcon, HasLabel
         };
     }
 
+    /** Para los botones del portal, donde se agrupa: «Carros», «Motos». */
+    public function etiquetaPlural(): string
+    {
+        return match ($this) {
+            self::Automovil => 'Carros',
+            self::Motocicleta => 'Motos',
+            self::Camion => 'Camiones y pesados',
+        };
+    }
+
     public function getIcon(): string
     {
         return match ($this) {

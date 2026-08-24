@@ -15,6 +15,7 @@ $rutas = function () {
     Route::get('/', [CatalogoController::class, 'inicio'])->name('inicio');
     Route::get('/vehiculos', [CatalogoController::class, 'catalogo'])->name('catalogo');
     Route::get('/vehiculos/{slug}', [CatalogoController::class, 'unidad'])->name('unidad');
+    Route::get('/contacto', [CatalogoController::class, 'contacto'])->name('contacto');
     Route::post('/contacto', [LeadController::class, 'store'])
         ->middleware('throttle:leads')
         ->name('lead');

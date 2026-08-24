@@ -44,13 +44,16 @@
                 <a href="{{ \App\Support\PortalUrl::catalogo($empresa) }}" class="font-medium text-gray-600 hover:text-gray-900">
                     Vehículos
                 </a>
+                <a href="{{ \App\Support\PortalUrl::contacto($empresa) }}" class="font-medium text-gray-600 hover:text-gray-900">
+                    Encontranos
+                </a>
                 @if ($empresa->telefono)
                     <a href="tel:{{ $empresa->telefono }}" class="hidden font-medium text-gray-600 hover:text-gray-900 sm:block">
                         {{ $empresa->telefono }}
                     </a>
                 @endif
                 <a
-                    href="https://wa.me/502{{ preg_replace('/\D/', '', $empresa->telefono ?? '') }}"
+                    href="{{ $empresa->whatsapp_enlace ?? '#' }}"
                     target="_blank" rel="noopener"
                     class="rounded-lg px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                     style="background: var(--acento)"
@@ -80,9 +83,24 @@
 
             <div class="text-sm text-gray-600">
                 <p class="font-semibold text-gray-900">Sucursales</p>
-                @foreach ($empresa->sucursales()->where('activa', true)->get() as $sucursal)
-                    <p class="mt-2">{{ $sucursal->nombre }}</p>
+                @foreach ($empresa->sucursales()->where('activa', true)->where('mostrar_en_portal', true)->get() as $sucursal)
+                    <p class="mt-2">
+                        @if ($sucursal->tieneUbicacion())
+                            <a href="{{ $sucursal->mapa_google }}" target="_blank" rel="noopener" class="hover:underline">{{ $sucursal->nombre }}</a>
+                        @else
+                            {{ $sucursal->nombre }}
+                        @endif
+                    </p>
                 @endforeach
+
+                @if (count($empresa->redes))
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        @foreach ($empresa->redes as $red)
+                            <a href="{{ $red['url'] }}" target="_blank" rel="noopener"
+                               class="text-sm font-medium text-gray-600 hover:text-gray-900">{{ $red['nombre'] }}</a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
 

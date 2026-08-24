@@ -33,4 +33,10 @@ class PortalUrl
     {
         return self::ruta('unidad', $empresa, ['slug' => $slug]);
     }
+
+    /** Dónde encontrarlos y cómo escribirles. */
+    public static function contacto(Empresa $empresa): string
+    {
+        return self::ruta('contacto', $empresa);
+    }
 }

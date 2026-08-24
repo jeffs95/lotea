@@ -1,5 +1,5 @@
 @php
-    $whatsapp = preg_replace('/\D/', '', $empresa->telefono ?? '');
+    $whatsapp = \App\Support\WhatsApp::internacional($empresa->whatsapp ?: $empresa->telefono);
     $mensaje = rawurlencode("Hola, vi el vehículo con código {$unidad->codigo_qr} en su patio y quiero información.");
 @endphp
 
@@ -36,7 +36,7 @@
         </p>
 
         @if ($whatsapp)
-            <a href="https://wa.me/502{{ $whatsapp }}?text={{ $mensaje }}" target="_blank" rel="noopener"
+            <a href="https://wa.me/{{ $whatsapp }}?text={{ $mensaje }}" target="_blank" rel="noopener"
                class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-semibold text-white transition hover:bg-green-700">
                 Preguntar por WhatsApp
             </a>

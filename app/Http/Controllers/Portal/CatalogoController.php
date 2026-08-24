@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Portal;
 
+use App\Enums\TipoVehiculo;
 use App\Models\Marca;
 use App\Models\Sucursal;
 use App\Models\Unidad;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -28,6 +30,7 @@ class CatalogoController
             'destacadas' => $this->publicadas()->where('destacado', true)->take(6)->get(),
             'recientes' => $this->publicadas()->latest('fecha_lista')->take(8)->get(),
             'marcas' => $this->marcasConStock(),
+            'tipos' => $this->tiposConStock(),
             'total' => $this->publicadas()->count(),
         ]);
     }
@@ -66,6 +69,8 @@ class CatalogoController
         return view('portal.catalogo', [
             'unidades' => $consulta->paginate(12)->withQueryString(),
             'marcas' => $this->marcasConStock(),
+            'tipos' => $this->tiposConStock(),
+            'carrocerias' => $this->carroceriasConStock($request),
             'sucursales' => Sucursal::where('activa', true)->orderBy('nombre')->get(),
             'ordenes' => self::ORDENES,
         ]);
@@ -93,6 +98,23 @@ class CatalogoController
     }
 
     /**
+     * Dónde encontrarlos y cómo escribirles.
+     *
+     * Va en su propia página y no solo en el pie: en Guatemala el comprador
+     * quiere ver el patio antes de ir, y llegar con Waze sin llamar a nadie.
+     */
+    public function contacto(): View
+    {
+        // La empresa la comparte el middleware del portal con todas las vistas.
+        return view('portal.contacto', [
+            'sucursales' => Sucursal::enElPortal()
+                ->orderByDesc('es_principal')
+                ->orderBy('nombre')
+                ->get(),
+        ]);
+    }
+
+    /**
      * Publicadas incluye las que vienen en camino: la preventa es negocio
      * real y es lo que recorta los días de inventario.
      */
@@ -102,6 +124,65 @@ class CatalogoController
             ->where('publicado', true)
             ->publicables()
             ->with(['marca', 'linea', 'sucursal', 'media']);
+    }
+
+    /**
+     * Los tipos que el concesionario de verdad tiene a la venta, con cuántos.
+     *
+     * Solo lo que hay: ofrecer «Camiones» en un patio que solo vende motos
+     * lleva al comprador a una página vacía y lo pierde.
+     *
+     * @return array<int, array{valor: string, etiqueta: string, total: int}>
+     */
+    protected function tiposConStock(): array
+    {
+        $conteos = $this->publicadas()
+            ->reorder()
+            ->selectRaw('tipo_vehiculo, count(*) as total')
+            ->groupBy('tipo_vehiculo')
+            ->pluck('total', 'tipo_vehiculo');
+
+        return collect(TipoVehiculo::cases())
+            ->filter(fn (TipoVehiculo $t) => ($conteos[$t->value] ?? 0) > 0)
+            ->map(fn (TipoVehiculo $t) => [
+                'valor' => $t->value,
+                'etiqueta' => $t->etiquetaPlural(),
+                'total' => (int) $conteos[$t->value],
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Las carrocerías con stock: sedán, camioneta, pick-up.
+     *
+     * Es lo que el comprador pregunta de verdad —«¿tenés camionetas?»— y va un
+     * nivel por debajo del tipo. Si ya se filtró por tipo, solo las de ese.
+     *
+     * @return array<int, array{valor: string, etiqueta: string, total: int}>
+     */
+    protected function carroceriasConStock(Request $request): array
+    {
+        $conteos = $this->publicadas()
+            ->reorder()
+            ->when($request->filled('tipo_vehiculo'),
+                fn ($q) => $q->where('tipo_vehiculo', $request->string('tipo_vehiculo')))
+            ->whereNotNull('carroceria')
+            ->selectRaw('carroceria, count(*) as total')
+            ->groupBy('carroceria')
+            ->pluck('total', 'carroceria');
+
+        $nombres = TipoVehiculo::todasLasCarrocerias();
+
+        return collect($conteos)
+            ->map(fn (int $total, string $valor) => [
+                'valor' => $valor,
+                'etiqueta' => $nombres[$valor] ?? Str::headline($valor),
+                'total' => $total,
+            ])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
     }
 
     protected function marcasConStock()

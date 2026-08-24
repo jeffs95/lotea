@@ -6,6 +6,7 @@ use App\Http\Controllers\MarcaController;
 use App\Models\Scopes\EmpresaScope;
 use App\Support\AlmacenDeArchivos;
 use App\Support\AvatarDeIniciales;
+use App\Support\WhatsApp;
 use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -162,6 +163,50 @@ class Empresa extends Model implements HasName
     public function getFaviconUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->favicon_path);
+    }
+
+    /** El WhatsApp del concesionario, listo para un href. */
+    public function getWhatsappEnlaceAttribute(): ?string
+    {
+        return WhatsApp::enlace($this->whatsapp ?: $this->telefono);
+    }
+
+    /**
+     * Las redes que el concesionario llenó, para pintarlas en el portal.
+     *
+     * Se guarda lo que el cliente pegue —a veces el usuario, a veces la URL
+     * entera— y aquí se arma el enlace bueno en los dos casos.
+     *
+     * @return array<int, array{red: string, nombre: string, url: string}>
+     */
+    public function getRedesAttribute(): array
+    {
+        $bases = [
+            'facebook' => ['Facebook', 'https://facebook.com/'],
+            'instagram' => ['Instagram', 'https://instagram.com/'],
+            'tiktok' => ['TikTok', 'https://tiktok.com/@'],
+            'youtube' => ['YouTube', 'https://youtube.com/@'],
+        ];
+
+        $redes = [];
+
+        foreach ($bases as $campo => [$nombre, $base]) {
+            $valor = trim((string) $this->{$campo});
+
+            if (blank($valor)) {
+                continue;
+            }
+
+            $redes[] = [
+                'red' => $campo,
+                'nombre' => $nombre,
+                'url' => str_starts_with($valor, 'http')
+                    ? $valor
+                    : $base.ltrim($valor, '@/'),
+            ];
+        }
+
+        return $redes;
     }
 
     /** Las dos letras que se muestran cuando no hay logo. */

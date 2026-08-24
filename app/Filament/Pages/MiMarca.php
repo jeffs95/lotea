@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -41,9 +42,9 @@ class MiMarca extends Page implements HasForms
 
     protected static ?string $slug = 'mi-marca';
 
-    protected static ?string $navigationLabel = 'Mi marca';
+    protected static ?string $navigationLabel = 'Mi marca y contacto';
 
-    protected static ?string $title = 'Mi marca';
+    protected static ?string $title = 'Mi marca y contacto';
 
     protected string $view = 'filament.pages.mi-marca';
 
@@ -59,6 +60,8 @@ class MiMarca extends Page implements HasForms
     {
         $this->form->fill($this->empresa()->only([
             'logo_path', 'logo_oscuro_path', 'favicon_path', 'color_primario',
+            'telefono', 'whatsapp', 'email',
+            'facebook', 'instagram', 'tiktok', 'youtube',
         ]));
     }
 
@@ -99,6 +102,49 @@ class MiMarca extends Page implements HasForms
                             ->visibility('public')
                             ->maxSize(512)
                             ->helperText('Cuadrado, de 64x64 o más.'),
+                    ]),
+
+                Section::make('Cómo lo contactan')
+                    ->description('Sale en el portal y en los botones de contacto de cada vehículo.')
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('telefono')->label('Teléfono')->tel()->maxLength(30),
+
+                        TextInput::make('whatsapp')
+                            ->label('WhatsApp')
+                            ->tel()
+                            ->maxLength(30)
+                            ->helperText('Si lo deja vacío se usa el teléfono.'),
+
+                        TextInput::make('email')
+                            ->label('Correo')
+                            ->email()
+                            ->maxLength(120),
+                    ]),
+
+                Section::make('Redes sociales')
+                    ->description('Puede pegar el enlace completo o solo el usuario. Las que deje vacías no aparecen.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('facebook')
+                            ->label('Facebook')
+                            ->maxLength(200)
+                            ->placeholder('importadoragomez'),
+
+                        TextInput::make('instagram')
+                            ->label('Instagram')
+                            ->maxLength(200)
+                            ->placeholder('@importadoragomez'),
+
+                        TextInput::make('tiktok')
+                            ->label('TikTok')
+                            ->maxLength(200)
+                            ->placeholder('@importadoragomez'),
+
+                        TextInput::make('youtube')
+                            ->label('YouTube')
+                            ->maxLength(200)
+                            ->placeholder('@importadoragomez'),
                     ]),
 
                 Section::make('Su color')
