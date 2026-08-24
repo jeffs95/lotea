@@ -81,6 +81,29 @@ php artisan lotea:probar-ftp
 Escribe un archivo, lo lee, lo borra y dice cuánto tardó cada paso. Es lo primero que hay que
 correr al configurar un servidor nuevo o cuando algo huele a VPN caída.
 
+Todo cuelga de la carpeta que diga `FTP_ROOT`, que por defecto es `/SAS-LOTEA`. Importa
+ponerla: ese FTP se comparte con otros sistemas que tienen ahí sus propias carpetas
+(`PERMISO_TEMPORAL`, `PERMISO_EXPRESS`, `RATIFICACION`, `JURIDICO`), y sin una raíz propia
+Lotea les llenaría la suya de carpetas sueltas.
+
+Dentro, los archivos se ordenan por concesionario y unidad:
+
+```
+SAS-LOTEA/
+├── marcas/                                   ← logos y favicons
+└── autos-del-valle/
+    └── unidades/
+        └── 12/
+            ├── fotos/37/frente.jpg
+            │   └── conversions/frente-web.webp
+            ├── fotos-subasta/38/lote.jpg
+            └── documentos/40/titulo.pdf
+```
+
+Se puede abrir con cualquier cliente de FTP y entender qué hay, y si un cliente se da de baja
+su carpeta se borra entera. Los números son ids, no el stock del carro: el stock se puede
+editar y las rutas ya guardadas quedarían apuntando a la nada.
+
 **Un disco FTP no tiene URL pública**, así que los archivos no se sirven directo: pasan por
 `/archivo/{media}` y `/marca/{slug}/{tipo}`. Eso trae dos cosas:
 

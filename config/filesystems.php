@@ -64,7 +64,7 @@ return [
             'username' => env('FTP_USERNAME'),
             'password' => env('FTP_PASSWORD'),
             'port' => (int) env('FTP_PORT', 21),
-            'root' => env('FTP_ROOT', '/'),
+            'root' => env('FTP_ROOT', '/SAS-LOTEA'),
             'passive' => (bool) env('FTP_PASSIVE', true),
             'ssl' => (bool) env('FTP_SSL', false),
             'timeout' => (int) env('FTP_TIMEOUT', 30),

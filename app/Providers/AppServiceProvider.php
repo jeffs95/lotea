@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Illuminate\Support\ServiceProvider;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -48,8 +47,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Al borrar un archivo hay que borrar también su copia local, o el
         // disco se llena de fotos de carros que ya no existen.
-        Media::deleted(fn (Media $media) => Storage::disk(AlmacenDeArchivos::DISCO_CACHE)
-            ->deleteDirectory((string) $media->getKey()));
+        Media::deleted(fn (Media $media) => AlmacenDeArchivos::olvidarTodoDe($media));
 
         // Con el locale 'es' a secas, Q95,700.00 se imprime "95.700,00 GTQ".
         // Guatemala usa el formato anglosajón para los números.

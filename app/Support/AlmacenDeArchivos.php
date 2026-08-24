@@ -102,4 +102,17 @@ class AlmacenDeArchivos
     {
         Storage::disk(static::DISCO_CACHE)->delete(static::rutaDe($media, $conversion));
     }
+
+    /**
+     * Borra la copia local de un archivo y de todas sus conversiones.
+     *
+     * Se llama al borrar el medium: si no, el disco se llena de fotos de
+     * carros que ya no existen.
+     */
+    public static function olvidarTodoDe(Media $media): void
+    {
+        $carpeta = app(config('media-library.path_generator'))->getPath($media);
+
+        Storage::disk(static::DISCO_CACHE)->deleteDirectory(rtrim($carpeta, '/'));
+    }
 }

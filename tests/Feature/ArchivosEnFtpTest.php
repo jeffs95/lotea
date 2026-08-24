@@ -80,6 +80,46 @@ class ArchivosEnFtpTest extends TestCase
         Storage::disk('public')->assertMissing(AlmacenDeArchivos::rutaDe($media));
     }
 
+    /**
+     * El FTP se comparte con otros sistemas de la DGT, que tienen ahí sus
+     * carpetas PERMISO_TEMPORAL y compañía. Lo de Lotea tiene que poder
+     * abrirse con un cliente de FTP y entenderse.
+     */
+    public function test_los_archivos_se_ordenan_por_concesionario_y_unidad(): void
+    {
+        $documento = $this->agregar('documentos');
+
+        $this->assertSame(
+            "autos-del-valle/unidades/{$this->unidad->id}/documentos/{$documento->getKey()}/documentos.pdf",
+            AlmacenDeArchivos::rutaDe($documento),
+        );
+    }
+
+    public function test_las_conversiones_van_junto_a_su_original(): void
+    {
+        $foto = $this->unidad->getFirstMedia('fotos');
+
+        $this->assertStringStartsWith(
+            "autos-del-valle/unidades/{$this->unidad->id}/fotos/{$foto->getKey()}/conversions/",
+            AlmacenDeArchivos::rutaDe($foto, 'web'),
+        );
+    }
+
+    /** Cada concesionario en su carpeta: si uno se va, se borra la suya y ya. */
+    public function test_cada_concesionario_tiene_su_propia_carpeta(): void
+    {
+        $ajena = Tenancy::comoEmpresa($this->otraEmpresa, function () {
+            $unidad = Unidad::factory()->create();
+
+            return $unidad->addMediaFromString('otra')->usingFileName('x.pdf')->toMediaCollection('documentos');
+        });
+
+        $propio = $this->agregar('documentos');
+
+        $this->assertStringStartsWith('autos-del-valle/', AlmacenDeArchivos::rutaDe($propio));
+        $this->assertStringStartsWith('autos-del-norte/', AlmacenDeArchivos::rutaDe($ajena));
+    }
+
     public function test_la_url_de_una_foto_apunta_a_la_ruta_que_la_sirve(): void
     {
         $foto = $this->unidad->getFirstMedia('fotos');

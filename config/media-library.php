@@ -24,7 +24,7 @@ use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
 use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
 use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 use Spatie\MediaLibrary\Support\FileRemover\DefaultFileRemover;
-use Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator;
+use App\Support\RutaDeArchivos;
 use Spatie\MediaLibraryPro\Models\TemporaryUpload;
 
 return [
@@ -144,7 +144,12 @@ return [
     /*
      * The class that contains the strategy for determining a media file's path.
      */
-    'path_generator' => DefaultPathGenerator::class,
+    /*
+     * Ordena los archivos por concesionario y unidad en vez de en carpetas
+     * numéricas. Ver App\Support\RutaDeArchivos: el FTP se comparte con otros
+     * sistemas y hay que poder abrirlo y entender qué hay.
+     */
+    'path_generator' => RutaDeArchivos::class,
 
     /*
      * The class that contains the strategy for determining how to remove files.
