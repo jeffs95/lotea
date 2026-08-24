@@ -74,6 +74,15 @@ class Unidad extends Model implements HasMedia
             $unidad->codigo_qr ??= CodigoDeUnidad::generar();
         });
 
+        // El slug se arma cuando el carro está por salir al portal y no antes:
+        // recién comprado no tiene marca ni línea, y saldría un slug feo que ya
+        // no se puede cambiar sin romper el enlace que alguien compartió.
+        static::saving(function (Unidad $unidad) {
+            if ($unidad->publicado && blank($unidad->slug)) {
+                $unidad->slug = $unidad->generarSlug();
+            }
+        });
+
         // Vale para cualquier camino —formulario, importación, un script— y no
         // solo para la pantalla que lo pide.
         static::saving(function (Unidad $unidad) {
@@ -160,6 +169,24 @@ class Unidad extends Model implements HasMedia
     }
 
     /** Cómo se nombra el carro en pantalla: "Toyota RAV4 2019". */
+    /**
+     * La parte legible de la URL del carro en el portal.
+     *
+     * Lleva el stock al final para que sea único dentro del concesionario: dos
+     * Yaris 2018 son dos carros distintos y cada uno necesita su enlace.
+     *
+     * Una vez puesto no se vuelve a tocar aunque cambien la marca o el año: ese
+     * enlace ya salió por WhatsApp y tiene que seguir abriendo.
+     */
+    public function generarSlug(): string
+    {
+        $base = str($this->descripcion)->slug()->value();
+
+        return str(filled($base) ? "{$base}-{$this->stock_no}" : "unidad-{$this->stock_no}")
+            ->slug()
+            ->value();
+    }
+
     public function getDescripcionAttribute(): string
     {
         return collect([

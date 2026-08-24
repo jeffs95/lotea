@@ -8,6 +8,7 @@ use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use App\Support\QrDeUnidad;
+use App\Support\RequisitosDelPortal;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
@@ -36,6 +37,81 @@ class UnidadForm
     protected static function tipo(callable $get): TipoVehiculo
     {
         return TipoVehiculo::tryFrom((string) $get('tipo_vehiculo')) ?? TipoVehiculo::Automovil;
+    }
+
+    /**
+     * Le dice al usuario, mientras llena la ficha, si el carro va a salir en el
+     * portal o no.
+     *
+     * Sin esto la unidad se guarda, no aparece, y nadie sabe por qué: el
+     * sistema apaga «Publicado» en silencio cuando falta el precio o la foto.
+     */
+    protected static function avisoDelPortal(callable $get): HtmlString
+    {
+        $faltan = RequisitosDelPortal::trabas($get('precio_lista'), self::tieneAlgunaFoto($get));
+        $estadoListo = RequisitosDelPortal::elEstadoAdmiteVenta($get('estado'));
+        $publicado = (bool) $get('publicado');
+
+        if ($faltan !== []) {
+            return self::aviso(
+                'danger',
+                'Así no va a aparecer en el portal',
+                'Falta '.self::enumerar($faltan).'. La unidad se guarda igual y queda en el inventario, '
+                .'pero el interruptor «Publicado» se va a apagar solo al guardar.',
+            );
+        }
+
+        if (! $estadoListo) {
+            return self::aviso(
+                'warning',
+                'Todavía no, por el estado',
+                'Un carro recién comprado no se ofrece como disponible. Aparecerá solo, sin volver a tocar nada, '
+                .'en cuanto lo pase a '.RequisitosDelPortal::estadosQueSeVen().'.',
+            );
+        }
+
+        if (! $publicado) {
+            return self::aviso(
+                'info',
+                'Listo para publicarse',
+                'Ya tiene precio y fotos. Encienda «Publicado en el portal» aquí abajo y el cliente lo verá.',
+            );
+        }
+
+        return self::aviso(
+            'success',
+            'Se va a ver en el portal',
+            'Tiene precio, fotos y un estado de venta, y está marcada como publicada.',
+        );
+    }
+
+    /** Las de subasta cuentan: es mejor esa foto que ninguna. */
+    protected static function tieneAlgunaFoto(callable $get): bool
+    {
+        return filled($get('fotos')) || filled($get('fotos_subasta'));
+    }
+
+    /** @param  array<int, string>  $cosas */
+    protected static function enumerar(array $cosas): string
+    {
+        return collect($cosas)->join(', ', ' y ');
+    }
+
+    protected static function aviso(string $color, string $titulo, string $detalle): HtmlString
+    {
+        $tonos = [
+            'danger' => ['bg-danger-50 dark:bg-danger-500/10', 'text-danger-700 dark:text-danger-400'],
+            'warning' => ['bg-warning-50 dark:bg-warning-500/10', 'text-warning-700 dark:text-warning-400'],
+            'info' => ['bg-gray-50 dark:bg-white/5', 'text-gray-700 dark:text-gray-300'],
+            'success' => ['bg-success-50 dark:bg-success-500/10', 'text-success-700 dark:text-success-400'],
+        ][$color];
+
+        return new HtmlString(
+            '<div class="rounded-lg px-4 py-3 '.$tonos[0].'">'
+            .'<p class="font-semibold '.$tonos[1].'">'.e($titulo).'</p>'
+            .'<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">'.e($detalle).'</p>'
+            .'</div>'
+        );
     }
 
     /** Todas las de todos los tipos: el formulario filtra según corresponda. */
@@ -290,10 +366,19 @@ class UnidadForm
                 ]),
 
                 Tab::make('Comercial')->schema([
+                    Section::make('Para que se vea en el portal')
+                        ->description('El sistema no publica un carro sin precio o sin fotos: en la página del cliente se vería incompleto.')
+                        ->schema([
+                            Placeholder::make('requisitos_portal')
+                                ->hiddenLabel()
+                                ->content(fn (callable $get) => self::avisoDelPortal($get)),
+                        ]),
+
                     Section::make()->columns(3)->schema([
                         TextInput::make('precio_lista')
                             ->label('Precio de lista')
                             ->numeric()
+                            ->live(onBlur: true)
                             ->prefix('Q'),
                         TextInput::make('precio_minimo')
                             ->label('Precio mínimo')
@@ -301,7 +386,7 @@ class UnidadForm
                             ->prefix('Q')
                             ->helperText('El piso autorizado. El vendedor no lo ve.'),
                         TextInput::make('ubicacion')->label('Ubicación en el patio')->maxLength(60),
-                        Toggle::make('publicado')->label('Publicado en el portal'),
+                        Toggle::make('publicado')->label('Publicado en el portal')->live(),
                         Toggle::make('destacado')->label('Destacado'),
                     ]),
 
@@ -324,6 +409,7 @@ class UnidadForm
                             SpatieMediaLibraryFileUpload::make('fotos')
                                 ->collection('fotos')
                                 ->multiple()
+                                ->live()
                                 ->reorderable()
                                 ->image()
                                 ->imageEditor()

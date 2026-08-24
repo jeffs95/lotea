@@ -39,7 +39,9 @@ class PortalPublicoTest extends TestCase
         return Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->publicada()->create([
             'estado' => EstadoUnidad::Publicada,
             'precio_lista' => 148000,
-            'slug' => 'toyota-rav4-2019-stock-1',
+            // Sin slug a propósito: que lo genere el modelo, como en la vida
+            // real. Fijarlo aquí escondía que nadie lo generaba y el portal se
+            // caía con un 500 en cuanto se publicaba un carro de verdad.
             ...$atributos,
         ]));
     }
@@ -178,5 +180,39 @@ class PortalPublicoTest extends TestCase
     public function test_una_empresa_que_no_existe_da_404(): void
     {
         $this->get('/v/no-existe/vehiculos')->assertNotFound();
+    }
+
+    /**
+     * El slug es lo que arma la URL de cada carro. Sin él, la tarjeta del
+     * catálogo revienta y se cae el portal entero con un 500: no es que falte
+     * un carro, es que no carga la página.
+     */
+    public function test_publicar_una_unidad_le_da_su_slug(): void
+    {
+        $unidad = $this->publicar(['stock_no' => '0007']);
+
+        $this->assertNotNull($unidad->fresh()->slug);
+        $this->assertStringEndsWith('-0007', $unidad->fresh()->slug);
+    }
+
+    /** Ese enlace ya salió por WhatsApp: no puede cambiar bajo los pies. */
+    public function test_el_slug_no_cambia_al_editar_la_unidad(): void
+    {
+        $unidad = $this->publicar();
+
+        $original = $unidad->fresh()->slug;
+
+        $unidad->update(['anio' => 2020, 'precio_lista' => 88000]);
+
+        $this->assertSame($original, $unidad->fresh()->slug);
+    }
+
+    /** El caso que tumbó el portal de verdad. */
+    public function test_el_catalogo_carga_con_una_unidad_recien_publicada(): void
+    {
+        $this->publicar();
+
+        $this->get("/v/{$this->empresa->slug}")->assertSuccessful();
+        $this->get("/v/{$this->empresa->slug}/vehiculos")->assertSuccessful();
     }
 }

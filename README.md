@@ -127,6 +127,18 @@ editar y las rutas ya guardadas quedarían apuntando a la nada.
 > dentro de esa red o con VPN. La copia local salva las lecturas, pero **subir** siempre
 > necesita alcanzar el FTP.
 
+### Cambiar de disco con archivos ya subidos
+
+```bash
+php artisan lotea:migrar-archivos --fingir   # qué movería
+php artisan lotea:migrar-archivos            # moverlo
+```
+
+Cambiar `LOTEA_DISCO_ARCHIVOS` solo dice dónde se guarda **de ahora en adelante**. Lo que ya
+estaba subido se queda donde estaba, el sistema lo busca en el disco nuevo y no lo encuentra: la
+ficha se ve sin fotos y el portal muestra las tarjetas vacías. Este comando lo pasa al disco
+configurado y regenera las conversiones.
+
 ## Subirlo a producción
 
 ```bash

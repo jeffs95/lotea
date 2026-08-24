@@ -4,12 +4,15 @@ namespace App\Filament\Resources\Unidades\Pages;
 
 use App\Enums\EstadoUnidad;
 use App\Filament\Resources\Unidades\Actions\LeerDocumentoAction;
+use App\Filament\Resources\Unidades\Pages\Concerns\AvisaSobreElPortal;
 use App\Filament\Resources\Unidades\UnidadResource;
 use App\Models\UnidadTransicion;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUnidad extends CreateRecord
 {
+    use AvisaSobreElPortal;
+
     protected static string $resource = UnidadResource::class;
 
     protected function getHeaderActions(): array
@@ -36,6 +39,8 @@ class CreateUnidad extends CreateRecord
                 ? 'Unidad registrada'
                 : 'Unidad registrada directamente en «'.$this->record->estado->getLabel().'»',
         ]);
+
+        $this->avisarSobreElPortal();
     }
 
     /**
