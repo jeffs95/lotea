@@ -52,6 +52,19 @@ class Sucursal extends Model
         return filled($this->latitud) && filled($this->longitud);
     }
 
+    /**
+     * El punto como «lat,lng», sin los ceros que agrega el cast decimal.
+     *
+     * Va en la URL del mapa incrustado, y 14.6231000 en vez de 14.6231 se ve
+     * descuidado en algo que el visitante puede copiar.
+     */
+    public function getPuntoAttribute(): ?string
+    {
+        return $this->tieneUbicacion()
+            ? ((float) $this->latitud).','.((float) $this->longitud)
+            : null;
+    }
+
     /** Para el que va a buscar el patio en el mapa. */
     public function getMapaGoogleAttribute(): ?string
     {

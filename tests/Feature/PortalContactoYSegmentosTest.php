@@ -88,6 +88,29 @@ class PortalContactoYSegmentosTest extends TestCase
             ->assertSee('query=14.6231,-90.5566', escape: false);
     }
 
+    /** El mapa es lo que la gente mira primero para decidir si le queda cerca. */
+    public function test_el_mapa_se_ve_incrustado_en_la_pagina(): void
+    {
+        Sucursal::first()->update(['latitud' => 14.6231, 'longitud' => -90.5566]);
+
+        $this->get($this->url('/contacto'))
+            ->assertSee('<iframe', escape: false)
+            ->assertSee('maps.google.com/maps?q=14.6231,-90.5566', escape: false)
+            // Sin lazy, tres sucursales cargarían tres mapas de golpe.
+            ->assertSee('loading="lazy"', escape: false);
+    }
+
+    /** Sin coordenadas la tarjeta no puede verse rota: se rellena con la marca. */
+    public function test_sin_coordenadas_no_hay_iframe_pero_la_tarjeta_se_sostiene(): void
+    {
+        Sucursal::first()->update(['latitud' => null, 'longitud' => null, 'nombre' => 'Patio sin mapa']);
+
+        $this->get($this->url('/contacto'))
+            ->assertDontSee('<iframe', escape: false)
+            ->assertSee('Patio sin mapa')
+            ->assertSee('Llamanos y te damos la referencia exacta para llegar.');
+    }
+
     public function test_sin_coordenadas_no_hay_botones_de_mapa(): void
     {
         Sucursal::first()->update(['latitud' => null, 'longitud' => null]);
