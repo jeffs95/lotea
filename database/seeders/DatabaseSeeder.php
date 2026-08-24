@@ -2,47 +2,35 @@
 
 namespace Database\Seeders;
 
-use App\Actions\CrearEmpresa;
-use App\Models\Empresa;
-use App\Models\Plan;
-use App\Models\Unidad;
-use App\Models\User;
-use App\Support\Tenancy;
 use Illuminate\Database\Seeder;
 
+/**
+ * Lo que necesita una instalación de Lotea para arrancar, y nada más.
+ *
+ * Aquí no se siembran concesionarios ni vehículos: los clientes se dan de alta
+ * desde el panel central y cada uno mete su propio inventario. Esto es lo que
+ * corre en producción tal cual.
+ */
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([CatalogosSeeder::class, PermisosPropiosSeeder::class, PlanesSeeder::class, OperadorSeeder::class]);
+        $this->call([
+            // Los permisos de cada recurso del panel: sin esto el primer
+            // cliente recibe un rol de dueño vacío.
+            PermisosDeShieldSeeder::class,
 
-        $empresa = Empresa::firstWhere('slug', 'autos-del-valle') ?? (new CrearEmpresa)->ejecutar([
-            'plan_id' => Plan::firstWhere('slug', 'pro')?->id,
-            'nombre' => 'Autos del Valle, S.A.',
-            'nombre_comercial' => 'Autos del Valle',
-            'nit' => '1234567-8',
-            'slug' => 'autos-del-valle',
-            'telefono' => '2222-3333',
-            'email' => 'ventas@autosdelvalle.gt',
-            'direccion' => 'Calzada Roosevelt 12-34, zona 11, Guatemala',
-        ], 'Patio Roosevelt');
+            // Y los que no salen de un recurso de Filament.
+            PermisosPropiosSeeder::class,
 
-        $dueno = User::firstOrCreate(
-            ['email' => 'dueno@lotea.test'],
-            ['name' => 'Jeferson (dueño)', 'password' => 'password', 'activo' => true],
-        );
+            // Marcas y líneas compartidas por todos los clientes.
+            CatalogosSeeder::class,
 
-        $dueno->empresas()->syncWithoutDetaching([$empresa->id]);
+            // Los planes que se venden.
+            PlanesSeeder::class,
 
-        Tenancy::comoEmpresa($empresa, function () use ($dueno) {
-            $dueno->assignRole('dueno');
-
-            if (Unidad::count() === 0) {
-                $this->call([UnidadesDemoSeeder::class, CostosDemoSeeder::class, VentasDemoSeeder::class, EmpleadosDemoSeeder::class, CajasDemoSeeder::class, TallerDemoSeeder::class, CarteraDemoSeeder::class, FotosDemoSeeder::class]);
-            }
-        });
-
-        // Fuera del contexto de la primera empresa: da de alta a las demás.
-        $this->call([ConcesionariosDemoSeeder::class, SoporteDemoSeeder::class]);
+            // La cuenta de Lotea para entrar al panel central.
+            OperadorSeeder::class,
+        ]);
     }
 }

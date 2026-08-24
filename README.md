@@ -43,13 +43,41 @@ explícitamente con `Tenancy::sinFiltro(fn () => ...)`. Es a propósito: así se
 composer install
 cp .env.example .env && php artisan key:generate
 createdb -U postgres lotea
-php artisan migrate
-php artisan shield:generate --all --panel=admin
-php artisan db:seed
+php artisan migrate --seed
+php artisan storage:link
 php artisan serve --port=8010
 ```
 
-Panel en `http://localhost:8010/app` — usuario de prueba `dueno@lotea.test` / `password`.
+El seed genera los permisos del panel, las marcas y líneas, los tres planes y la cuenta de
+Lotea. No siembra concesionarios ni vehículos: los clientes se dan de alta desde el panel
+central y cada uno mete su propio inventario.
+
+Panel central en `http://localhost:8010/central`. La cuenta sale de `OperadorSeeder`, que
+lee el entorno:
+
+| Variable | Por defecto |
+|---|---|
+| `LOTEA_OPERADOR_EMAIL` | `jeffersonjuarez0101@gmail.com` |
+| `LOTEA_OPERADOR_PASSWORD` | `password` |
+
+`APP_URL` tiene que coincidir con el puerto donde corre el servidor. Si no, los archivos ya
+subidos se quedan cargando para siempre en los formularios: el navegador los pide a un puerto
+donde no hay nada escuchando.
+
+## Subirlo a producción
+
+```bash
+php artisan migrate --force --seed
+php artisan storage:link
+php artisan optimize
+```
+
+Antes del primer seed conviene definir `LOTEA_OPERADOR_EMAIL` y `LOTEA_OPERADOR_PASSWORD`:
+la contraseña por defecto sirve para desarrollar, no para un servidor abierto a internet.
+
+El seed es idempotente —usa `updateOrCreate`— así que volver a correrlo tras un despliegue no
+duplica nada. Lo que sí hace es **devolver la contraseña del operador al valor del entorno**,
+así que si la cambiaste desde el panel, actualizá la variable o dejá de sembrar.
 
 ## Tests
 
@@ -183,16 +211,15 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
-## Usuarios de prueba
+## Probar los roles
 
-| Usuario | Contraseña | Para qué |
-|---|---|---|
-| `operador@lotea.gt` | `password` | Panel central: el negocio de vender Lotea |
-| `dueno@lotea.test` | `password` | Ve todo de su concesionario, incluidos costos y márgenes |
-| `vendedor@lotea.test` | `password` | Ve inventario, ventas y clientes — **ningún costo** |
+Una instalación nueva trae solo la cuenta de Lotea. Para ejercitar los roles hay que dar de
+alta un concesionario desde el panel central —que crea su casa matriz, sus diez roles y sus
+categorías de costo— y luego crear usuarios desde el panel de ese cliente.
 
-Entrar con el vendedor es la forma más rápida de comprobar la regla de negocio más
-importante del sistema.
+Crear un usuario con el rol **vendedor** y entrar con él es la forma más rápida de comprobar
+la regla de negocio más importante del sistema: ve inventario, ventas y clientes, pero
+**ningún costo ni margen**.
 
 ## Taller, caja y cartera
 
