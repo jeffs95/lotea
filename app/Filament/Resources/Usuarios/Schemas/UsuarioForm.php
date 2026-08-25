@@ -48,10 +48,14 @@ class UsuarioForm
 
                     Select::make('roles')
                         ->label('Roles')
-                        ->relationship('roles', 'name')
                         ->multiple()
                         ->preload()
-                        ->options(fn () => Role::pluck('name', 'id'))
+                        ->options(fn () => Role::orderBy('name')->pluck('name', 'id'))
+                        // Sin ->relationship() a propósito: esa vía escribe la
+                        // tabla pivote con Eloquent y se salta a spatie, que es
+                        // quien guarda a qué empresa pertenece el vínculo. La
+                        // asignación la hacen las páginas, con assignRole().
+                        ->dehydrated(true)
                         ->helperText('Definen qué puede ver y hacer dentro de esta empresa.'),
                 ]),
         ]);
