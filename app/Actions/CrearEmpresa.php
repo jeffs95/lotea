@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\CategoriaCosto;
 use App\Models\Empresa;
 use App\Models\Sucursal;
+use App\Support\PermisosPorRol;
 use App\Support\Tenancy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -99,9 +100,16 @@ class CrearEmpresa
                     Role::findOrCreate($rol, 'web');
                 }
 
-                // El dueño ve y hace todo dentro de su empresa; el resto de
-                // roles nace vacío y se arma desde la pantalla de Roles.
+                // El dueño ve y hace todo dentro de su empresa.
                 Role::findOrCreate('dueno', 'web')->syncPermissions(Permission::all());
+
+                // Y los demás nacen con lo que necesitan para trabajar desde el
+                // primer día. Antes salían vacíos: el dueño creaba un vendedor,
+                // el vendedor entraba y no veía ni el inventario. Todo esto se
+                // puede ajustar después desde la pantalla de Roles.
+                foreach (PermisosPorRol::roles() as $rol) {
+                    Role::findOrCreate($rol, 'web')->syncPermissions(PermisosPorRol::para($rol));
+                }
             });
 
             return $empresa;

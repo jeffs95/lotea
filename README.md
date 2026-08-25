@@ -337,6 +337,25 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Los roles y sus permisos
+
+Cada concesionario nace con diez roles ya configurados —`App\Support\PermisosPorRol` tiene el
+mapa— para que su gente pueda trabajar el primer día sin que nadie arme permisos a mano. El
+dueño ajusta lo que quiera desde la pantalla de Roles.
+
+```bash
+php artisan lotea:permisos-por-rol autos-del-valle   # los clientes de antes
+php artisan lotea:permisos-por-rol --forzar          # rehace también los ya configurados
+```
+
+Sin `--forzar` solo llena los roles vacíos: nadie quiere que un comando le deshaga lo que
+estuvo ajustando.
+
+> **Ver costos y márgenes** y **ver el precio mínimo** los tienen solo el dueño, el gerente,
+> quien compra, quien coordina la importación, el taller y el contador. El vendedor **nunca**:
+> si sabe lo que costó el carro, el cliente lo sabrá en la siguiente hora y el margen se negocia
+> desde ahí. Hay tests que fallan si algún rol se lleva ese permiso por descuido.
+
 ## Probar los roles
 
 Una instalación nueva trae solo la cuenta de Lotea. Para ejercitar los roles hay que dar de
