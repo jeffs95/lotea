@@ -69,14 +69,18 @@ class QrDeUnidad
      * Tiene que ir embebido y no como enlace: el SVG se sirve dentro de un
      * data URI y ahí una imagen externa no carga nunca.
      */
-    protected static function logoIncrustable(?Empresa $empresa): ?string
+    protected static function logoIncrustable(?Empresa $empresa): ?array
     {
-        if (! $empresa || blank($empresa->logo_path)) {
+        // El símbolo antes que la marca completa: en un cuadro de dos
+        // centímetros el nombre no se lee y solo le roba sitio al dibujo.
+        $campo = filled($empresa?->isotipo_path) ? 'isotipo_path' : 'logo_path';
+
+        if (! $empresa || blank($empresa->{$campo})) {
             return null;
         }
 
         try {
-            $archivo = $empresa->archivoDeMarcaLocal('logo_path');
+            $archivo = $empresa->archivoDeMarcaLocal($campo);
 
             if (! $archivo) {
                 return null;
@@ -90,8 +94,16 @@ class QrDeUnidad
         }
     }
 
-    /** Reduce el logo a un PNG cuadrado sobre blanco, listo para incrustar. */
-    protected static function reducir(string $archivo): ?string
+    /**
+     * Reduce el logo sobre fondo blanco, conservando su proporción.
+     *
+     * Sin forzarlo a cuadrado: un logo apaisado metido en un cuadrado obliga a
+     * una caja blanca cuadrada, que tapa módulos de más y encima deja el logo
+     * pequeño. Guardando la proporción, la caja se ajusta al logo.
+     *
+     * @return array{uri: string, proporcion: float}|null
+     */
+    protected static function reducir(string $archivo): ?array
     {
         $original = @imagecreatefromstring((string) file_get_contents($archivo));
 
@@ -101,24 +113,31 @@ class QrDeUnidad
 
         $anchoOriginal = imagesx($original);
         $altoOriginal = imagesy($original);
-        $lado = self::LADO_DEL_LOGO_EN_PIXELES;
 
-        $lienzo = imagecreatetruecolor($lado, $lado);
+        // Un logo muy alargado se recorta al ancho: más plano que 4:1 dejaría
+        // una franja tan baja que no se distinguiría nada.
+        $proporcion = min(4.0, max(1.0, $anchoOriginal / max(1, $altoOriginal)));
+
+        $ancho = self::LADO_DEL_LOGO_EN_PIXELES;
+        $alto = (int) round($ancho / $proporcion);
+
+        $lienzo = imagecreatetruecolor($ancho, $alto);
 
         // Fondo blanco: el lector necesita el contraste, y un logo con
         // transparencia sobre los módulos del código sería ilegible.
         imagefill($lienzo, 0, 0, imagecolorallocate($lienzo, 255, 255, 255));
+        imagealphablending($lienzo, true);
 
-        // El logo suele ser horizontal: se encaja sin deformarlo.
-        $escala = min($lado / $anchoOriginal, $lado / $altoOriginal);
-        $ancho = (int) round($anchoOriginal * $escala);
-        $alto = (int) round($altoOriginal * $escala);
+        // Se encaja dentro sin deformarlo.
+        $escala = min($ancho / $anchoOriginal, $alto / $altoOriginal);
+        $dibujoAncho = (int) round($anchoOriginal * $escala);
+        $dibujoAlto = (int) round($altoOriginal * $escala);
 
         imagecopyresampled(
             $lienzo, $original,
-            (int) (($lado - $ancho) / 2), (int) (($lado - $alto) / 2),
+            (int) (($ancho - $dibujoAncho) / 2), (int) (($alto - $dibujoAlto) / 2),
             0, 0,
-            $ancho, $alto,
+            $dibujoAncho, $dibujoAlto,
             $anchoOriginal, $altoOriginal,
         );
 
@@ -129,7 +148,10 @@ class QrDeUnidad
         imagedestroy($lienzo);
         imagedestroy($original);
 
-        return 'data:image/png;base64,'.base64_encode($png);
+        return [
+            'uri' => 'data:image/png;base64,'.base64_encode($png),
+            'proporcion' => $proporcion,
+        ];
     }
 
     /**
@@ -139,20 +161,30 @@ class QrDeUnidad
      * da al lector una zona limpia que puede reconstruir con la corrección de
      * errores.
      */
-    protected static function incrustarLogo(string $svg, string $logo, int $tamano): string
+    /**
+     * @param  array{uri: string, proporcion: float}  $logo
+     */
+    protected static function incrustarLogo(string $svg, array $logo, int $tamano): string
     {
-        $lado = (int) round($tamano * self::PROPORCION_DEL_LOGO);
-        $respiro = (int) round($lado * 0.16);
-        $caja = $lado + $respiro * 2;
-        $origen = (int) round(($tamano - $caja) / 2);
-        $radio = (int) round($caja * 0.18);
+        // El ancho manda; el alto sale de la proporción del logo. Así una marca
+        // apaisada ocupa una franja ancha y baja en vez de un cuadrado, y tapa
+        // menos módulos para el mismo tamaño aparente.
+        $ancho = (int) round($tamano * self::PROPORCION_DEL_LOGO * 1.35);
+        $alto = (int) round($ancho / $logo['proporcion']);
 
-        $x = $origen + $respiro;
+        $respiro = (int) round($tamano * 0.03);
+        $cajaAncho = $ancho + $respiro * 2;
+        $cajaAlto = $alto + $respiro * 2;
 
-        $capa = '<rect x="'.$origen.'" y="'.$origen.'" width="'.$caja.'" height="'.$caja
+        $cajaX = (int) round(($tamano - $cajaAncho) / 2);
+        $cajaY = (int) round(($tamano - $cajaAlto) / 2);
+        $radio = (int) round(min($cajaAncho, $cajaAlto) * 0.22);
+
+        $capa = '<rect x="'.$cajaX.'" y="'.$cajaY.'" width="'.$cajaAncho.'" height="'.$cajaAlto
             .'" rx="'.$radio.'" fill="#ffffff"/>'
-            .'<image x="'.$x.'" y="'.$x.'" width="'.$lado.'" height="'.$lado
-            .'" href="'.$logo.'" preserveAspectRatio="xMidYMid meet"/>';
+            .'<image x="'.($cajaX + $respiro).'" y="'.($cajaY + $respiro)
+            .'" width="'.$ancho.'" height="'.$alto
+            .'" href="'.$logo['uri'].'" preserveAspectRatio="xMidYMid meet"/>';
 
         return str_replace('</svg>', $capa.'</svg>', $svg);
     }

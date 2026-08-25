@@ -127,6 +127,33 @@ editar y las rutas ya guardadas quedarían apuntando a la nada.
 > dentro de esa red o con VPN. La copia local salva las lecturas, pero **subir** siempre
 > necesita alcanzar el FTP.
 
+### Las versiones del logo del cliente
+
+```bash
+php artisan lotea:variantes-logo autos-del-valle
+php artisan lotea:variantes-logo --forzar      # rehace todas, de todos
+```
+
+El cliente entrega el logo que usa en Facebook, con su fondo pegado. De ese
+archivo salen ocho versiones —sin inventar nada: se recorta, se quita el fondo y
+se oscurece lo blanco respetando los colores de la marca:
+
+| Variante | Qué es | Dónde se usa |
+|---|---|---|
+| `isologo` | La marca completa, sin fondo | Panel en modo oscuro |
+| `isologo-claro` | Igual, con lo blanco oscurecido | Portal y papel |
+| `isotipo` | Solo el símbolo | — |
+| `isotipo-claro` | El símbolo en oscuro | Centro del QR |
+| `isotipo-cuadrado(-claro)` | El símbolo encuadrado | Favicon |
+| `logotipo(-claro)` | Solo el nombre escrito | Libre |
+
+Las tres que el sistema usa solo se asignan si el campo está vacío: lo que el
+cliente subió a mano manda, salvo que se pase `--forzar`.
+
+> Del símbolo y del favicon se usa la versión **clara** —la de trazo oscuro—
+> porque van sobre blanco: el cuadro del QR y la pestaña del navegador. La
+> plateada sobre blanco se ve desvaída.
+
 ### Cambiar de disco con archivos ya subidos
 
 ```bash

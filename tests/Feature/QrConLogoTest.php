@@ -101,17 +101,30 @@ class QrConLogoTest extends TestCase
         $this->assertStringNotContainsString('<image', $svg);
     }
 
-    public function test_el_logo_no_pasa_de_la_cuarta_parte_del_codigo(): void
+    /**
+     * Lo que consume corrección de errores es el **área** tapada, no el ancho.
+     * Un logo apaisado puede ser más ancho y tapar mucho menos.
+     */
+    public function test_el_logo_tapa_una_parte_minima_del_codigo(): void
     {
         $this->ponerLogo();
 
-        preg_match('/<image x="(\d+)"[^>]*width="(\d+)"/', QrDeUnidad::svg($this->unidad, 300), $m);
+        preg_match(
+            '/<image x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)"/',
+            QrDeUnidad::svg($this->unidad, 300),
+            $m,
+        );
 
         $this->assertNotEmpty($m, 'No se encontró el logo en el SVG.');
-        $this->assertLessThanOrEqual(0.25, (int) $m[2] / 300);
+
+        [, $x, $y, $ancho, $alto] = array_map('intval', $m);
+
+        // El nivel alto recupera hasta un 30%; se deja un margen enorme.
+        $this->assertLessThanOrEqual(0.08, ($ancho * $alto) / (300 * 300));
 
         // Y centrado: descuadrado taparía uno de los tres ojos del código.
-        $this->assertEqualsWithDelta(150, (int) $m[1] + (int) $m[2] / 2, 2);
+        $this->assertEqualsWithDelta(150, $x + $ancho / 2, 3);
+        $this->assertEqualsWithDelta(150, $y + $alto / 2, 3);
     }
 
     /**
