@@ -182,6 +182,60 @@ class MiMarcaTest extends TestCase
         $this->assertSame('#ffffff', $this->valle->fresh()->color_de_marca);
     }
 
+    /**
+     * Cada casilla tiene que decir dónde se usa esa imagen: es lo que evita que
+     * el cliente suba el logo con fondo negro donde va sobre blanco.
+     */
+    public function test_cada_casilla_dice_en_que_parte_del_sistema_se_ve(): void
+    {
+        $this->comoDueno();
+
+        Livewire::test(MiMarca::class)
+            ->assertSee('Dónde va cada versión')
+            ->assertSee('la barra de arriba y el pie de su página pública')
+            ->assertSee('la portada de su página')
+            ->assertSee('el centro del código QR que se pega en el parabrisas')
+            ->assertSee('el fondo de la portada');
+    }
+
+    public function test_el_cliente_puede_subir_cada_version_por_separado(): void
+    {
+        $this->comoDueno();
+
+        Livewire::test(MiMarca::class)
+            ->fillForm([
+                'logo_claro_path' => [UploadedFile::fake()->image('claro.png', 240, 80)],
+                'logo_oscuro_path' => [UploadedFile::fake()->image('oscuro.png', 240, 80)],
+                'isotipo_path' => [UploadedFile::fake()->image('simbolo.png', 120, 120)],
+                'portada_path' => [UploadedFile::fake()->image('patio.jpg', 1600, 900)],
+            ])
+            ->call('guardar')
+            ->assertHasNoFormErrors();
+
+        $empresa = $this->valle->fresh();
+
+        foreach (['logo_claro_path', 'logo_oscuro_path', 'isotipo_path', 'portada_path'] as $campo) {
+            $this->assertNotNull($empresa->{$campo}, "No se guardó «{$campo}».");
+            Storage::disk('public')->assertExists($empresa->{$campo});
+        }
+    }
+
+    /** Es lo que promete el texto de ayuda de cada casilla. */
+    public function test_subir_el_logo_original_rellena_solo_las_versiones_vacias(): void
+    {
+        $this->comoDueno();
+
+        Livewire::test(MiMarca::class)
+            ->fillForm(['logo_path' => [UploadedFile::fake()->image('logo.png', 400, 400)]])
+            ->call('guardar')
+            ->assertHasNoFormErrors();
+
+        $empresa = $this->valle->fresh();
+
+        $this->assertNotNull($empresa->logo_claro_path);
+        $this->assertNotNull($empresa->logo_oscuro_path);
+    }
+
     public function test_el_panel_se_repinta_con_el_color_nuevo(): void
     {
         $this->comoDueno();

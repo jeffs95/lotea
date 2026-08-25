@@ -147,8 +147,15 @@ se oscurece lo blanco respetando los colores de la marca:
 | `isotipo-cuadrado(-claro)` | El símbolo encuadrado | Favicon |
 | `logotipo(-claro)` | Solo el nombre escrito | Libre |
 
-Las tres que el sistema usa solo se asignan si el campo está vacío: lo que el
-cliente subió a mano manda, salvo que se pase `--forzar`.
+Las que el sistema usa solo se asignan si el campo está vacío: lo que el cliente
+subió a mano manda, salvo que se pase `--forzar`. El mismo proceso corre solo
+cuando el concesionario sube su logo desde **Mi marca y contacto**, donde cada
+casilla dice en qué parte del sistema se ve esa imagen —la barra del portal, la
+portada, el centro del QR— para que nadie suba el archivo equivocado.
+
+Ahí mismo se sube la **imagen de portada**: el fondo de la cabecera grande del
+portal. Lleva una capa oscura encima porque sin ella el titular blanco se pierde
+sobre una foto clara, y eso es peor que no tener foto.
 
 > Del símbolo y del favicon se usa la versión **clara** —la de trazo oscuro—
 > porque van sobre blanco: el cuadro del QR y la pestaña del navegador. La

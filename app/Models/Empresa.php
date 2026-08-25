@@ -191,6 +191,12 @@ class Empresa extends Model implements HasName
         return $this->archivoDeMarca($this->isotipo_path);
     }
 
+    /** La foto de fondo de la portada del portal, si el cliente puso una. */
+    public function getPortadaUrlAttribute(): ?string
+    {
+        return $this->archivoDeMarca($this->portada_path);
+    }
+
     public function getFaviconUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->favicon_path);

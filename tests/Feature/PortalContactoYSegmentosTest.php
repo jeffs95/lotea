@@ -11,6 +11,7 @@ use App\Support\Coordenadas;
 use App\Support\Tenancy;
 use App\Support\WhatsApp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -144,6 +145,44 @@ class PortalContactoYSegmentosTest extends TestCase
         $this->get($this->url())
             ->assertSuccessful()
             ->assertSee('Encontranos');
+    }
+
+    // ── La portada ──────────────────────────────────────────────────────────
+
+    public function test_sin_portada_queda_el_degradado_con_su_color(): void
+    {
+        $this->get($this->url())
+            ->assertSuccessful()
+            ->assertDontSee('object-cover', escape: false);
+    }
+
+    public function test_la_portada_se_ve_de_fondo_en_el_inicio_y_en_contacto(): void
+    {
+        $this->ponerPortada();
+
+        foreach (['', '/contacto'] as $ruta) {
+            $this->get($this->url($ruta))
+                ->assertSuccessful()
+                ->assertSee($this->empresa->fresh()->portada_url, escape: false);
+        }
+    }
+
+    /**
+     * Sin la capa oscura, el titular blanco se pierde sobre una foto clara y la
+     * portada queda ilegible: peor que no tener foto.
+     */
+    public function test_la_portada_lleva_una_capa_que_deja_leer_el_texto(): void
+    {
+        $this->ponerPortada();
+
+        $this->get($this->url())->assertSee('bg-gray-900/75', escape: false);
+    }
+
+    protected function ponerPortada(): void
+    {
+        $ruta = UploadedFile::fake()->image('patio.jpg', 1600, 900)->store('marcas', 'public');
+
+        $this->empresa->update(['portada_path' => $ruta]);
     }
 
     // ── Segmentación por tipo ───────────────────────────────────────────────

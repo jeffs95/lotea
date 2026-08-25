@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\GenerarVariantesDeMarca;
 use App\Models\Empresa;
 use App\Support\AlmacenDeArchivos;
 use App\Support\MarcaDelCliente;
@@ -18,6 +19,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 /**
@@ -59,7 +61,9 @@ class MiMarca extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill($this->empresa()->only([
-            'logo_path', 'logo_oscuro_path', 'favicon_path', 'color_primario',
+            'logo_path', 'logo_claro_path', 'logo_oscuro_path',
+            'isotipo_path', 'favicon_path', 'portada_path',
+            'color_primario',
             'telefono', 'whatsapp', 'email',
             'facebook', 'instagram', 'tiktok', 'youtube',
         ]));
@@ -70,9 +74,8 @@ class MiMarca extends Page implements HasForms
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('Su logo')
-                    ->description('Se ve arriba en este panel y en la página donde exhibe sus vehículos.')
-                    ->columns(3)
+                Section::make('Su logo original')
+                    ->description('El archivo tal como se lo dio su diseñador. De aquí salen las demás versiones.')
                     ->schema([
                         FileUpload::make('logo_path')
                             ->label('Logo')
@@ -82,26 +85,86 @@ class MiMarca extends Page implements HasForms
                             ->visibility('public')
                             ->imageEditor()
                             ->maxSize(2048)
-                            ->helperText('PNG con fondo transparente. Se ve a 32 px de alto.'),
+                            ->helperText('Este no se publica directamente: es el original del que se derivan los de abajo.'),
+                    ]),
 
-                        FileUpload::make('logo_oscuro_path')
-                            ->label('Logo para fondo oscuro')
+                Section::make('Dónde va cada versión')
+                    ->description('Cada casilla dice exactamente en qué parte del sistema aparece. Lo que deje vacío se llena solo a partir del logo original.')
+                    ->columns(2)
+                    ->schema([
+                        FileUpload::make('logo_claro_path')
+                            ->label('Sobre fondo blanco')
                             ->image()
                             ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
                             ->maxSize(2048)
-                            ->helperText('Opcional. Si no lo sube, en modo oscuro se usa el normal.'),
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> la barra de arriba y el pie de su página pública, '
+                                .'las etiquetas del parabrisas y este panel de día.<br>'
+                                .'Necesita trazo <strong>oscuro</strong> y fondo transparente.'
+                            )),
+
+                        FileUpload::make('logo_oscuro_path')
+                            ->label('Sobre fondo oscuro')
+                            ->image()
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
+                            ->directory('marcas')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->maxSize(2048)
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> la portada de su página, la sección «Encontranos» '
+                                .'y este panel en modo noche.<br>'
+                                .'Necesita trazo <strong>claro</strong> y fondo transparente.'
+                            )),
+
+                        FileUpload::make('isotipo_path')
+                            ->label('Solo el símbolo, sin el nombre')
+                            ->image()
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
+                            ->directory('marcas')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->maxSize(1024)
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> el centro del código QR que se pega en el parabrisas.<br>'
+                                .'Ahí el nombre no se alcanza a leer. Trazo <strong>oscuro</strong>, va sobre blanco.'
+                            )),
 
                         FileUpload::make('favicon_path')
-                            ->label('Icono de la pestaña')
+                            ->label('Icono para navegadores viejos')
                             ->image()
                             ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
                             ->maxSize(512)
-                            ->helperText('Cuadrado, de 64x64 o más.'),
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> la pestaña del navegador, solo en los que no '
+                                .'entienden iconos modernos.<br>'
+                                .'Los demás usan sus iniciales sobre su color, que se dibujan solas.'
+                            )),
+                    ]),
+
+                Section::make('La portada de su página')
+                    ->description('La imagen grande de arriba, detrás del titular.')
+                    ->schema([
+                        FileUpload::make('portada_path')
+                            ->label('Imagen de portada')
+                            ->image()
+                            ->disk(AlmacenDeArchivos::nombreDelDisco())
+                            ->directory('marcas')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->imageEditorAspectRatios(['16:9', '21:9'])
+                            ->maxSize(4096)
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> el fondo de la portada y de «Encontranos».<br>'
+                                .'Una foto de su patio o de un carro, apaisada y de 1600 px de ancho o más. '
+                                .'Se le pone una capa oscura encima para que el texto siga leyéndose; '
+                                .'si no sube ninguna, queda el degradado con su color.'
+                            )),
                     ]),
 
                 Section::make('Cómo lo contactan')
@@ -175,7 +238,16 @@ class MiMarca extends Page implements HasForms
 
     public function guardar(): void
     {
-        $this->empresa()->update($this->form->getState());
+        $empresa = $this->empresa();
+        $logoAnterior = $empresa->logo_path;
+
+        $empresa->update($this->form->getState());
+
+        // Si subió un logo nuevo, de ahí salen las versiones que dejó vacías:
+        // es lo que promete el texto de ayuda de cada casilla.
+        if ($empresa->logo_path !== $logoAnterior) {
+            app(GenerarVariantesDeMarca::class)->ejecutar($empresa);
+        }
 
         // La marca vive memorizada por request; sin esto el panel se repintaría
         // con el color anterior.

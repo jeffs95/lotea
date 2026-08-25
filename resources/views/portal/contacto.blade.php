@@ -7,7 +7,17 @@
 
     {{-- Mismo lenguaje que el inicio: oscuro con el color de la marca detrás --}}
     <section class="relative overflow-hidden bg-gray-900">
-        <div class="absolute inset-0 opacity-20" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
+        @if ($empresa->portada_url)
+            {{-- La foto del cliente, y encima una capa oscura: sin ella el
+                 titular blanco se pierde sobre una foto clara y la portada
+                 queda ilegible, que es peor que no tener foto. --}}
+            <img src="{{ $empresa->portada_url }}" alt=""
+                 class="absolute inset-0 h-full w-full object-cover" loading="eager">
+            <div class="absolute inset-0 bg-gray-900/75"></div>
+            <div class="absolute inset-0 opacity-25" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
+        @else
+            <div class="absolute inset-0 opacity-20" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
+        @endif
 
         <div class="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
             @if ($empresa->logo_oscuro_url)

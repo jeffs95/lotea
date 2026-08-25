@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\GenerarVariantesDeMarca;
 use App\Models\Empresa;
-use App\Support\AlmacenDeArchivos;
-use App\Support\Tenancy;
-use App\Support\VariantesDeLogo;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -60,82 +58,16 @@ class GenerarVariantesDeLogo extends Command
 
     protected function procesar(Empresa $empresa): void
     {
-        $origen = Tenancy::comoEmpresa($empresa, fn () => $empresa->archivoDeMarcaLocal('logo_path'));
-
-        if (! $origen) {
-            $this->warn('  su logo no está en el disco; nada que hacer.');
-
-            return;
-        }
-
-        $disco = AlmacenDeArchivos::disco();
-        $carpeta = "marcas/{$empresa->slug}/variantes";
-        $rutas = [];
-
-        foreach (VariantesDeLogo::desde($origen, $empresa->color_de_marca) as $nombre => $imagen) {
-            $png = VariantesDeLogo::aPng($imagen);
-
-            $ruta = "{$carpeta}/{$nombre}.png";
-            $disco->put($ruta, $png);
-            $rutas[$nombre] = $ruta;
-
-            $this->line(sprintf('  %-24s %4dx%-4d  %s KB',
-                $nombre, imagesx($imagen), imagesy($imagen), number_format(strlen($png) / 1024, 1)));
-
-            imagedestroy($imagen);
-        }
-
-        $this->asignar($empresa, $rutas);
-    }
-
-    /**
-     * Pone en la ficha las variantes que el sistema usa por su cuenta.
-     *
-     * No se pisa lo que el cliente ya eligió a mano salvo que se pida --forzar:
-     * si subió su propio logo para modo oscuro, ese manda.
-     *
-     * @param  array<string, string>  $rutas
-     */
-    protected function asignar(Empresa $empresa, array $rutas): void
-    {
-        $forzar = (bool) $this->option('forzar');
-
-        $asignaciones = [
-            // Todo lo que va sobre fondo claro —el portal, las etiquetas, el
-            // panel de día— necesita el trazo oscuro.
-            'logo_claro_path' => $rutas['isologo-claro'] ?? null,
-
-            // El panel en modo oscuro quiere el logo tal cual, sin su fondo.
-            'logo_oscuro_path' => $rutas['isologo'] ?? null,
-
-            // El símbolo del QR va sobre el cuadro blanco: trazo oscuro. La
-            // versión plateada ahí se ve desvaída.
-            'isotipo_path' => $rutas['isotipo-claro'] ?? null,
-
-            // El de la pestaña lleva fondo propio: la barra del navegador es
-            // clara en unos equipos y oscura en otros, y un símbolo suelto
-            // desaparece en uno de los dos.
-            'favicon_path' => $rutas['favicon'] ?? null,
-        ];
-
-        $cambios = [];
-
-        foreach ($asignaciones as $campo => $ruta) {
-            if ($ruta && ($forzar || blank($empresa->{$campo}))) {
-                $cambios[$campo] = $ruta;
-            }
-        }
+        $cambios = app(GenerarVariantesDeMarca::class)->ejecutar($empresa, (bool) $this->option('forzar'));
 
         if ($cambios === []) {
-            $this->line('  <fg=gray>la ficha ya tenía sus variantes; se dejaron como estaban</>');
+            $this->line('  <fg=gray>sin cambios: o su logo no está en el disco, o ya tenía sus versiones puestas</>');
 
             return;
         }
 
-        $empresa->update($cambios);
-
         foreach ($cambios as $campo => $ruta) {
-            $this->line("  <fg=green>asignado</> {$campo}");
+            $this->line("  <fg=green>asignado</> {$campo}  <fg=gray>{$ruta}</>");
         }
     }
 }

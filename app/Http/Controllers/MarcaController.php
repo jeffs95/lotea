@@ -20,6 +20,7 @@ class MarcaController extends Controller
         'logo-original' => 'logo_path',
         'logo-oscuro' => 'logo_oscuro_path',
         'isotipo' => 'isotipo_path',
+        'portada' => 'portada_path',
         'favicon' => 'favicon_path',
     ];
 
