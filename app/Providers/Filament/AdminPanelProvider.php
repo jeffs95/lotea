@@ -46,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn (): ?string => MarcaDelCliente::logo())
             ->darkModeBrandLogo(fn (): ?string => MarcaDelCliente::logoOscuro())
             ->brandLogoHeight('2rem')
-            ->favicon(fn (): ?string => MarcaDelCliente::favicon())
+            ->favicon(fn (): ?string => MarcaDelCliente::faviconDeLaPestana())
             // El color va por render hook y no por ->colors(): ver el comentario
             // de la vista. Filament cachea la paleta de ->colors() y en un
             // proceso reusado el segundo cliente heredaría el color del primero.

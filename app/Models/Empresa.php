@@ -177,15 +177,7 @@ class Empresa extends Model implements HasName
      */
     public function logoParaFondo(?string $hex = null): ?string
     {
-        $hex = ltrim($hex ?: $this->color_de_marca, '#');
-
-        if (strlen($hex) === 3) {
-            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
-        }
-
-        $r = (int) hexdec(substr($hex, 0, 2));
-        $v = (int) hexdec(substr($hex, 2, 2));
-        $a = (int) hexdec(substr($hex, 4, 2));
+        [$r, $v, $a] = $this->aRgb($hex ?: $this->color_de_marca);
 
         // Luminancia percibida: el verde pesa mucho más que el azul.
         $luminancia = (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255;
@@ -202,6 +194,65 @@ class Empresa extends Model implements HasName
     public function getFaviconUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->favicon_path);
+    }
+
+    /**
+     * El icono de la pestaña, dibujado como SVG.
+     *
+     * Las dos letras del concesionario sobre su color, como el icono de una
+     * aplicación. No es capricho: a 16 píxeles —el tamaño real de una pestaña—
+     * un logo apaisado de línea fina se convierte en una mancha o desaparece,
+     * mientras que dos letras se leen siempre.
+     *
+     * En SVG y no en PNG por dos razones: se ve nítido en cualquier pantalla y
+     * no hace falta una fuente instalada en el servidor para dibujarlo.
+     */
+    public function getFaviconSvgAttribute(): string
+    {
+        $fondo = $this->color_de_marca;
+        $tinta = $this->tintaSobre($fondo);
+        $letras = e($this->iniciales);
+
+        return <<<SVG
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                <rect width="64" height="64" rx="14" fill="{$fondo}"/>
+                <text x="32" y="33" fill="{$tinta}" text-anchor="middle" dominant-baseline="central"
+                      font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
+                      font-size="30" font-weight="700" letter-spacing="-1">{$letras}</text>
+            </svg>
+            SVG;
+    }
+
+    /** La dirección del icono de la pestaña. */
+    public function getFaviconPestanaUrlAttribute(): string
+    {
+        $url = parse_url(route('marca', ['slug' => $this->slug, 'tipo' => 'pestana']), PHP_URL_PATH);
+
+        return $url.'?v='.substr(md5($this->color_de_marca.$this->getFilamentName()), 0, 8);
+    }
+
+    /** Blanco o casi negro, el que se lea sobre ese fondo. */
+    protected function tintaSobre(string $hex): string
+    {
+        [$r, $v, $a] = $this->aRgb($hex);
+
+        return (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255 < 0.55 ? '#ffffff' : '#111827';
+    }
+
+    /** @return array{int, int, int} */
+    protected function aRgb(string $hex): array
+    {
+        $hex = ltrim($hex, '#');
+
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        return [
+            (int) hexdec(substr($hex, 0, 2)),
+            (int) hexdec(substr($hex, 2, 2)),
+            (int) hexdec(substr($hex, 4, 2)),
+        ];
     }
 
     /** El WhatsApp del concesionario, listo para un href. */

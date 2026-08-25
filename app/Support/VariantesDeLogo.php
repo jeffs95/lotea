@@ -40,10 +40,14 @@ class VariantesDeLogo
     /** Margen que se deja alrededor de cada pieza recortada. */
     protected const MARGEN = 12;
 
+    /** Lado del icono de la pestaña. Sirve también para «añadir a inicio». */
+    protected const LADO_DEL_FAVICON = 512;
+
     /**
+     * @param  string|null  $colorDeMarca  para el fondo del icono de la pestaña
      * @return array<string, GdImage> nombre de la variante => imagen
      */
-    public static function desde(string $archivo): array
+    public static function desde(string $archivo, ?string $colorDeMarca = null): array
     {
         $original = @imagecreatefromstring((string) file_get_contents($archivo));
 
@@ -65,6 +69,14 @@ class VariantesDeLogo
         foreach ($piezas as $nombre => $pieza) {
             $variantes[$nombre] = $pieza;
             $variantes[$nombre.'-claro'] = self::paraFondoClaro($pieza);
+        }
+
+        if (isset($piezas['isotipo'])) {
+            $variantes['favicon'] = self::favicon(
+                $piezas['isotipo'],
+                $variantes['isotipo-claro'],
+                $colorDeMarca,
+            );
         }
 
         imagedestroy($original);
@@ -289,6 +301,85 @@ class VariantesDeLogo
         imagecopy($salida, $imagen, 0, 0, $x1, $y1, $nuevoAncho, $nuevoAlto);
 
         return $salida;
+    }
+
+    /**
+     * El icono de la pestaña, con fondo propio.
+     *
+     * Un símbolo transparente no sirve aquí: la barra del navegador es clara en
+     * unos equipos y oscura en otros, y el mismo icono se vuelve invisible en
+     * uno de los dos. Con el color de la marca detrás se ve siempre, y de paso
+     * el cliente reconoce su pestaña entre veinte.
+     */
+    protected static function favicon(GdImage $simbolo, GdImage $simboloOscuro, ?string $colorDeMarca): GdImage
+    {
+        $lado = self::LADO_DEL_FAVICON;
+        [$r, $v, $a] = self::aRgb($colorDeMarca ?: '#111827');
+
+        $salida = imagecreatetruecolor($lado, $lado);
+        imagealphablending($salida, false);
+        imagesavealpha($salida, true);
+        imagefill($salida, 0, 0, imagecolorallocate($salida, $r, $v, $a));
+
+        // Sobre un fondo claro el trazo claro desaparece: se elige el que
+        // contrasta, igual que con la cabecera de las etiquetas.
+        $luminancia = (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255;
+        $pieza = $luminancia < 0.55 ? $simbolo : $simboloOscuro;
+
+        // El símbolo ocupa el ancho dejando aire a los lados, como el icono de
+        // cualquier aplicación.
+        $ancho = (int) round($lado * 0.78);
+        $alto = (int) round($ancho * imagesy($pieza) / imagesx($pieza));
+
+        imagealphablending($salida, true);
+        imagecopyresampled(
+            $salida, $pieza,
+            (int) round(($lado - $ancho) / 2), (int) round(($lado - $alto) / 2),
+            0, 0,
+            $ancho, $alto,
+            imagesx($pieza), imagesy($pieza),
+        );
+
+        imagealphablending($salida, false);
+
+        return self::redondearEsquinas($salida, (int) round($lado * 0.22));
+    }
+
+    /** Le quita las esquinas al icono, que es como se ven todos hoy. */
+    protected static function redondearEsquinas(GdImage $imagen, int $radio): GdImage
+    {
+        $lado = imagesx($imagen);
+        $transparente = imagecolorallocatealpha($imagen, 0, 0, 0, 127);
+
+        for ($y = 0; $y < $lado; $y++) {
+            for ($x = 0; $x < $lado; $x++) {
+                // Centro del círculo de la esquina más cercana.
+                $cx = $x < $radio ? $radio : ($x > $lado - $radio ? $lado - $radio : $x);
+                $cy = $y < $radio ? $radio : ($y > $lado - $radio ? $lado - $radio : $y);
+
+                if (($x - $cx) ** 2 + ($y - $cy) ** 2 > $radio ** 2) {
+                    imagesetpixel($imagen, $x, $y, $transparente);
+                }
+            }
+        }
+
+        return $imagen;
+    }
+
+    /** @return array{int, int, int} */
+    protected static function aRgb(string $hex): array
+    {
+        $hex = ltrim($hex, '#');
+
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        return [
+            (int) hexdec(substr($hex, 0, 2)),
+            (int) hexdec(substr($hex, 2, 2)),
+            (int) hexdec(substr($hex, 4, 2)),
+        ];
     }
 
     /**

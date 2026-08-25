@@ -9,8 +9,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Consultá por esta unidad · {{ $empresa->nombre_comercial ?? $empresa->nombre }}</title>
+    {{-- Las iniciales sobre el color de la marca: a 16 píxeles un logo
+         apaisado no se distingue, y sobre barra oscura desaparece. --}}
+    <link rel="icon" type="image/svg+xml" href="{{ $empresa->favicon_pestana_url }}">
     @if ($empresa->favicon_url)
-        <link rel="icon" href="{{ $empresa->favicon_url }}">
+        <link rel="alternate icon" href="{{ $empresa->favicon_url }}">
     @endif
     @vite(['resources/css/app.css'])
     <style>:root { --acento: {{ $empresa->color_de_marca }}; }</style>

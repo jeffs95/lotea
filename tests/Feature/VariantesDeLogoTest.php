@@ -152,10 +152,13 @@ class VariantesDeLogoTest extends TestCase
 
         Storage::disk(AlmacenDeArchivos::nombreDelDisco())->assertExists($empresa->isotipo_path);
 
-        // El símbolo y el favicon van sobre blanco: tienen que ser las versiones
-        // oscuras, o se ven desvaídos en el QR y en la pestaña.
+        // El símbolo del QR va sobre el cuadro blanco: versión de trazo oscuro,
+        // o se ve desvaído.
         $this->assertStringContainsString('claro', $empresa->isotipo_path);
-        $this->assertStringContainsString('claro', $empresa->favicon_path);
+
+        // El de la pestaña lleva su propio fondo, para verse en barra clara y
+        // en barra oscura.
+        $this->assertStringContainsString('favicon', $empresa->favicon_path);
     }
 
     /** Lo que el cliente eligió a mano no se pisa sin pedirlo. */
@@ -275,6 +278,59 @@ class VariantesDeLogoTest extends TestCase
 
         $this->assertNotSame($primera, $segunda);
         $this->assertStringContainsString('?v=', $primera);
+    }
+
+    // ── El icono de la pestaña ──────────────────────────────────────────────
+
+    /**
+     * A 16 píxeles un logo apaisado de línea fina desaparece, y sobre la barra
+     * oscura del navegador se pierde del todo. Van las iniciales con fondo.
+     */
+    public function test_el_icono_de_la_pestana_lleva_las_iniciales_sobre_el_color(): void
+    {
+        $this->empresa->update(['color_primario' => '#f50a0a']);
+
+        $svg = $this->empresa->fresh()->favicon_svg;
+
+        $this->assertStringContainsString('>IG</text>', $svg);
+        $this->assertStringContainsString('fill="#f50a0a"', $svg);
+        // Con fondo propio se ve igual sobre barra clara que sobre barra oscura.
+        $this->assertStringContainsString('<rect', $svg);
+    }
+
+    public function test_el_icono_usa_tinta_que_contraste_con_el_color(): void
+    {
+        $this->empresa->update(['color_primario' => '#111827']);
+        $this->assertStringContainsString('fill="#ffffff"', $this->empresa->fresh()->favicon_svg);
+
+        $this->empresa->update(['color_primario' => '#fbbf24']);
+        $this->assertStringContainsString('fill="#111827"', $this->empresa->fresh()->favicon_svg);
+    }
+
+    public function test_el_icono_se_sirve_como_svg(): void
+    {
+        $respuesta = $this->get("/marca/{$this->empresa->slug}/pestana");
+
+        $respuesta->assertSuccessful();
+        $this->assertSame('image/svg+xml', $respuesta->headers->get('Content-Type'));
+    }
+
+    public function test_el_portal_enlaza_el_icono(): void
+    {
+        $this->get("/v/{$this->empresa->slug}")
+            ->assertSee('rel="icon" type="image/svg+xml"', escape: false)
+            ->assertSee("/marca/{$this->empresa->slug}/pestana", escape: false);
+    }
+
+    /** Si el cliente cambia de color, el icono tiene que cambiar con él. */
+    public function test_la_url_del_icono_cambia_con_el_color(): void
+    {
+        $this->empresa->update(['color_primario' => '#f50a0a']);
+        $antes = $this->empresa->fresh()->favicon_pestana_url;
+
+        $this->empresa->update(['color_primario' => '#16a34a']);
+
+        $this->assertNotSame($antes, $this->empresa->fresh()->favicon_pestana_url);
     }
 
     /**

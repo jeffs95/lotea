@@ -72,7 +72,7 @@ class GenerarVariantesDeLogo extends Command
         $carpeta = "marcas/{$empresa->slug}/variantes";
         $rutas = [];
 
-        foreach (VariantesDeLogo::desde($origen) as $nombre => $imagen) {
+        foreach (VariantesDeLogo::desde($origen, $empresa->color_de_marca) as $nombre => $imagen) {
             $png = VariantesDeLogo::aPng($imagen);
 
             $ruta = "{$carpeta}/{$nombre}.png";
@@ -108,11 +108,14 @@ class GenerarVariantesDeLogo extends Command
             // El panel en modo oscuro quiere el logo tal cual, sin su fondo.
             'logo_oscuro_path' => $rutas['isologo'] ?? null,
 
-            // El símbolo y el favicon van sobre blanco —el cuadro del QR, la
-            // pestaña del navegador— así que se usan las versiones oscuras. La
-            // plateada sobre blanco se ve desvaída.
+            // El símbolo del QR va sobre el cuadro blanco: trazo oscuro. La
+            // versión plateada ahí se ve desvaída.
             'isotipo_path' => $rutas['isotipo-claro'] ?? null,
-            'favicon_path' => $rutas['isotipo-cuadrado-claro'] ?? null,
+
+            // El de la pestaña lleva fondo propio: la barra del navegador es
+            // clara en unos equipos y oscura en otros, y un símbolo suelto
+            // desaparece en uno de los dos.
+            'favicon_path' => $rutas['favicon'] ?? null,
         ];
 
         $cambios = [];

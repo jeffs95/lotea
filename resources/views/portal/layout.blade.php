@@ -21,8 +21,11 @@
 
     @vite(['resources/css/app.css'])
 
+    {{-- Las iniciales sobre el color de la marca: a 16 píxeles un logo
+         apaisado no se distingue, y sobre barra oscura desaparece. --}}
+    <link rel="icon" type="image/svg+xml" href="{{ $empresa->favicon_pestana_url }}">
     @if ($empresa->favicon_url)
-        <link rel="icon" href="{{ $empresa->favicon_url }}">
+        <link rel="alternate icon" href="{{ $empresa->favicon_url }}">
     @endif
 
     <style>:root { --acento: {{ $empresa->color_de_marca }}; }</style>

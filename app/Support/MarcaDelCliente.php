@@ -83,6 +83,12 @@ class MarcaDelCliente
         return static::empresa()?->favicon_url;
     }
 
+    /** El icono de la pestaña: las iniciales sobre el color de la marca. */
+    public static function faviconDeLaPestana(): ?string
+    {
+        return static::empresa()?->favicon_pestana_url;
+    }
+
     /** El slug del concesionario en la URL, o null si no estamos en su panel. */
     protected static function slugDelRequest(): ?string
     {

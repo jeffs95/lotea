@@ -25,13 +25,22 @@ class MarcaController extends Controller
 
     public function __invoke(string $slug, string $tipo): Response
     {
-        abort_unless(isset(self::TIPOS[$tipo]), 404);
-
         // Sin filtro: el portal público no tiene empresa activa, y una empresa
         // no es dato de otra empresa.
         $empresa = Tenancy::sinFiltro(fn () => Empresa::firstWhere('slug', $slug));
 
         abort_unless($empresa, 404);
+
+        // El icono de la pestaña se dibuja al vuelo: son dos letras y un
+        // rectángulo, no hay archivo que guardar.
+        if ($tipo === 'pestana') {
+            return response($empresa->favicon_svg, 200, [
+                'Content-Type' => 'image/svg+xml',
+                'Cache-Control' => 'public, max-age=604800',
+            ]);
+        }
+
+        abort_unless(isset(self::TIPOS[$tipo]), 404);
 
         $archivo = $empresa->archivoDeMarcaLocal(self::TIPOS[$tipo]);
 
