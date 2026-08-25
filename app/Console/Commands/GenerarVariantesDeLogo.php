@@ -101,6 +101,10 @@ class GenerarVariantesDeLogo extends Command
         $forzar = (bool) $this->option('forzar');
 
         $asignaciones = [
+            // Todo lo que va sobre fondo claro —el portal, las etiquetas, el
+            // panel de día— necesita el trazo oscuro.
+            'logo_claro_path' => $rutas['isologo-claro'] ?? null,
+
             // El panel en modo oscuro quiere el logo tal cual, sin su fondo.
             'logo_oscuro_path' => $rutas['isologo'] ?? null,
 

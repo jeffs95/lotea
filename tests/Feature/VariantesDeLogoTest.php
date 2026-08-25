@@ -197,6 +197,102 @@ class VariantesDeLogoTest extends TestCase
             ->assertSuccessful();
     }
 
+    // ── Dónde se usa cada variante ──────────────────────────────────────────
+
+    /**
+     * Lo que va sobre fondo claro tiene que pedir la variante clara.
+     *
+     * Antes no existía ese campo y el portal pintaba el archivo original del
+     * cliente, con su fondo negro pegado: un recuadro oscuro en medio de una
+     * página blanca.
+     */
+    public function test_el_logo_para_fondo_claro_usa_la_variante_clara(): void
+    {
+        $this->empresa->update([
+            'logo_path' => 'marcas/original.png',
+            'logo_claro_path' => 'marcas/variantes/isologo-claro.png',
+        ]);
+
+        Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put('marcas/original.png', 'x');
+        Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put('marcas/variantes/isologo-claro.png', 'x');
+
+        // Sin atarse a cómo se sirve: lo que importa es que apunte a la clara.
+        $this->assertTrue(
+            $this->apuntaA($this->empresa->fresh()->logo_url, 'isologo-claro', 'logo'),
+            'El logo de fondo claro no está usando la variante clara.',
+        );
+    }
+
+    /** Sin variante clara se usa el original: mejor eso que nada. */
+    public function test_sin_variante_clara_cae_al_original(): void
+    {
+        Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put('marcas/original.png', 'x');
+
+        $this->empresa->update(['logo_path' => 'marcas/original.png', 'logo_claro_path' => null]);
+
+        $this->assertNotNull($this->empresa->fresh()->logo_url);
+    }
+
+    /**
+     * La cabecera de la etiqueta va pintada con el color de la marca, que puede
+     * ser oscuro o claro. El logo se elige según eso.
+     */
+    public function test_elige_el_logo_segun_lo_oscuro_del_fondo(): void
+    {
+        foreach (['logo_path', 'logo_claro_path', 'logo_oscuro_path'] as $campo) {
+            Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put("marcas/{$campo}.png", 'x');
+        }
+
+        $this->empresa->update([
+            'logo_path' => 'marcas/logo_path.png',
+            'logo_claro_path' => 'marcas/logo_claro_path.png',
+            'logo_oscuro_path' => 'marcas/logo_oscuro_path.png',
+        ]);
+
+        $empresa = $this->empresa->fresh();
+
+        // Sobre un rojo oscuro hace falta el trazo claro.
+        $this->assertTrue($this->apuntaA($empresa->logoParaFondo('#7f1d1d'), 'logo_oscuro_path', 'logo-oscuro'));
+
+        // Sobre un amarillo, el trazo oscuro.
+        $this->assertTrue($this->apuntaA($empresa->logoParaFondo('#fbbf24'), 'logo_claro_path', 'logo'));
+    }
+
+    /**
+     * La URL de la marca no cambia nunca y se sirve con una semana de caché.
+     * Sin un sello de versión, cambiar el logo no se vería.
+     */
+    public function test_la_url_del_logo_cambia_cuando_cambia_el_archivo(): void
+    {
+        Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put('marcas/uno.png', 'x');
+        Storage::disk(AlmacenDeArchivos::nombreDelDisco())->put('marcas/dos.png', 'x');
+
+        $this->empresa->update(['logo_claro_path' => 'marcas/uno.png']);
+        $primera = $this->empresa->fresh()->logo_url;
+
+        $this->empresa->update(['logo_claro_path' => 'marcas/dos.png']);
+        $segunda = $this->empresa->fresh()->logo_url;
+
+        $this->assertNotSame($primera, $segunda);
+        $this->assertStringContainsString('?v=', $primera);
+    }
+
+    /**
+     * ¿La URL lleva a este archivo?
+     *
+     * En un disco local la URL trae la ruta del archivo; en el FTP trae el tipo
+     * de marca, porque se sirve por una ruta de Laravel. El test no debería
+     * depender de cuál esté configurado.
+     */
+    protected function apuntaA(?string $url, string $archivo, string $tipo): bool
+    {
+        if ($url === null) {
+            return false;
+        }
+
+        return str_contains($url, $archivo) || str_contains($url, "/{$tipo}?");
+    }
+
     /** @return array{int, int, int} */
     protected function colorMasFrecuente(\GdImage $imagen): array
     {

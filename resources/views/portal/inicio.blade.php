@@ -8,6 +8,11 @@
         <div class="absolute inset-0 opacity-20" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
 
         <div class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+            @if ($empresa->logo_oscuro_url)
+                <img src="{{ $empresa->logo_oscuro_url }}" alt="{{ $empresa->getFilamentName() }}"
+                     class="mb-6 h-12 w-auto object-contain sm:h-16">
+            @endif
+
             <p class="text-sm font-semibold uppercase tracking-widest" style="color: var(--acento)">
                 {{ $total }} {{ $total === 1 ? 'unidad disponible' : 'unidades disponibles' }}
             </p>

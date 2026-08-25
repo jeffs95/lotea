@@ -10,6 +10,12 @@
         <div class="absolute inset-0 opacity-20" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
 
         <div class="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
+            @if ($empresa->logo_oscuro_url)
+                {{-- Sobre el hero oscuro va la versión de trazo claro --}}
+                <img src="{{ $empresa->logo_oscuro_url }}" alt="{{ $empresa->getFilamentName() }}"
+                     class="mb-6 h-12 w-auto object-contain sm:h-14">
+            @endif
+
             <p class="text-sm font-semibold uppercase tracking-widest" style="color: var(--acento)">
                 {{ $sucursales->count() === 1 ? 'Nuestro patio' : 'Nuestros patios' }}
             </p>

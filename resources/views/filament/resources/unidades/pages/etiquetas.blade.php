@@ -21,8 +21,9 @@
                 {{-- La marca del concesionario arriba, en su color --}}
                 <div class="flex items-center justify-center px-4 py-2.5"
                      style="background: {{ $empresa?->color_de_marca ?? '#111827' }}">
-                    @if ($empresa?->logo_url)
-                        <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->getFilamentName() }}"
+                    @if ($empresa?->logoParaFondo())
+                        {{-- El logo según lo oscura que sea su propia cabecera --}}
+                        <img src="{{ $empresa->logoParaFondo() }}" alt="{{ $empresa->getFilamentName() }}"
                              class="h-6 w-auto object-contain">
                     @else
                         <span class="text-sm font-bold uppercase tracking-widest text-white">

@@ -149,15 +149,54 @@ class Empresa extends Model implements HasName
                 : self::COLOR_POR_DEFECTO;
     }
 
+    /**
+     * El logo para fondos claros: el portal, las etiquetas, el panel de día.
+     *
+     * Se prefiere la versión clara —trazo oscuro, sin fondo— porque el archivo
+     * que sube el cliente casi siempre trae su propio fondo negro pegado, y
+     * sobre una página blanca eso es un recuadro oscuro en medio de nada.
+     */
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->archivoDeMarca($this->logo_path);
+        return $this->archivoDeMarca($this->logo_claro_path)
+            ?? $this->archivoDeMarca($this->logo_path);
     }
 
-    /** Su logo sobre el fondo oscuro del panel; si no subió uno, el normal. */
+    /** El mismo logo sobre fondo oscuro: el panel de noche, el hero del portal. */
     public function getLogoOscuroUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->logo_oscuro_path) ?? $this->logo_url;
+    }
+
+    /**
+     * El logo que corresponde a un fondo de color cualquiera.
+     *
+     * La cabecera de la etiqueta va pintada con el color de la marca, y ese
+     * color puede ser un rojo oscuro o un amarillo claro: en uno hace falta el
+     * logo de trazo claro y en el otro el de trazo oscuro.
+     */
+    public function logoParaFondo(?string $hex = null): ?string
+    {
+        $hex = ltrim($hex ?: $this->color_de_marca, '#');
+
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        $r = (int) hexdec(substr($hex, 0, 2));
+        $v = (int) hexdec(substr($hex, 2, 2));
+        $a = (int) hexdec(substr($hex, 4, 2));
+
+        // Luminancia percibida: el verde pesa mucho más que el azul.
+        $luminancia = (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255;
+
+        return $luminancia < 0.55 ? $this->logo_oscuro_url : $this->logo_url;
+    }
+
+    /** El símbolo solo, sin el nombre. Para espacios pequeños y cuadrados. */
+    public function getIsotipoUrlAttribute(): ?string
+    {
+        return $this->archivoDeMarca($this->isotipo_path);
     }
 
     public function getFaviconUrlAttribute(): ?string
@@ -236,11 +275,25 @@ class Empresa extends Model implements HasName
         // lo sirve, igual que las fotos de las unidades.
         if (! AlmacenDeArchivos::esLocalPublico()) {
             $tipo = array_search($this->campoDeMarca($ruta), MarcaController::TIPOS, true);
+            $url = parse_url(route('marca', ['slug' => $this->slug, 'tipo' => $tipo]), PHP_URL_PATH);
 
-            return parse_url(route('marca', ['slug' => $this->slug, 'tipo' => $tipo]), PHP_URL_PATH);
+            return $url.'?v='.$this->versionDeMarca($ruta);
         }
 
-        return parse_url(AlmacenDeArchivos::disco()->url($ruta), PHP_URL_PATH);
+        return parse_url(AlmacenDeArchivos::disco()->url($ruta), PHP_URL_PATH)
+            .'?v='.$this->versionDeMarca($ruta);
+    }
+
+    /**
+     * Un sello que cambia cuando cambia el archivo.
+     *
+     * La URL de la marca es siempre la misma —/marca/{slug}/logo— y se sirve con
+     * una semana de caché. Sin esto, un cliente que cambia su logo lo seguiría
+     * viendo viejo en su portal, y sus visitantes también, hasta que caducara.
+     */
+    protected function versionDeMarca(string $ruta): string
+    {
+        return substr(md5($ruta.$this->updated_at?->timestamp), 0, 8);
     }
 
     /** Qué campo de marca corresponde a esta ruta guardada. */

@@ -16,8 +16,10 @@ use Symfony\Component\HttpFoundation\Response;
 class MarcaController extends Controller
 {
     public const TIPOS = [
-        'logo' => 'logo_path',
+        'logo' => 'logo_claro_path',
+        'logo-original' => 'logo_path',
         'logo-oscuro' => 'logo_oscuro_path',
+        'isotipo' => 'isotipo_path',
         'favicon' => 'favicon_path',
     ];
 

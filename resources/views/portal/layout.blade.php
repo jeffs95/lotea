@@ -11,7 +11,9 @@
     <meta property="og:type" content="@yield('og_tipo', 'website')">
     <meta property="og:title" content="@yield('titulo', $empresa->nombre_comercial ?? $empresa->nombre)">
     <meta property="og:description" content="@yield('descripcion', 'Vehículos de importación con garantía.')">
-    <meta property="og:image" content="@yield('og_imagen', '')">
+    {{-- Lo que se ve al pegar el enlace en WhatsApp, que es como circula todo
+         aquí. Si la página no trae foto de un carro, va el logo. --}}
+    <meta property="og:image" content="@yield('og_imagen', $empresa->logo_url ? url($empresa->logo_url) : '')">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta name="twitter:card" content="summary_large_image">
 
@@ -69,6 +71,11 @@
     <footer class="mt-16 border-t border-gray-200 bg-white">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
             <div>
+                @if ($empresa->logo_url)
+                    <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->getFilamentName() }}"
+                         class="mb-3 h-9 w-auto object-contain">
+                @endif
+
                 <p class="text-base font-bold">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</p>
                 @if ($empresa->direccion)
                     <p class="mt-2 text-sm text-gray-600">{{ $empresa->direccion }}</p>

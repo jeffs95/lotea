@@ -274,8 +274,12 @@ class ArchivosEnFtpTest extends TestCase
 
         Storage::disk('ftp_documentos')->assertExists($ruta);
 
-        $this->assertSame(
-            "/marca/{$this->empresa->slug}/logo",
+        // Se sirve como «logo-original» porque es el archivo que subió el
+        // cliente; «logo» queda para la variante adaptada a fondos claros. Y
+        // lleva un sello de versión para que cambiar el logo se note pese a la
+        // caché del navegador.
+        $this->assertStringStartsWith(
+            "/marca/{$this->empresa->slug}/logo-original?v=",
             $this->empresa->fresh()->logo_url,
         );
     }
