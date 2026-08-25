@@ -360,6 +360,9 @@ class UnidadForm
                                 ->reorderable()
                                 ->image()
                                 ->imageEditor()
+                                ->imageResizeMode('contain')
+                                ->imageResizeTargetWidth('1920')
+                                ->maxSize(6144)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
                         ]),
@@ -413,6 +416,15 @@ class UnidadForm
                                 ->reorderable()
                                 ->image()
                                 ->imageEditor()
+                                // Se encogen en el navegador antes de salir.
+                                // Una foto de celular pesa varios megas, y al
+                                // subir tres a la vez se pasa el límite del
+                                // servidor: PHP descarta la petición entera sin
+                                // dejar un error que mostrar, y el vendedor
+                                // solo ve que no pasa nada.
+                                ->imageResizeMode('contain')
+                                ->imageResizeTargetWidth('1920')
+                                ->maxSize(6144)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
                         ]),
@@ -423,6 +435,13 @@ class UnidadForm
                             SpatieMediaLibraryFileUpload::make('documentos')
                                 ->collection('documentos')
                                 ->multiple()
+                                // Por debajo del post_max_size del servidor a
+                                // propósito: así el rechazo lo hace el
+                                // formulario, con un mensaje que se entiende.
+                                // Si lo hace PHP, descarta la petición entera y
+                                // el usuario no ve nada.
+                                ->maxSize(6144)
+                                ->helperText('Hasta 6 MB por archivo. Un PDF escaneado suele pesar menos de 2 MB.')
                                 ->hiddenLabel(),
                         ]),
                 ]),

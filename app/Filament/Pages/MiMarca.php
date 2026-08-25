@@ -84,7 +84,9 @@ class MiMarca extends Page implements HasForms
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(2048)
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('1200')
+                            ->maxSize(6144)
                             ->helperText('Este no se publica directamente: es el original del que se derivan los de abajo.'),
                     ]),
 
@@ -99,7 +101,9 @@ class MiMarca extends Page implements HasForms
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(2048)
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('1200')
+                            ->maxSize(6144)
                             ->helperText(new HtmlString(
                                 '<strong>Se ve en:</strong> la barra de arriba y el pie de su página pública, '
                                 .'las etiquetas del parabrisas y este panel de día.<br>'
@@ -113,7 +117,9 @@ class MiMarca extends Page implements HasForms
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(2048)
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('1200')
+                            ->maxSize(6144)
                             ->helperText(new HtmlString(
                                 '<strong>Se ve en:</strong> la portada de su página, la sección «Encontranos» '
                                 .'y este panel en modo noche.<br>'
@@ -127,7 +133,9 @@ class MiMarca extends Page implements HasForms
                             ->directory('marcas')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(1024)
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('600')
+                            ->maxSize(6144)
                             ->helperText(new HtmlString(
                                 '<strong>Se ve en:</strong> el centro del código QR que se pega en el parabrisas.<br>'
                                 .'Ahí el nombre no se alcanza a leer. Trazo <strong>oscuro</strong>, va sobre blanco.'
@@ -139,7 +147,9 @@ class MiMarca extends Page implements HasForms
                             ->disk(AlmacenDeArchivos::nombreDelDisco())
                             ->directory('marcas')
                             ->visibility('public')
-                            ->maxSize(512)
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('256')
+                            ->maxSize(6144)
                             ->helperText(new HtmlString(
                                 '<strong>Se ve en:</strong> la pestaña del navegador, solo en los que no '
                                 .'entienden iconos modernos.<br>'
@@ -158,7 +168,13 @@ class MiMarca extends Page implements HasForms
                             ->visibility('public')
                             ->imageEditor()
                             ->imageEditorAspectRatios(['16:9', '21:9'])
-                            ->maxSize(4096)
+                            // Se encoge en el navegador antes de subirla: una
+                            // foto de celular pesa más que el límite del
+                            // servidor, y al pasarse PHP descarta la petición
+                            // entera sin dejar ni un error que mostrar.
+                            ->imageResizeMode('contain')
+                            ->imageResizeTargetWidth('1920')
+                            ->maxSize(6144)
                             ->helperText(new HtmlString(
                                 '<strong>Se ve en:</strong> el fondo de la portada y de «Encontranos».<br>'
                                 .'Una foto de su patio o de un carro, apaisada y de 1600 px de ancho o más. '

@@ -173,6 +173,23 @@ estaba subido se queda donde estaba, el sistema lo busca en el disco nuevo y no 
 ficha se ve sin fotos y el portal muestra las tarjetas vacías. Este comando lo pasa al disco
 configurado y regenera las conversiones.
 
+### Límites de subida
+
+`post_max_size` tiene que ser **mayor o igual** que `upload_max_filesize`, y los dos por encima
+de lo que acepten los formularios. Si un archivo pasa de `post_max_size`, PHP descarta la
+petición entera antes de que Laravel la vea: no hay error que mostrar, el formulario se queda
+igual y el usuario cree que el sistema no hace nada.
+
+```ini
+upload_max_filesize = 12M
+post_max_size = 12M
+```
+
+Las imágenes se encogen en el navegador antes de subirse —a 1920 px las fotos y la portada, a
+1200 px los logos— así que una foto de celular de 8 MB llega como medio mega. Los `maxSize` de
+los formularios están por debajo del límite del servidor a propósito: así el rechazo lo hace el
+formulario, con un mensaje que se entiende.
+
 ## Subirlo a producción
 
 ```bash
