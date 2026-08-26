@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\AccesoCentral;
 use App\Http\Middleware\LimpiarContextoDeEmpresa;
 use App\Support\AvatarDeIniciales;
 use Filament\Http\Middleware\Authenticate;
@@ -33,7 +34,7 @@ class CentralPanelProvider extends PanelProvider
         return $panel
             ->id('central')
             ->path('central')
-            ->login()
+            ->login(AccesoCentral::class)
             // Iniciales dibujadas en casa: el proveedor por defecto de Filament
             // le manda el nombre de cada usuario a ui-avatars.com.
             ->defaultAvatarProvider(AvatarDeIniciales::class)

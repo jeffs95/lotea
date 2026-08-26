@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\AccesoDelCliente;
 use App\Models\Empresa;
 use App\Support\AvatarDeIniciales;
 use App\Support\MarcaDelCliente;
@@ -35,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('app')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->login()
+            ->login(AccesoDelCliente::class)
             // Iniciales dibujadas en casa: el proveedor por defecto de Filament
             // le manda el nombre de cada usuario a ui-avatars.com.
             ->defaultAvatarProvider(AvatarDeIniciales::class)

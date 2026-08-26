@@ -3,3 +3,45 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../resources/views/filament/central/**/*';
+@source '../../../../resources/views/components/**/*';
+
+/*
+ * La mitad de marca de las dos pantallas de acceso.
+ *
+ * Se queda oscura en los dos temas a propósito: es una superficie de marca, no
+ * de lectura, y el color de cada panel —ámbar el del concesionario, azul el de
+ * Lotea— se ve mejor sobre negro. El formulario de al lado sí sigue el tema que
+ * el usuario tenga puesto.
+ *
+ * El color entra por la variable --marca, que la pone la propia página. Así la
+ * hoja no sabe de paneles y agregar uno nuevo no la toca.
+ */
+.lotea-portada {
+    background-color: #0a0a0d;
+}
+
+/* Dos luces en diagonal: la de arriba tiñe, la de abajo da profundidad. */
+.lotea-portada-brillo {
+    background:
+        radial-gradient(
+            125% 85% at 12% -5%,
+            color-mix(in srgb, var(--marca) 38%, transparent),
+            transparent 58%
+        ),
+        radial-gradient(
+            95% 75% at 105% 105%,
+            color-mix(in srgb, var(--marca) 16%, transparent),
+            transparent 55%
+        );
+}
+
+/*
+ * Malla de puntos, desvanecida hacia los bordes. Da textura de producto sin
+ * pelearse con el texto que va encima.
+ */
+.lotea-portada-malla {
+    background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.10) 1px, transparent 0);
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(75% 60% at 25% 25%, #000 25%, transparent 78%);
+    mask-image: radial-gradient(75% 60% at 25% 25%, #000 25%, transparent 78%);
+}
