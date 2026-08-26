@@ -48,9 +48,13 @@
                 <div class="flex items-center justify-center px-4 py-2.5"
                      style="background: {{ $colorDeCabecera }}">
                     @if ($logoDeCabecera)
-                        {{-- El logo según lo oscura que sea su propia cabecera --}}
-                        <img src="{{ $logoDeCabecera }}" alt="{{ $nombreDelCliente }}"
-                             class="h-6 w-auto object-contain">
+                        {{-- Sobre blanco y no directo sobre la banda: el logo del
+                             cliente puede llevar su mismo color de marca dentro y
+                             esa parte desaparecería. Pasó: se leía «RTADORA». --}}
+                        <span class="rounded bg-white px-2 py-1">
+                            <img src="{{ $logoDeCabecera }}" alt="{{ $nombreDelCliente }}"
+                                 class="h-6 w-auto object-contain">
+                        </span>
                     @else
                         <span class="text-sm font-bold uppercase tracking-widest text-white">
                             {{ $nombreDelCliente }}

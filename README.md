@@ -337,6 +337,26 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Las etiquetas del parabrisas
+
+La hoja se puede sacar de dos formas y las dos existen por una razón:
+
+- **Imprimir** manda la página a la impresora del navegador. Es un clic menos,
+  pero pasa por cuatro manos —el CSS, el navegador, el sistema operativo y el
+  driver— y basta que una falle para que salga una hoja en blanco sin decir por
+  qué. Pasó en Windows.
+- **Descargar PDF** arma la hoja en el servidor. Sale igual en Windows, en Mac y
+  en un teléfono, y se puede guardar y reimprimir.
+
+Cada salida lleva el código en el formato que su motor sabe dibujar, y no es el
+mismo: el navegador imprime bien un SVG escrito dentro de la página y falla con
+uno metido en un `<img>`; dompdf hace exactamente lo contrario. Está probado en
+los dos sentidos, así que no se unifiquen sin comprobarlo.
+
+El logo del concesionario va sobre un rectángulo blanco y no directo sobre la
+banda de color: su logo puede llevar ese mismo color dentro y esa parte
+desaparece. Pasó — se leía «RTADORA» en vez de «IMPORTADORA».
+
 ## Pasar un concesionario a producción
 
 Cuando un cliente se arma probando en una máquina y hay que llevarlo tal cual a

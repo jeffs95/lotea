@@ -177,12 +177,42 @@ class Empresa extends Model implements HasName
      */
     public function logoParaFondo(?string $hex = null): ?string
     {
+        return $this->esFondoOscuro($hex) ? $this->logo_oscuro_url : $this->logo_url;
+    }
+
+    /**
+     * El mismo logo, pero escrito dentro del documento.
+     *
+     * Un PDF se arma en el servidor y no puede salir a pedir una imagen a
+     * ninguna URL, así que ahí el logo tiene que ir incrustado o no va.
+     */
+    public function logoIncrustadoParaFondo(?string $hex = null): ?string
+    {
+        $campos = $this->esFondoOscuro($hex)
+            ? ['logo_oscuro_path', 'logo_claro_path', 'logo_path']
+            : ['logo_claro_path', 'logo_path', 'logo_oscuro_path'];
+
+        foreach ($campos as $campo) {
+            $archivo = $this->archivoDeMarcaLocal($campo);
+
+            if ($archivo === null) {
+                continue;
+            }
+
+            $tipo = mime_content_type($archivo) ?: 'image/png';
+
+            return 'data:'.$tipo.';base64,'.base64_encode((string) file_get_contents($archivo));
+        }
+
+        return null;
+    }
+
+    /** Luminancia percibida: el verde pesa mucho más que el azul. */
+    protected function esFondoOscuro(?string $hex = null): bool
+    {
         [$r, $v, $a] = $this->aRgb($hex ?: $this->color_de_marca);
 
-        // Luminancia percibida: el verde pesa mucho más que el azul.
-        $luminancia = (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255;
-
-        return $luminancia < 0.55 ? $this->logo_oscuro_url : $this->logo_url;
+        return (0.2126 * $r + 0.7152 * $v + 0.0722 * $a) / 255 < 0.55;
     }
 
     /** El símbolo solo, sin el nombre. Para espacios pequeños y cuadrados. */

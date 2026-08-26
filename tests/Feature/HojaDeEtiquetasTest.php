@@ -3,15 +3,18 @@
 namespace Tests\Feature;
 
 use App\Actions\CrearEmpresa;
+use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Models\Empresa;
 use App\Models\Role;
 use App\Models\Unidad;
 use App\Models\User;
 use App\Support\AlmacenDeArchivos;
 use App\Support\Tenancy;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
 /**
@@ -159,5 +162,70 @@ class HojaDeEtiquetasTest extends TestCase
         $this->actingAs($this->usuario)
             ->get("/app/{$this->empresa->slug}/unidades/etiquetas")
             ->assertDontSee('<?xml', false);
+    }
+
+    // ── La hoja en PDF ──────────────────────────────────────────────────────
+
+    /**
+     * Imprimir desde el navegador pasa por cuatro manos —el CSS, el navegador,
+     * el sistema y el driver— y basta que una falle para que salga una hoja en
+     * blanco sin decir por qué. Le pasó al cliente en Windows. El PDF se arma
+     * aquí, así que sale igual en todas partes.
+     */
+    public function test_la_hoja_se_puede_bajar_en_pdf(): void
+    {
+        Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->count(2)->create());
+
+        $contenido = $this->contenidoDe($this->armarLaHoja()->pdf());
+
+        $this->assertStringStartsWith('%PDF-', $contenido, 'Lo que se descarga no es un PDF.');
+        $this->assertGreaterThan(5_000, strlen($contenido), 'El PDF salió sospechosamente vacío.');
+    }
+
+    /** Con el logo escrito dentro: un PDF no puede salir a pedirlo por red. */
+    public function test_el_pdf_lleva_el_logo_incrustado_y_no_un_enlace(): void
+    {
+        $this->ponerLogo();
+
+        $this->assertStringStartsWith(
+            'data:',
+            (string) $this->empresa->fresh()->logoIncrustadoParaFondo(),
+            'El logo del PDF sale como enlace; en un PDF eso no carga nunca.',
+        );
+    }
+
+    /** Y una hoja larga se reparte en varias páginas, no se corta. */
+    public function test_el_pdf_pagina_cuando_no_caben_todas(): void
+    {
+        Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->count(30)->create());
+
+        $contenido = $this->contenidoDe($this->armarLaHoja()->pdf());
+
+        $paginas = preg_match_all('#/Type\s*/Page[^s]#', $contenido);
+
+        $this->assertGreaterThan(1, $paginas, 'Treinta etiquetas cupieron en una sola hoja: algo se perdió.');
+    }
+
+    /** La página con su empresa puesta, sin pasar por Livewire. */
+    protected function armarLaHoja(): EtiquetasUnidades
+    {
+        $this->actingAs($this->usuario);
+
+        Filament::setCurrentPanel('admin');
+        Filament::setTenant($this->empresa);
+
+        $pagina = new EtiquetasUnidades;
+        $pagina->mount();
+
+        return $pagina;
+    }
+
+    /** Saca el cuerpo de una descarga sin dejarlo en pantalla. */
+    protected function contenidoDe(StreamedResponse $respuesta): string
+    {
+        ob_start();
+        $respuesta->sendContent();
+
+        return (string) ob_get_clean();
     }
 }
