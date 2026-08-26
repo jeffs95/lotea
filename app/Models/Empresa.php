@@ -322,9 +322,38 @@ class Empresa extends Model implements HasName
      * Se comprueba que el archivo esté: uno borrado a mano dejaría una imagen
      * rota en todas las pantallas del cliente.
      */
+    /**
+     * Las URL de marca ya resueltas en este request.
+     *
+     * Cada resolución pregunta al disco si el archivo está, y en producción ese
+     * disco es un FTP: un viaje a otro servidor. La hoja de etiquetas pedía el
+     * logo dos veces por etiqueta, así que con cuarenta unidades eran más de
+     * cien viajes y la página tardaba lo que tardara la red.
+     *
+     * @var array<string, ?string>
+     */
+    protected array $urlesDeMarca = [];
+
     protected function archivoDeMarca(?string $ruta): ?string
     {
-        if (blank($ruta) || ! AlmacenDeArchivos::disco()->exists($ruta)) {
+        if (blank($ruta)) {
+            return null;
+        }
+
+        // La versión entra en la clave: al guardar una imagen nueva cambia el
+        // updated_at y esto se resuelve otra vez en lugar de servir lo viejo.
+        $clave = $ruta.'|'.$this->updated_at?->timestamp;
+
+        if (array_key_exists($clave, $this->urlesDeMarca)) {
+            return $this->urlesDeMarca[$clave];
+        }
+
+        return $this->urlesDeMarca[$clave] = $this->resolverArchivoDeMarca($ruta);
+    }
+
+    protected function resolverArchivoDeMarca(string $ruta): ?string
+    {
+        if (! AlmacenDeArchivos::disco()->exists($ruta)) {
             return null;
         }
 

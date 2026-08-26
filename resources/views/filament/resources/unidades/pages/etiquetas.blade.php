@@ -1,6 +1,12 @@
 @php($unidades = $this->getUnidades())
 @php($empresa = \Filament\Facades\Filament::getTenant())
 
+{{-- Resueltos una vez y no por etiqueta: el logo se pregunta al disco, que en
+     producción es un FTP, y cuarenta etiquetas eran cuarenta viajes de ida. --}}
+@php($colorDeCabecera = $empresa?->color_de_marca ?? '#111827')
+@php($logoDeCabecera = $empresa?->logoParaFondo())
+@php($nombreDelCliente = $empresa?->getFilamentName())
+
 <x-filament-panels::page>
     <div class="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -8,26 +14,46 @@
             Imprimí en papel adhesivo y pegá cada una en su parabrisas.
         </p>
 
-        <x-filament::button icon="heroicon-o-printer" x-data x-on:click="window.print()">
+        <x-filament::button
+            icon="heroicon-o-printer"
+            x-data="{
+                async imprimir() {
+                    /*
+                     * El logo del concesionario viaja por red y el diálogo de
+                     * impresión no espera a nadie: si se abre antes de que
+                     * llegue, la cabecera de cada etiqueta sale vacía.
+                     */
+                    const enCamino = [...document.images].filter((img) => ! img.complete);
+
+                    await Promise.all(enCamino.map((img) => new Promise((listo) => {
+                        img.addEventListener('load', listo, { once: true });
+                        img.addEventListener('error', listo, { once: true });
+                    })));
+
+                    window.print();
+                },
+            }"
+            x-on:click="imprimir()"
+        >
             Imprimir
         </x-filament::button>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-2">
+    <div class="hoja-de-etiquetas grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($unidades as $unidad)
             {{-- Cada etiqueta se recorta entera: nunca partida entre dos hojas --}}
             <div class="etiqueta break-inside-avoid overflow-hidden rounded-2xl bg-white ring-1 ring-gray-300">
 
                 {{-- La marca del concesionario arriba, en su color --}}
                 <div class="flex items-center justify-center px-4 py-2.5"
-                     style="background: {{ $empresa?->color_de_marca ?? '#111827' }}">
-                    @if ($empresa?->logoParaFondo())
+                     style="background: {{ $colorDeCabecera }}">
+                    @if ($logoDeCabecera)
                         {{-- El logo según lo oscura que sea su propia cabecera --}}
-                        <img src="{{ $empresa->logoParaFondo() }}" alt="{{ $empresa->getFilamentName() }}"
+                        <img src="{{ $logoDeCabecera }}" alt="{{ $nombreDelCliente }}"
                              class="h-6 w-auto object-contain">
                     @else
                         <span class="text-sm font-bold uppercase tracking-widest text-white">
-                            {{ $empresa?->getFilamentName() }}
+                            {{ $nombreDelCliente }}
                         </span>
                     @endif
                 </div>
@@ -67,16 +93,4 @@
         </p>
     @endif
 
-    {{-- Que la hoja salga limpia: sin menú, sin encabezados, solo etiquetas. --}}
-    <style>
-        @media print {
-            .fi-topbar, .fi-sidebar, .fi-header, .fi-breadcrumbs { display: none !important; }
-            .fi-main, .fi-page { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-            body { background: #fff !important; }
-
-            /* Los fondos de color no se imprimen si no se pide expresamente, y
-               la cabecera de la etiqueta saldría en blanco. */
-            .etiqueta { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        }
-    </style>
 </x-filament-panels::page>

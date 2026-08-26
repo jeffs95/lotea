@@ -45,3 +45,80 @@
     -webkit-mask-image: radial-gradient(75% 60% at 25% 25%, #000 25%, transparent 78%);
     mask-image: radial-gradient(75% 60% at 25% 25%, #000 25%, transparent 78%);
 }
+
+/*
+ * La hoja de etiquetas para el parabrisas.
+ *
+ * Imprimir el contenido de un panel no es solo esconder el menú. Los
+ * contenedores de Filament llevan altura tomada del viewport y overflow
+ * propio, y un elemento con overflow no se puede partir entre dos páginas: el
+ * navegador recorta lo que no cabe en la primera y la hoja sale vacía. Así que
+ * hay que desarmar el layout, no solo ocultarlo.
+ */
+@media print {
+    @page {
+        margin: 8mm;
+    }
+
+    html,
+    body {
+        height: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+
+    /* Lo que estorba. */
+    .fi-topbar,
+    .fi-sidebar,
+    .fi-header,
+    .fi-breadcrumbs,
+    .fi-simple-layout-header,
+    .fi-global-search {
+        display: none !important;
+    }
+
+    /*
+     * Y lo importante: devolverles altura automática y desborde visible. Sin
+     * esto el contenido se queda encerrado en una caja del tamaño de la
+     * pantalla y solo se imprime lo que entraba en ella.
+     */
+    .fi-body,
+    .fi-layout,
+    .fi-main-ctn,
+    .fi-main,
+    .fi-page,
+    .fi-page-content {
+        display: block !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-width: none !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    /*
+     * Las etiquetas dejan de ser una rejilla: Chrome no fragmenta bien un grid
+     * entre páginas y se come filas enteras. En bloques en línea sí pagina.
+     */
+    .hoja-de-etiquetas {
+        display: block !important;
+    }
+
+    .hoja-de-etiquetas .etiqueta {
+        display: inline-block;
+        vertical-align: top;
+        width: 32.6%;
+        margin: 0 0.3% 3mm;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Los fondos de color no se imprimen si no se piden: la cabecera de la
+       etiqueta saldría en blanco y con ella el logo del concesionario. */
+    .hoja-de-etiquetas .etiqueta {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
