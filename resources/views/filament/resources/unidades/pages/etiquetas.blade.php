@@ -67,8 +67,7 @@
                         {{ $unidad->descripcion }}
                     </p>
 
-                    <img src="{{ $this->qr($unidad) }}" alt="Código {{ $unidad->codigo_qr }}"
-                         class="mx-auto mt-3 h-36 w-36">
+                    {!! $this->qr($unidad) !!}
 
                     <p class="mt-2.5 font-mono text-base font-bold tracking-[0.18em] text-gray-900">
                         {{ $unidad->codigo_qr }}

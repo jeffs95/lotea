@@ -128,13 +128,36 @@ class HojaDeEtiquetasTest extends TestCase
         $this->assertCount(1, array_unique($coincidencias[1]), 'Cada etiqueta pide un enlace distinto.');
     }
 
-    /** El QR va incrustado: una hoja que se imprime no puede depender de la red. */
-    public function test_los_codigos_van_incrustados_y_no_como_peticion(): void
+    /**
+     * El código va escrito dentro de la página y no en un <img src="data:...">.
+     *
+     * Metido en un <img>, el navegador lo dibuja como documento aparte, y este
+     * SVG lleva el logo del concesionario incrustado dentro: ese dibujo anidado
+     * es lo que el motor de impresión de Windows no rasteriza, y la etiqueta
+     * salía sin código. En línea se imprime con el resto de la página.
+     */
+    public function test_el_codigo_va_escrito_en_la_pagina_y_no_dentro_de_una_imagen(): void
+    {
+        $unidad = Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->create());
+
+        $html = $this->actingAs($this->usuario)
+            ->get("/app/{$this->empresa->slug}/unidades/etiquetas")
+            ->getContent();
+
+        $this->assertStringContainsString('<svg role="img"', $html, 'El código no quedó en línea.');
+        $this->assertStringContainsString('aria-label="Código '.$unidad->codigo_qr.'"', $html);
+
+        // Y ni rastro del <img> con el SVG dentro, que es lo que no se imprimía.
+        $this->assertStringNotContainsString('<img src="data:image/svg+xml', $html);
+    }
+
+    /** Dentro del HTML no puede ir la declaración XML: no es válida ahí. */
+    public function test_el_codigo_en_linea_no_arrastra_la_cabecera_xml(): void
     {
         Tenancy::comoEmpresa($this->empresa, fn () => Unidad::factory()->create());
 
         $this->actingAs($this->usuario)
             ->get("/app/{$this->empresa->slug}/unidades/etiquetas")
-            ->assertSee('src="data:image/svg+xml;base64,', false);
+            ->assertDontSee('<?xml', false);
     }
 }

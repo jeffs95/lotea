@@ -64,6 +64,32 @@ class QrDeUnidad
     }
 
     /**
+     * El mismo código, pero para escribirlo dentro del HTML.
+     *
+     * Y no en un <img src="data:...">, que es como estaba: un SVG cargado así
+     * el navegador lo trata como un documento aparte y lo dibuja por su cuenta,
+     * y este lleva el logo del concesionario incrustado dentro. Ese dibujo
+     * anidado es justo lo que el motor de impresión de Windows no rasteriza, y
+     * la etiqueta salía sin código. En línea es un nodo más de la página y se
+     * imprime con todo lo demás.
+     */
+    public static function svgEnLinea(Unidad $unidad, int $tamano = 200, string $clases = '', bool $conLogo = true): string
+    {
+        $svg = self::svg($unidad, $tamano, $conLogo);
+
+        // Dentro de un documento HTML la declaración XML no va.
+        $svg = preg_replace('/^\s*<\?xml[^>]*\?>\s*/', '', $svg) ?? $svg;
+
+        $atributos = 'role="img" aria-label="Código '.e($unidad->codigo_qr).'"';
+
+        if ($clases !== '') {
+            $atributos .= ' class="'.e($clases).'"';
+        }
+
+        return preg_replace('/<svg /', '<svg '.$atributos.' ', $svg, 1) ?? $svg;
+    }
+
+    /**
      * El logo del concesionario como data URI, ya reducido.
      *
      * Tiene que ir embebido y no como enlace: el SVG se sirve dentro de un

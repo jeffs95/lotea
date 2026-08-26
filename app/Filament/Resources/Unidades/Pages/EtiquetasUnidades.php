@@ -52,8 +52,9 @@ class EtiquetasUnidades extends Page
             ->get();
     }
 
+    /** El código listo para escribirlo dentro de la etiqueta. */
     public function qr(Unidad $unidad): string
     {
-        return QrDeUnidad::dataUri($unidad, 180);
+        return QrDeUnidad::svgEnLinea($unidad, 180, 'mx-auto mt-3 h-36 w-36');
     }
 }
