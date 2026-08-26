@@ -337,6 +337,22 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Entrar al panel de un cliente
+
+La cuenta de Lotea no pertenece a la empresa de ningún concesionario —ni debe: contaría como
+usuario suyo, saldría en su lista y gastaría cupo de su plan— así que Filament responde 404 al
+abrir su panel. El botón **«Entrar a dar soporte»** del panel central abre esa puerta:
+
+- Solo para quien tenga `users.es_operador`. Se comprueba contra la base en cada request, así que
+  quitar la bandera corta el acceso al instante.
+- Se entra **como uno mismo**, no como el cliente: lo que se toque queda a nombre de quien lo
+  tocó. Si mañana el cliente reclama que le cambiaron algo, el rastro dice la verdad.
+- Entrada y salida quedan anotadas en el historial de ese concesionario, que el dueño ve en su
+  propia pantalla de auditoría.
+- Una barra ámbar arriba avisa dónde se está. El riesgo no es entrar: es olvidarse de que se
+  entró y creer que se está en el panel propio.
+- Es de una empresa a la vez, no se entra a un concesionario suspendido, y al salir se cierra.
+
 ## Los roles y sus permisos
 
 Cada concesionario nace con diez roles ya configurados —`App\Support\PermisosPorRol` tiene el

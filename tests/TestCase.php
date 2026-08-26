@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Support\MarcaDelCliente;
+use App\Support\ModoSoporte;
 use App\Support\RutaDeArchivos;
 use App\Support\Tenancy;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -21,6 +22,7 @@ abstract class TestCase extends BaseTestCase
         // reinicia los ids y el segundo test heredaría el mapa del primero.
         MarcaDelCliente::olvidar();
         RutaDeArchivos::olvidar();
+        ModoSoporte::olvidar();
     }
 
     protected function tearDown(): void
@@ -28,6 +30,7 @@ abstract class TestCase extends BaseTestCase
         Tenancy::olvidar();
         MarcaDelCliente::olvidar();
         RutaDeArchivos::olvidar();
+        ModoSoporte::olvidar();
 
         parent::tearDown();
     }

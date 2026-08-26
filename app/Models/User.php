@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ModoSoporte;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -71,16 +72,30 @@ class User extends Authenticatable implements FilamentUser, HasTenants
      */
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->empresas()
+        $suyas = $this->empresas()
             ->where('activa', true)
             ->whereNull('suspendida_en')
             ->get();
+
+        // Durante una sesión de soporte, ese concesionario aparece en el
+        // selector aunque el operador no sea de la casa.
+        $soporte = ModoSoporte::empresa();
+
+        return $soporte && ! $suyas->contains('id', $soporte->getKey())
+            ? $suyas->push($soporte)
+            : $suyas;
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
         if ($tenant instanceof Empresa && ! $tenant->puedeOperar()) {
             return false;
+        }
+
+        // Lotea entrando a dar soporte: no es de la empresa, pero abrió su
+        // panel a propósito y desde el central.
+        if (ModoSoporte::esLaEmpresaAbierta($tenant->getKey())) {
+            return true;
         }
 
         return $this->empresas()->whereKey($tenant->getKey())->exists();

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArchivoController;
 use App\Http\Controllers\EscaneoController;
 use App\Http\Controllers\MarcaController;
+use App\Http\Controllers\SoporteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,3 +30,17 @@ Route::get('/archivo/{media}/{conversion?}', ArchivoController::class)
 
 /** El logo y el favicon del concesionario, que viven en el mismo disco. */
 Route::get('/marca/{slug}/{tipo}', MarcaController::class)->name('marca');
+
+/**
+ * El acceso de Lotea al panel de un cliente, para dar soporte.
+ *
+ * Fuera del panel central a propósito: el operador termina en el panel del
+ * concesionario, que es otro panel de Filament.
+ */
+Route::middleware('web')->group(function () {
+    // Primero la salida: si no, «salir» entraría como el slug de un
+    // concesionario que no existe y respondería 404.
+    Route::get('/soporte/salir', [SoporteController::class, 'salir'])->name('soporte.salir');
+
+    Route::get('/soporte/{empresa:slug}', [SoporteController::class, 'entrar'])->name('soporte.entrar');
+});

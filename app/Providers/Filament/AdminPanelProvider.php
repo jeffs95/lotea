@@ -50,6 +50,11 @@ class AdminPanelProvider extends PanelProvider
             // El color va por render hook y no por ->colors(): ver el comentario
             // de la vista. Filament cachea la paleta de ->colors() y en un
             // proceso reusado el segundo cliente heredaría el color del primero.
+            // El aviso de que se está en el panel de un cliente, arriba de todo.
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn (): View => view('filament.barra-de-soporte'),
+            )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): View => view('filament.paleta-del-cliente', ['paleta' => MarcaDelCliente::paleta()]),

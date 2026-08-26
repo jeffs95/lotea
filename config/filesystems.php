@@ -72,6 +72,27 @@ return [
         ],
 
         /*
+         * El mismo disco con el nombre en inglés.
+         *
+         * Los otros sistemas de la casa llaman «ftp_documents» a su disco, y
+         * poner ese nombre aquí no da un error al arrancar: falla mucho después,
+         * cuando alguien sube una foto, con un «does not have a configured
+         * driver» que no dice qué hacer. Este alias evita el viaje.
+         */
+        'ftp_documents' => [
+            'driver' => 'ftp',
+            'host' => env('FTP_HOST'),
+            'username' => env('FTP_USERNAME'),
+            'password' => env('FTP_PASSWORD'),
+            'port' => (int) env('FTP_PORT', 21),
+            'root' => env('FTP_ROOT', '/SAS-LOTEA'),
+            'passive' => (bool) env('FTP_PASSIVE', true),
+            'ssl' => (bool) env('FTP_SSL', false),
+            'timeout' => (int) env('FTP_TIMEOUT', 30),
+            'throw' => true,
+        ],
+
+        /*
          * Copia local de lo que ya se leyó del FTP.
          *
          * El portal público muestra decenas de fotos por visita; pedirlas al

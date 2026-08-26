@@ -140,9 +140,22 @@ class ConcesionariosTable
                     EditAction::make(),
 
                     Action::make('abrirPanel')
-                        ->label('Abrir su panel')
-                        ->icon('heroicon-o-arrow-top-right-on-square')
-                        ->url(fn (Empresa $record) => route('filament.admin.pages.dashboard', ['tenant' => $record->slug]))
+                        ->label('Entrar a dar soporte')
+                        ->icon('heroicon-o-lifebuoy')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading(fn (Empresa $record) => "Entrar al panel de {$record->getFilamentName()}")
+                        ->modalDescription(
+                            'Vas a ver su panel como si fueras de la casa, y con permiso para cambiar cosas. '
+                            .'La entrada y la salida quedan anotadas en el historial del concesionario, y lo '
+                            .'que toques queda a tu nombre.'
+                        )
+                        ->modalSubmitActionLabel('Entrar')
+                        // Antes esto mandaba directo al panel del cliente y
+                        // respondía 404: la cuenta de Lotea no pertenece a su
+                        // empresa. Ahora pasa por la puerta que sí abre.
+                        ->visible(fn (Empresa $record) => $record->puedeOperar())
+                        ->url(fn (Empresa $record) => route('soporte.entrar', ['empresa' => $record->slug]))
                         ->openUrlInNewTab(),
 
                     Action::make('verPortal')
