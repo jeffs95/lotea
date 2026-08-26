@@ -371,6 +371,16 @@ si esos números se desalinean, porque este error no se descubre mirando.
 El `.user.ini` importa especialmente en Heroku, que deja PHP en 2 MB por
 archivo. Una foto de teléfono pesa entre 4 y 12 MB.
 
+**Va en `public/`, no en la raíz.** PHP lee ese archivo del directorio del script
+en ejecución, que es el document root; puesto en la raíz del proyecto se queda
+ahí sin que nadie lo mire, y los límites que declara no se aplican. Hay un test
+que falla si aparece uno en la raíz, porque desde fuera se ve idéntico.
+
+Cuando el límite se queda corto, PHP descarta el archivo pero deja seguir la
+petición: la pantalla marca la foto en verde y el archivo nunca existió. Al
+guardar sale un error de Flysystem diciendo que no puede leer algo de
+`livewire-tmp/`. Si aparece ese error, el primer sitio donde mirar es este.
+
 ## Las etiquetas del parabrisas
 
 La hoja se puede sacar de dos formas y las dos existen por una razón:

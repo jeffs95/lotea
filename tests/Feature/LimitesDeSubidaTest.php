@@ -19,9 +19,22 @@ class LimitesDeSubidaTest extends TestCase
     /** @return array<string, int> los ajustes del .user.ini, en kilobytes */
     protected function ajustesDePhp(): array
     {
-        $archivo = base_path('.user.ini');
+        // En public/ y no en la raíz: PHP lee el .user.ini del directorio del
+        // script que está corriendo, que es el document root. En la raíz del
+        // proyecto se queda ahí sin que nadie lo mire.
+        $archivo = public_path('.user.ini');
 
-        $this->assertFileExists($archivo, 'Sin .user.ini, Heroku deja PHP en 2 MB por archivo.');
+        $this->assertFileExists(
+            $archivo,
+            'Falta public/.user.ini: Heroku deja PHP en 2 MB por archivo, y una foto de '
+            .'teléfono pesa entre 4 y 12 MB.',
+        );
+
+        $this->assertFileDoesNotExist(
+            base_path('.user.ini'),
+            'Hay un .user.ini en la raíz del proyecto: PHP no lo lee de ahí, así que '
+            .'los límites que declare no se aplican y nadie se entera.',
+        );
 
         $texto = (string) file_get_contents($archivo);
         $ajustes = [];

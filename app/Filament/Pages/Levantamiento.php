@@ -29,6 +29,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\FilesystemException;
 use UnitEnum;
 
 /**
@@ -178,7 +179,18 @@ class Levantamiento extends Page implements HasForms
 
     public function guardarYSeguir(): void
     {
-        $datos = $this->form->getState();
+        try {
+            $datos = $this->form->getState();
+        } catch (FilesystemException) {
+            // Aquí es donde Filament mueve las fotos de su carpeta temporal a
+            // la definitiva, y a veces la temporal ya no está: el servidor
+            // rechazó el archivo por tamaño, o se reinició mientras se llenaba
+            // la ficha. Reventaba con un error de servidor que no le dice nada
+            // a quien está en el patio con el teléfono en la mano.
+            $this->avisarDeFotosPerdidas();
+
+            return;
+        }
 
         $unidad = Unidad::create([
             'sucursal_id' => $this->sucursalId,
@@ -198,7 +210,7 @@ class Levantamiento extends Page implements HasForms
             'fecha_lista' => now()->toDateString(),
         ]);
 
-        $this->adjuntarFotos($unidad, $datos['fotos'] ?? []);
+        $perdidas = $this->adjuntarFotos($unidad, $datos['fotos'] ?? []);
 
         // Con foto y precio ya cumple, así que se publica sola.
         $unidad->refresh()->update(['publicado' => $unidad->puedePublicarse()]);
@@ -222,32 +234,71 @@ class Levantamiento extends Page implements HasForms
             'url' => UnidadResource::getUrl('edit', ['record' => $unidad]),
         ];
 
-        Notification::make()
-            ->title("{$unidad->stock_no} capturado")
-            ->body($unidad->estaCompleta()
-                ? 'Ficha completa y publicada en el portal.'
-                : 'Publicada. Falta completar: '.implode(', ', $unidad->loQueFalta()).'.')
-            ->success()
-            ->send();
+        $aviso = Notification::make()->title("{$unidad->stock_no} capturado");
+
+        if ($perdidas > 0) {
+            // Se guarda igual —la ficha ya está creada y no se va a perder el
+            // trabajo—, pero quien captura tiene que enterarse ahora y no al
+            // revisar el portal la semana que viene.
+            $aviso
+                ->body($perdidas === 1
+                    ? 'Pero una foto no llegó al servidor. Abrí la ficha y agregala.'
+                    : "Pero {$perdidas} fotos no llegaron al servidor. Abrí la ficha y agregalas.")
+                ->warning()
+                ->persistent();
+        } else {
+            $aviso
+                ->body($unidad->estaCompleta()
+                    ? 'Ficha completa y publicada en el portal.'
+                    : 'Publicada. Falta completar: '.implode(', ', $unidad->loQueFalta()).'.')
+                ->success();
+        }
+
+        $aviso->send();
 
         // Formulario limpio para el siguiente carro, sin recargar la pantalla.
         $this->form->fill($this->valoresIniciales());
     }
 
     /**
-     * Pasa las fotos subidas a la galería de la unidad y limpia los temporales.
+     * Pasa las fotos subidas a la galería de la unidad.
+     *
+     * Devuelve cuántas no aparecieron. Antes se las saltaba en silencio y la
+     * unidad quedaba guardada sin fotos: quien la capturó seguía con el
+     * siguiente carro creyendo que estaban, y se enteraba mucho después.
      *
      * @param  array<string, string>|array<int, string>  $rutas
      */
-    protected function adjuntarFotos(Unidad $unidad, array $rutas): void
+    protected function adjuntarFotos(Unidad $unidad, array $rutas): int
     {
+        $perdidas = 0;
+
         foreach (array_values($rutas) as $ruta) {
             if (! is_string($ruta) || ! Storage::disk('local')->exists($ruta)) {
+                $perdidas++;
+
                 continue;
             }
 
             $unidad->addMediaFromDisk($ruta, 'local')->toMediaCollection('fotos');
         }
+
+        return $perdidas;
+    }
+
+    /** Cuando las fotos ya no están donde el navegador las dejó. */
+    protected function avisarDeFotosPerdidas(): void
+    {
+        Notification::make()
+            ->title('Las fotos no llegaron completas')
+            ->body(
+                'Volvé a agregarlas y guardá otra vez. No se capturó nada, así que no '
+                .'se duplica nada. Si vuelve a pasar, tomalas de una en una o desde la '
+                .'galería en vez de la cámara.'
+            )
+            ->warning()
+            ->persistent()
+            ->send();
     }
 
     /** @return array<string, mixed> */

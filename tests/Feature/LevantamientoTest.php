@@ -16,6 +16,7 @@ use App\Support\Tenancy;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -203,5 +204,66 @@ class LevantamientoTest extends TestCase
 
         $this->assertFalse($unidad->fresh()->publicado);
         $this->assertSame(['fotos'], $unidad->loQueFaltaParaPublicar());
+    }
+
+    // ── Cuando las fotos no llegan ──────────────────────────────────────────
+
+    /**
+     * El caso que reventaba en el patio: la foto se ve verde en la pantalla y
+     * al guardar sale un error de servidor.
+     *
+     * Pasa cuando el archivo temporal ya no está: el servidor rechazó la foto
+     * por tamaño, o el dyno se reinició mientras se llenaba la ficha. Quien
+     * captura está de pie en el patio con el teléfono; un error de servidor no
+     * le dice qué hacer.
+     */
+    public function test_si_una_foto_no_llego_se_avisa_en_vez_de_perderla_en_silencio(): void
+    {
+        $componente = $this->capturar();
+        $unidad = Unidad::latest('id')->first();
+
+        $this->assertNotNull($unidad);
+        $this->assertSame(1, $unidad->getMedia('fotos')->count());
+
+        // Ahora una que se perdió por el camino: el archivo ya no está donde
+        // el formulario dice que quedó.
+        $unidad->getMedia('fotos')->each->delete();
+        $perdidas = $this->invocar($componente, 'adjuntarFotos', [
+            $unidad->refresh(),
+            ['no-existe/se-perdio.jpg'],
+        ]);
+
+        $this->assertSame(1, $perdidas, 'Se saltó la foto sin contarla: la unidad queda sin fotos y nadie se entera.');
+        $this->assertSame(0, $unidad->refresh()->getMedia('fotos')->count());
+    }
+
+    /** Y una ruta que sí existe se adjunta, para que el contador no mienta. */
+    public function test_las_fotos_que_si_llegaron_se_adjuntan(): void
+    {
+        $componente = $this->capturar();
+        $unidad = Unidad::latest('id')->first();
+        $unidad->getMedia('fotos')->each->delete();
+
+        // En una variable: el archivo de la copia falsa vive lo que viva el objeto.
+        $falsa = UploadedFile::fake()->image('buena.jpg', 300, 200);
+        Storage::disk('local')->put('levantamiento/buena.jpg', (string) file_get_contents($falsa->getPathname()));
+
+        $perdidas = $this->invocar($componente, 'adjuntarFotos', [
+            $unidad->refresh(), ['levantamiento/buena.jpg'],
+        ]);
+
+        $this->assertSame(0, $perdidas, 'Contó como perdida una foto que sí estaba.');
+        $this->assertSame(1, $unidad->refresh()->getMedia('fotos')->count());
+    }
+
+    /** Llama a un método protegido del componente. */
+    protected function invocar($componente, string $metodo, array $argumentos)
+    {
+        $instancia = $componente instanceof Levantamiento ? $componente : $componente->instance();
+
+        $reflexion = new \ReflectionMethod($instancia, $metodo);
+        $reflexion->setAccessible(true);
+
+        return $reflexion->invokeArgs($instancia, $argumentos);
     }
 }
