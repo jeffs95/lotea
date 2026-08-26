@@ -208,22 +208,22 @@ class MiMarca extends Page implements HasForms
                         TextInput::make('facebook')
                             ->label('Facebook')
                             ->maxLength(200)
-                            ->placeholder('importadoragomez'),
+                            ->placeholder('suconcesionario'),
 
                         TextInput::make('instagram')
                             ->label('Instagram')
                             ->maxLength(200)
-                            ->placeholder('@importadoragomez'),
+                            ->placeholder('@suconcesionario'),
 
                         TextInput::make('tiktok')
                             ->label('TikTok')
                             ->maxLength(200)
-                            ->placeholder('@importadoragomez'),
+                            ->placeholder('@suconcesionario'),
 
                         TextInput::make('youtube')
                             ->label('YouTube')
                             ->maxLength(200)
-                            ->placeholder('@importadoragomez'),
+                            ->placeholder('@suconcesionario'),
                     ]),
 
                 Section::make('Su color')

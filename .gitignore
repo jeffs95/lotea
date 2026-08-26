@@ -31,3 +31,6 @@ Thumbs.db
 
 # Capturas de diagnóstico: nunca al repositorio
 /public/_tmp-*
+
+# Los datos del cliente que se siembra: nunca al repositorio
+/database/seeders/datos/cliente.json

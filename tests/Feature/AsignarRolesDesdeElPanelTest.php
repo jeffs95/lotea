@@ -74,14 +74,14 @@ class AsignarRolesDesdeElPanelTest extends TestCase
         Livewire::test(CreateUsuario::class)
             ->fillForm([
                 'name' => 'Carlos Vendedor',
-                'email' => 'carlos@importadoragomez.gt',
+                'email' => 'carlos@ejemplo.gt',
                 'password' => 'una-clave-larga',
                 'roles' => [$vendedor->getKey()],
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $usuario = User::firstWhere('email', 'carlos@importadoragomez.gt');
+        $usuario = User::firstWhere('email', 'carlos@ejemplo.gt');
 
         $this->assertNotNull($usuario, 'No se creó el usuario.');
         $this->assertTrue(
@@ -101,13 +101,13 @@ class AsignarRolesDesdeElPanelTest extends TestCase
         Livewire::test(CreateUsuario::class)
             ->fillForm([
                 'name' => 'Carlos Vendedor',
-                'email' => 'carlos@importadoragomez.gt',
+                'email' => 'carlos@ejemplo.gt',
                 'password' => 'una-clave-larga',
                 'roles' => [$vendedor->getKey()],
             ])
             ->call('create');
 
-        $usuario = User::firstWhere('email', 'carlos@importadoragomez.gt');
+        $usuario = User::firstWhere('email', 'carlos@ejemplo.gt');
 
         $vinculo = DB::table('model_has_roles')
             ->where('model_id', $usuario->getKey())
@@ -125,13 +125,13 @@ class AsignarRolesDesdeElPanelTest extends TestCase
         Livewire::test(CreateUsuario::class)
             ->fillForm([
                 'name' => 'Carlos Vendedor',
-                'email' => 'carlos@importadoragomez.gt',
+                'email' => 'carlos@ejemplo.gt',
                 'password' => 'una-clave-larga',
                 'roles' => [$vendedor->getKey()],
             ])
             ->call('create');
 
-        $usuario = User::firstWhere('email', 'carlos@importadoragomez.gt');
+        $usuario = User::firstWhere('email', 'carlos@ejemplo.gt');
 
         $this->assertFalse(
             Tenancy::comoEmpresa($this->otraEmpresa, fn () => $usuario->fresh()->hasRole('vendedor')),

@@ -130,13 +130,13 @@ class PortalContactoYSegmentosTest extends TestCase
     public function test_muestra_las_redes_que_el_cliente_lleno(): void
     {
         $this->empresa->update([
-            'facebook' => 'importadoragomez',
-            'instagram' => '@importadoragomez',
+            'facebook' => 'autosdeejemplo',
+            'instagram' => '@autosdeejemplo',
         ]);
 
         $this->get($this->url('/contacto'))
-            ->assertSee('facebook.com/importadoragomez', escape: false)
-            ->assertSee('instagram.com/importadoragomez', escape: false)
+            ->assertSee('facebook.com/autosdeejemplo', escape: false)
+            ->assertSee('instagram.com/autosdeejemplo', escape: false)
             ->assertDontSee('TikTok');
     }
 
@@ -290,10 +290,10 @@ class PortalContactoYSegmentosTest extends TestCase
     /** El código estaba escrito a mano en las vistas y se duplicaba. */
     public function test_no_se_duplica_el_codigo_de_pais_en_el_portal(): void
     {
-        $this->empresa->update(['whatsapp' => '502 3780 4805']);
+        $this->empresa->update(['whatsapp' => '502 5000 0000']);
 
         $this->get($this->url())
-            ->assertSee('wa.me/50237804805', escape: false)
+            ->assertSee('wa.me/50250000000', escape: false)
             ->assertDontSee('wa.me/502502', escape: false);
     }
 }

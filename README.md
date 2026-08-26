@@ -337,6 +337,33 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Pasar un concesionario a producción
+
+Cuando un cliente se arma probando en una máquina y hay que llevarlo tal cual a
+producción, `ClienteInicialSeeder` lo hace. Los datos **no van en el código**:
+el nombre de un concesionario, sus correos, sus VIN y sus precios son suyos, y
+esto es un repositorio público.
+
+Se leen, en este orden:
+
+1. La variable de entorno `SEMILLA_CLIENTE`, con el JSON completo. Es la vía
+   para Heroku, donde no se puede dejar un archivo suelto.
+2. `database/seeders/datos/cliente.json`, que está en `.gitignore`.
+
+La forma exacta está en `database/seeders/datos/cliente.ejemplo.json`, que sí va
+al repositorio porque no tiene datos de nadie. Un test comprueba que ese ejemplo
+se pueda sembrar tal cual, para que no se quede viejo, y otro que no vuelvan a
+entrar correos de personas reales.
+
+Las contraseñas nunca van en el archivo: cada usuario dice de qué variable de
+entorno sale la suya, y sin ella queda una temporal que se avisa en pantalla.
+
+```bash
+php artisan db:seed --class=ClienteInicialSeeder
+```
+
+Es idempotente: correrlo dos veces no duplica nada.
+
 ## Entrar al panel de un cliente
 
 La cuenta de Lotea no pertenece a la empresa de ningún concesionario —ni debe: contaría como

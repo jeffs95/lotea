@@ -1,0 +1,65 @@
+{
+    "empresa": {
+        "nombre": "Autos del Ejemplo",
+        "nombre_comercial": "Autos del Ejemplo",
+        "slug": "autos-del-ejemplo",
+        "nit": "0000000-0",
+        "telefono": "50000000",
+        "whatsapp": "5000-0000",
+        "email": "ventas@ejemplo.gt",
+        "color_primario": "#f59e0b",
+        "facebook": "autosdelejemplo",
+        "instagram": "@autosdelejemplo",
+        "plan": "pro"
+    },
+    "sucursal": {
+        "codigo": "PRIN",
+        "nombre": "Sala de ventas central",
+        "direccion": "Avenida Siempre Viva 1-00, zona 1, Guatemala",
+        "whatsapp": "5000-0000",
+        "horario": "Lun a Vie 8:00–18:00 · Sáb 8:00–13:00",
+        "latitud": 14.6349,
+        "longitud": -90.5069
+    },
+    "usuarios": [
+        {
+            "email": "dueno@ejemplo.gt",
+            "nombre": "Dueño del patio",
+            "rol": "dueno",
+            "clave_env": "SEMILLA_CLAVE_DUENO"
+        },
+        {
+            "email": "vendedor@ejemplo.gt",
+            "nombre": "Vendedor",
+            "rol": "vendedor",
+            "clave_env": "SEMILLA_CLAVE_VENDEDOR"
+        }
+    ],
+    "caja": {
+        "nombre": "Caja chica",
+        "moneda": "GTQ",
+        "saldo_inicial": 10000
+    },
+    "logo": "marcas/el-archivo-que-ya-esta-en-el-disco.jpeg",
+    "unidades": [
+        {
+            "stock_no": "0001",
+            "vin": "1HGCM82633A004352",
+            "marca": "Toyota",
+            "linea": "Corolla",
+            "anio": 2019,
+            "tipo_vehiculo": "automovil",
+            "estado": "lista",
+            "precio_lista": 85000,
+            "precio_minimo": 78000,
+            "publicado": true,
+            "destacado": false,
+            "slug": "toyota-corolla-2019-0001",
+            "archivos": {
+                "fotos": [
+                    "autos-del-ejemplo/unidades/1/fotos/1/foto.jpeg"
+                ]
+            }
+        }
+    ]
+}
