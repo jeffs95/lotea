@@ -106,13 +106,25 @@ class Unidad extends Model implements HasMedia
         $this->addMediaCollection('documentos');
     }
 
+    /**
+     * Las versiones de cada foto.
+     *
+     * Las dos van a la cola y ninguna se genera dentro del request. Antes la
+     * miniatura era «nonQueued» y se armaba ahí mismo: por cada foto había que
+     * leerla del almacenamiento, procesarla y volver a subirla, todo mientras el
+     * usuario esperaba. Con ocho fotos eran más de treinta viajes de red y
+     * dieciséis imágenes procesadas, y Heroku corta el request a los treinta
+     * segundos. El vendedor veía morir el guardado con la unidad ya creada.
+     *
+     * El precio es que la miniatura tarda unos segundos en aparecer. Se prefiere
+     * eso a que no se pueda guardar.
+     */
     public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('miniatura')
             ->width(320)
             ->height(240)
-            ->format('webp')
-            ->nonQueued();
+            ->format('webp');
 
         // 30 fotos por carro × 40 carros × N clientes: el peso del almacenamiento
         // es un costo real del negocio, no un detalle técnico.

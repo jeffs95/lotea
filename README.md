@@ -337,6 +337,40 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Subir fotos sin que se caiga
+
+Guardar una unidad con fotos parece barato y no lo es. Por cada foto hay que
+subir el original, generar dos versiones —miniatura y web— y subir cada una.
+Con ocho fotos son más de treinta viajes al almacenamiento y dieciséis imágenes
+procesadas. Heroku corta el request a los treinta segundos, así que eso **no
+cabe** en la petición web, y cuando revienta la unidad ya quedó creada pero el
+guardado murió.
+
+Por eso las conversiones van a la cola, y **eso exige el dyno `worker`
+corriendo**:
+
+```bash
+heroku ps:scale worker=1 -a app-lotea-prd
+```
+
+Sin él, las fotos se suben pero nunca aparecen sus miniaturas. Si por costo se
+prefiere no tenerlo, hay que poner `MEDIA_CONVERSIONES_EN_COLA=false` y asumir
+que subir muchas fotos de golpe puede caerse.
+
+Nada de esto tiene que ver con la base de datos: guardar una unidad son unas
+pocas consultas de milisegundos. El tiempo se va en imágenes y en red.
+
+### Los límites, que fallan en silencio
+
+Tres números tienen que cuadrar: el del formulario (`LimiteDeSubida`), los de
+PHP (`.user.ini`) y el de Livewire (`config/livewire.php`). Si el archivo supera
+`post_max_size`, **PHP descarta la petición entera antes de que Laravel
+arranque**: sin excepción, sin log, el botón no hace nada. Hay tests que fallan
+si esos números se desalinean, porque este error no se descubre mirando.
+
+El `.user.ini` importa especialmente en Heroku, que deja PHP en 2 MB por
+archivo. Una foto de teléfono pesa entre 4 y 12 MB.
+
 ## Las etiquetas del parabrisas
 
 La hoja se puede sacar de dos formas y las dos existen por una razón:

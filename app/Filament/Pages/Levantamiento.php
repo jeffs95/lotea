@@ -14,6 +14,7 @@ use App\Models\Marca;
 use App\Models\Sucursal;
 use App\Models\Unidad;
 use App\Models\UnidadTransicion;
+use App\Support\LimiteDeSubida;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -143,7 +144,7 @@ class Levantamiento extends Page implements HasForms
                             ->reorderable()
                             ->image()
                             ->maxFiles(12)
-                            ->maxSize(12 * 1024)
+                            ->maxSize(LimiteDeSubida::KILOBYTES)
                             ->disk('local')
                             ->directory('levantamiento')
                             ->visibility('private')

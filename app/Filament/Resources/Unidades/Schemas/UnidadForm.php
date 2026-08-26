@@ -7,6 +7,7 @@ use App\Enums\EstadoUnidad;
 use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
+use App\Support\LimiteDeSubida;
 use App\Support\QrDeUnidad;
 use App\Support\RequisitosDelPortal;
 use Filament\Forms\Components\DatePicker;
@@ -362,7 +363,7 @@ class UnidadForm
                                 ->imageEditor()
                                 ->imageResizeMode('contain')
                                 ->imageResizeTargetWidth('1920')
-                                ->maxSize(6144)
+                                ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
                         ]),
@@ -424,7 +425,7 @@ class UnidadForm
                                 // solo ve que no pasa nada.
                                 ->imageResizeMode('contain')
                                 ->imageResizeTargetWidth('1920')
-                                ->maxSize(6144)
+                                ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
                         ]),
@@ -440,7 +441,7 @@ class UnidadForm
                                 // formulario, con un mensaje que se entiende.
                                 // Si lo hace PHP, descarta la petición entera y
                                 // el usuario no ve nada.
-                                ->maxSize(6144)
+                                ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->helperText('Hasta 6 MB por archivo. Un PDF escaneado suele pesar menos de 2 MB.')
                                 ->hiddenLabel(),
                         ]),
