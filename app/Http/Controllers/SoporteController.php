@@ -53,13 +53,7 @@ class SoporteController extends Controller
         return redirect()->to(route('filament.central.pages.dashboard'));
     }
 
-    /**
-     * Deja constancia en el rastro de ese concesionario.
-     *
-     * Se escribe con la empresa fijada para que la anotación quede en su
-     * historial y no suelta: el dueño la ve en su propia pantalla de auditoría.
-     */
-    /** Sin leer el modelo: Livewire lo rehidrata sin todas sus columnas. */
+    /** Se pregunta a la base: Livewire rehidrata el modelo sin todas sus columnas. */
     protected function esOperador(): bool
     {
         return (bool) User::query()
@@ -68,6 +62,12 @@ class SoporteController extends Controller
             ->value('es_operador');
     }
 
+    /**
+     * Deja constancia en el rastro de ese concesionario.
+     *
+     * Se escribe con la empresa fijada para que la anotación quede en su
+     * historial y no suelta: el dueño la ve en su propia pantalla de auditoría.
+     */
     protected function anotar(Empresa $empresa, string $descripcion): void
     {
         Tenancy::comoEmpresa($empresa, function () use ($empresa, $descripcion) {
