@@ -18,6 +18,12 @@
         </include>
     </source>
     <php>
+        <!--
+            El decodificador de códigos QR arma la matriz entera en memoria, y
+            con los 128 MB de serie reventaba según en qué turno le tocara
+            correr: la suite pasaba o no pasaba dependiendo del orden.
+        -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
