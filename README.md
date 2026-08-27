@@ -376,6 +376,20 @@ php artisan lotea:migrar-archivos            # hacerlo
 
 Reparte cada colección a su cubo y se puede correr de nuevo sin duplicar nada.
 
+**Si la migración se corre desde dos sitios** —una máquina y producción, contra
+el mismo almacenamiento— van a quedar archivos que su registro no encuentra. No
+es que se hayan perdido: la ruta lleva dentro el id de la fila, y ese id no es
+el mismo en dos bases distintas, así que el archivo termina en
+`unidades/3/fotos/7/ABC.webp` y la fila lo busca en `unidades/1/fotos/1/ABC.webp`.
+
+```bash
+php artisan lotea:reubicar-archivos --fingir
+php artisan lotea:reubicar-archivos
+```
+
+Los busca por nombre —un ULID que no se repite— y los deja donde la base los
+busca, sin borrar el original.
+
 ## Subir fotos sin que se caiga
 
 Guardar una unidad con fotos parece barato y no lo es. Por cada foto hay que
