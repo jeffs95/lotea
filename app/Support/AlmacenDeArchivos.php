@@ -33,6 +33,31 @@ class AlmacenDeArchivos
         return config('media-library.disk_name');
     }
 
+    /**
+     * El disco de las fotos del catálogo, que se sirven por CDN.
+     *
+     * En desarrollo y en los tests los dos discos son el mismo; la distinción
+     * la hace el código y no la infraestructura, así que nada se rompe cuando
+     * no hay dos cubos que separar.
+     */
+    public static function discoPublico(): string
+    {
+        return config('lotea.discos.publico') ?: static::nombreDelDisco();
+    }
+
+    /** El de los documentos y las fotos de subasta, que salen firmados. */
+    public static function discoPrivado(): string
+    {
+        return config('lotea.discos.privado') ?: static::nombreDelDisco();
+    }
+
+    /** ¿Ese disco puede entregar el archivo sin que la aplicación lo lea? */
+    public static function sirveDirecto(string $disco): bool
+    {
+        return filled(config("filesystems.disks.{$disco}.url"))
+            || config("filesystems.disks.{$disco}.driver") === 's3';
+    }
+
     /** ¿Los archivos están en un disco local que el navegador puede pedir directo? */
     public static function esLocalPublico(): bool
     {

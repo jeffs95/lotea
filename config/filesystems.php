@@ -58,6 +58,44 @@ return [
          * `throw` en true: si el FTP no responde, hay que enterarse al subir el
          * archivo, no descubrirlo después con la ficha del carro sin fotos.
          */
+        /*
+         * Cloudflare R2, que habla el mismo protocolo que S3.
+         *
+         * Van dos y no uno a propósito. Al público se le conecta un dominio
+         * para que el CDN sirva las fotos, y eso hace accesible todo lo que
+         * tenga dentro: los títulos de vehículo y las tarjetas de circulación
+         * no pueden estar ahí. El privado no se expone nunca y sus archivos
+         * salen con enlaces firmados que caducan.
+         *
+         * La región es «auto»: R2 no tiene regiones como S3, pero el SDK exige
+         * una y firma con ella.
+         */
+        'r2_publico' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET_PUBLICO'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            // El dominio propio por el que el navegador pide las fotos. Sin él
+            // no hay CDN y las URL apuntarían al endpoint de Cloudflare.
+            'url' => env('R2_URL_PUBLICA'),
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
+        'r2_privado' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET_PRIVADO'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => true,
+        ],
+
         'ftp_documentos' => [
             'driver' => 'ftp',
             'host' => env('FTP_HOST'),

@@ -7,6 +7,7 @@ use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Concerns\DejaRastro;
 use App\Models\Concerns\PerteneceAEmpresa;
+use App\Support\AlmacenDeArchivos;
 use App\Support\CodigoDeUnidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -99,11 +100,22 @@ class Unidad extends Model implements HasMedia
      * al patio con un daño que no estaba en el anuncio, esa comparación es la
      * diferencia entre reclamar y comerse la pérdida.
      */
+    /**
+     * Cada tipo de archivo a su sitio.
+     *
+     * Las fotos del catálogo van al disco público: se sirven por CDN sin pasar
+     * por la aplicación, que es de donde salía casi toda la lentitud.
+     *
+     * Los documentos y las fotos de subasta no. Los primeros llevan datos del
+     * propietario; las segundas muestran el carro como llegó de la subasta,
+     * golpeado y antes del taller, y eso el concesionario no quiere que lo vea
+     * su comprador. Esos salen con enlace firmado y caducan.
+     */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('fotos_subasta');
-        $this->addMediaCollection('fotos');
-        $this->addMediaCollection('documentos');
+        $this->addMediaCollection('fotos_subasta')->useDisk(AlmacenDeArchivos::discoPrivado());
+        $this->addMediaCollection('fotos')->useDisk(AlmacenDeArchivos::discoPublico());
+        $this->addMediaCollection('documentos')->useDisk(AlmacenDeArchivos::discoPrivado());
     }
 
     /**
