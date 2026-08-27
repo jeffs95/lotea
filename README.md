@@ -413,6 +413,23 @@ que subir muchas fotos de golpe puede caerse.
 Nada de esto tiene que ver con la base de datos: guardar una unidad son unas
 pocas consultas de milisegundos. El tiempo se va en imágenes y en red.
 
+### Pintar una página no le pregunta nada al almacenamiento
+
+Parece obvio y no lo era: armar la URL de una imagen comprobaba antes si el
+archivo estaba en el disco. Contra un disco local eso es gratis; contra R2 es un
+viaje de red de unos **300 ms**, y el encabezado del portal pide el logo y el
+icono. Eran tres o cuatro viajes por visita: el portal tardaba **1,3 segundos**
+en mandar el primer byte con dos vehículos en el catálogo.
+
+Lo difícil fue encontrarlo. Las consultas eran el 4% del tiempo, las fotos ya
+salían por el CDN, y la página se veía perfecta. El costo estaba en una línea
+que solo decía «¿existe?».
+
+Ahora el camino guardado en la base es la fuente de verdad: si está, el archivo
+se subió. Si alguien lo borra por fuera queda una imagen rota, y se prefiere eso
+a un segundo de espera para todos. Hay tests que fallan si alguna URL de marca
+vuelve a preguntarle al disco.
+
 ### Los límites, que fallan en silencio
 
 Tres números tienen que cuadrar: el del formulario (`LimiteDeSubida`), los de

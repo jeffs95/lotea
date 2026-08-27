@@ -159,12 +159,21 @@ class MarcaBlancaTest extends TestCase
         );
     }
 
-    /** Un archivo borrado a mano no puede dejar una imagen rota en el panel. */
-    public function test_un_logo_que_ya_no_esta_en_el_disco_no_se_muestra(): void
+    /**
+     * Un archivo borrado a mano deja una imagen rota, y se acepta.
+     *
+     * Comprobar que el archivo está antes de escribir su URL cuesta un viaje al
+     * almacenamiento —unos 300 ms contra R2, en cada visita, por cada imagen de
+     * marca—, y el panel no puede pagar eso para cubrir un caso que solo pasa
+     * si alguien borra archivos por fuera del sistema.
+     *
+     * Lo que sí se cuida es que la página no se caiga por ello.
+     */
+    public function test_un_logo_borrado_a_mano_no_tumba_el_panel(): void
     {
         $this->valle->update(['logo_path' => 'marcas/borrado-a-mano.png']);
 
-        $this->assertNull($this->valle->fresh()->logo_url);
+        $this->assertNotNull($this->valle->fresh()->logo_url);
         $this->verPanelDe($this->valle);
     }
 

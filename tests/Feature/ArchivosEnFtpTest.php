@@ -292,11 +292,24 @@ class ArchivosEnFtpTest extends TestCase
         $this->get($this->empresa->fresh()->logo_url)->assertSuccessful();
     }
 
-    public function test_un_logo_que_no_esta_en_el_disco_no_da_url(): void
+    /**
+     * Si el archivo no está, la URL se arma igual y la petición da 404.
+     *
+     * Antes se comprobaba en el disco antes de escribir la URL, y devolvía
+     * null. Se quitó a conciencia: esa comprobación es un viaje de red, contra
+     * R2 cuesta unos 300 ms, y el encabezado del portal pide el logo y el icono
+     * en cada visita. Era más de un segundo de espera por página para evitar
+     * una imagen rota en un caso que solo ocurre si alguien borra el archivo
+     * por fuera del sistema.
+     *
+     * El camino guardado es la fuente de verdad: si está, el archivo se subió.
+     * Quien sirve el archivo sí comprueba, así que no hay error, solo un 404.
+     */
+    public function test_un_logo_que_no_esta_en_el_disco_da_url_pero_no_archivo(): void
     {
         $this->empresa->update(['logo_path' => 'marcas/borrado.png']);
 
-        $this->assertNull($this->empresa->fresh()->logo_url);
+        $this->assertNotNull($this->empresa->fresh()->logo_url);
         $this->get("/marca/{$this->empresa->slug}/logo")->assertNotFound();
     }
 

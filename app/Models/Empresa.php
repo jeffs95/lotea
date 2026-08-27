@@ -381,11 +381,20 @@ class Empresa extends Model implements HasName
         return $this->urlesDeMarca[$clave] = $this->resolverArchivoDeMarca($ruta);
     }
 
+    /**
+     * La URL, sin preguntarle al almacenamiento si el archivo está.
+     *
+     * Antes se comprobaba, y esa comprobación es un viaje de red: contra R2
+     * cuesta entre 250 y 375 ms. El encabezado del portal pide el logo y el
+     * icono, así que eran tres o cuatro viajes —más de un segundo— antes de
+     * mandar el primer byte, en cada visita. Con dos vehículos en el catálogo.
+     *
+     * El camino guardado en la base es la fuente de verdad: si está, el archivo
+     * se subió. Si alguien lo borró por fuera, sale una imagen rota, y eso es
+     * mejor que un segundo de espera por página para todos los demás.
+     */
     protected function resolverArchivoDeMarca(string $ruta): ?string
     {
-        if (! AlmacenDeArchivos::disco()->exists($ruta)) {
-            return null;
-        }
 
         // En un disco sin URL pública —el FTP— el archivo se pide a la ruta que
         // lo sirve, igual que las fotos de las unidades.
