@@ -395,6 +395,19 @@ class Empresa extends Model implements HasName
      */
     protected function resolverArchivoDeMarca(string $ruta): ?string
     {
+        $disco = AlmacenDeArchivos::discoPublico();
+        $dominioPropio = config("filesystems.disks.{$disco}.url");
+
+        /*
+         * Un logo se muestra en el portal a cualquiera, así que si el cubo
+         * público tiene dominio, sale por ahí igual que las fotos. Antes se
+         * quedaba pasando por la aplicación aunque el archivo ya estuviera en
+         * el CDN: una petición a PHP por cada visita, solo para el logo.
+         */
+        if (filled($dominioPropio) && config("filesystems.disks.{$disco}.driver") !== 'local') {
+            return rtrim($dominioPropio, '/').'/'.ltrim($ruta, '/')
+                .'?v='.$this->versionDeMarca($ruta);
+        }
 
         // En un disco sin URL pública —el FTP— el archivo se pide a la ruta que
         // lo sirve, igual que las fotos de las unidades.

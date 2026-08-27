@@ -2,9 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Controllers\MarcaController;
+use App\Models\Empresa;
 use App\Support\AlmacenDeArchivos;
 use App\Support\Tenancy;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Throwable;
 
@@ -55,7 +58,14 @@ class MigrarArchivos extends Command
             ->filter(fn (Media $m) => $m->disk !== $this->discoQueLeToca($m)));
 
         if ($pendientes->isEmpty()) {
-            $this->info('No hay nada que mover: todo está en el disco configurado.');
+            // Los archivos de marca van aparte y pueden estar pendientes aunque
+            // las fotos ya estén en su sitio: son caminos sueltos en la empresa
+            // y no registros de medialibrary.
+            $deMarca = $this->moverLaMarca($fingir);
+
+            $this->info($deMarca > 0
+                ? "Las fotos ya estaban en su sitio. Archivos de marca movidos: {$deMarca}"
+                : 'No hay nada que mover: todo está en el disco configurado.');
 
             return self::SUCCESS;
         }
@@ -108,6 +118,8 @@ class MigrarArchivos extends Command
         $barra->finish();
         $this->newLine(2);
 
+        $movidos += $this->moverLaMarca($fingir);
+
         $this->info("Movidos: {$movidos}");
 
         if ($fallidos !== []) {
@@ -122,6 +134,72 @@ class MigrarArchivos extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Los logos, iconos y portadas de cada concesionario.
+     *
+     * Van aparte porque no son archivos de medialibrary sino caminos sueltos en
+     * columnas de la empresa, así que el recorrido de arriba no los ve. Se
+     * quedaban en el disco viejo y el logo del portal seguía saliendo por la
+     * aplicación cuando ya todo lo demás iba por el CDN.
+     *
+     * Al cubo público: un logo se muestra en el portal a cualquiera.
+     */
+    protected function moverLaMarca(bool $fingir): int
+    {
+        $destino = AlmacenDeArchivos::discoPublico();
+        $movidos = 0;
+
+        $empresas = Tenancy::sinFiltro(fn () => Empresa::withoutGlobalScopes()->get());
+
+        foreach ($empresas as $empresa) {
+            foreach (MarcaController::TIPOS as $campo) {
+                $ruta = $empresa->{$campo};
+
+                if (blank($ruta) || Storage::disk($destino)->exists($ruta)) {
+                    continue;
+                }
+
+                $origen = $this->dondeEsta($ruta, $destino);
+
+                if ($origen === null) {
+                    $this->line("  <fg=gray>{$empresa->slug}: {$campo} no aparece en ningún disco</>");
+
+                    continue;
+                }
+
+                $this->line("  <fg=green>marca</> {$empresa->slug} · {$campo}: {$origen} → {$destino}");
+
+                if (! $fingir) {
+                    Storage::disk($destino)->put($ruta, (string) Storage::disk($origen)->get($ruta));
+                }
+
+                $movidos++;
+            }
+        }
+
+        return $movidos;
+    }
+
+    /** El primer disco que tiene ese camino. */
+    protected function dondeEsta(string $ruta, string $exceptoEste): ?string
+    {
+        foreach (array_keys((array) config('filesystems.disks', [])) as $disco) {
+            if ($disco === $exceptoEste || $disco === AlmacenDeArchivos::DISCO_CACHE) {
+                continue;
+            }
+
+            try {
+                if (Storage::disk($disco)->exists($ruta)) {
+                    return $disco;
+                }
+            } catch (Throwable) {
+                continue;
+            }
+        }
+
+        return null;
     }
 
     /** A qué cubo pertenece este archivo según lo que sea. */
