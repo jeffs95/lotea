@@ -28,6 +28,18 @@ class Empresa extends Model implements HasName
     /** El ámbar de Lotea, para quien no eligió color propio. */
     public const COLOR_POR_DEFECTO = '#f59e0b';
 
+    /**
+     * Lo que dice la portada cuando el concesionario no escribió lo suyo.
+     *
+     * Habla del vehículo y del precio, no de cómo llegó al patio. El visitante
+     * no entró a leer sobre subastas: entró a ver si hay algo que le sirva y
+     * cuánto cuesta. El proceso se cuenta después, cuando ya está interesado.
+     */
+    public const TITULAR_POR_DEFECTO = 'El vehículo que busca, con el precio a la vista.';
+
+    public const SUBTITULO_POR_DEFECTO = 'Inventario disponible para entrega inmediata. '
+        .'Cada unidad con su precio, su kilometraje y sus documentos en orden.';
+
     protected $table = 'empresas';
 
     protected $guarded = ['id'];
@@ -156,6 +168,22 @@ class Empresa extends Model implements HasName
      * que sube el cliente casi siempre trae su propio fondo negro pegado, y
      * sobre una página blanca eso es un recuadro oscuro en medio de nada.
      */
+    /**
+     * El titular de la portada: el que escribió el concesionario, o el de casa.
+     *
+     * Cae al de casa y no a vacío porque una portada sin titular se ve rota, y
+     * el cliente que acaba de darse de alta todavía no pasó por «Mi marca».
+     */
+    public function getTitularDelPortalAttribute(): string
+    {
+        return filled($this->titular_portal) ? $this->titular_portal : self::TITULAR_POR_DEFECTO;
+    }
+
+    public function getSubtituloDelPortalAttribute(): string
+    {
+        return filled($this->subtitulo_portal) ? $this->subtitulo_portal : self::SUBTITULO_POR_DEFECTO;
+    }
+
     public function getLogoUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->logo_claro_path)

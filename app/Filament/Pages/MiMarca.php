@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -157,8 +158,32 @@ class MiMarca extends Page implements HasForms
                             )),
                     ]),
 
-                Section::make('La portada de su página')
-                    ->description('La imagen grande de arriba, detrás del titular.')
+                Section::make('Lo que dice su portada')
+                    ->description('El texto grande de arriba, lo primero que lee quien entra.')
+                    ->schema([
+                        TextInput::make('titular_portal')
+                            ->label('Titular')
+                            ->maxLength(120)
+                            ->placeholder(Empresa::TITULAR_POR_DEFECTO)
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> el texto más grande de su página, sobre la portada.<br>'
+                                .'Una frase corta que diga qué vende. Si lo deja vacío se usa una general.'
+                            )),
+
+                        Textarea::make('subtitulo_portal')
+                            ->label('Frase de apoyo')
+                            ->rows(2)
+                            ->maxLength(300)
+                            ->placeholder(Empresa::SUBTITULO_POR_DEFECTO)
+                            ->helperText(new HtmlString(
+                                '<strong>Se ve en:</strong> debajo del titular, en letra más pequeña.<br>'
+                                .'Aquí va el motivo para escribirle: entrega inmediata, financiamiento, '
+                                .'garantía. Dos líneas como máximo.'
+                            )),
+                    ]),
+
+                Section::make('La imagen de su portada')
+                    ->description('La foto grande de arriba, detrás del titular.')
                     ->schema([
                         FileUpload::make('portada_path')
                             ->label('Imagen de portada')
@@ -176,7 +201,7 @@ class MiMarca extends Page implements HasForms
                             ->imageResizeTargetWidth('1920')
                             ->maxSize(6144)
                             ->helperText(new HtmlString(
-                                '<strong>Se ve en:</strong> el fondo de la portada y de «Encontranos».<br>'
+                                '<strong>Se ve en:</strong> el fondo de la portada y de «Dónde encontrarnos».<br>'
                                 .'Una foto de su patio o de un carro, apaisada y de 1600 px de ancho o más. '
                                 .'Se le pone una capa oscura encima para que el texto siga leyéndose; '
                                 .'si no sube ninguna, queda el degradado con su color.'

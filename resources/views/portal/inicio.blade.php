@@ -28,12 +28,11 @@
             </p>
 
             <h1 class="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-                Carros de importación,<br>con historia clara y precio de frente.
+                {{ $empresa->titular_del_portal }}
             </h1>
 
             <p class="mt-4 max-w-xl text-lg text-gray-300">
-                Traemos las unidades directo de subasta, las preparamos en nuestro taller y se las entregamos
-                listas para rodar.
+                {{ $empresa->subtitulo_del_portal }}
             </p>
 
             {{-- Buscador: lo primero que hace la gente es escribir el modelo que quiere --}}
