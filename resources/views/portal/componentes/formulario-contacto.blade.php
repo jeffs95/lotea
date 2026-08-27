@@ -33,19 +33,32 @@
                style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         <input type="hidden" name="_t" value="{{ now()->timestamp }}">
 
-        <input type="text" name="nombre" placeholder="Nombre completo" required maxlength="120"
+        {{-- El navegador avisa antes de mandar: el visitante corrige en el
+             momento en vez de recargar la página y volver a escribir todo. --}}
+        <input type="text" name="nombre" placeholder="Nombre completo" required
+               minlength="3" maxlength="120"
+               autocomplete="name" autocapitalize="words"
                value="{{ old('nombre') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
         @error('nombre')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
 
-        <input type="tel" name="telefono" placeholder="Teléfono" required maxlength="30"
+        {{-- inputmode abre el teclado numérico en el teléfono, que es desde
+             donde entra casi todo el tráfico. El patrón deja pasar los formatos
+             que la gente escribe de verdad, con guiones, espacios o el +502. --}}
+        <input type="tel" name="telefono" placeholder="Teléfono (5555-1234)" required
+               inputmode="tel" autocomplete="tel"
+               pattern="[+]?[0-9()\s\-]{8,20}"
+               title="Ocho dígitos si es de Guatemala. Puede escribirlo con guiones o con el +502."
+               maxlength="30"
                value="{{ old('telefono') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
         @error('telefono')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
 
         <input type="email" name="email" placeholder="Correo (opcional)" maxlength="120"
+               inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"
                value="{{ old('email') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
+        @error('email')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
 
         <textarea name="mensaje" rows="3" maxlength="1000" placeholder="¿En qué podemos ayudarle?"
                   class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">{{ old('mensaje') }}</textarea>
