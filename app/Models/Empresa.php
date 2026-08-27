@@ -35,10 +35,10 @@ class Empresa extends Model implements HasName
      * no entró a leer sobre subastas: entró a ver si hay algo que le sirva y
      * cuánto cuesta. El proceso se cuenta después, cuando ya está interesado.
      */
-    public const TITULAR_POR_DEFECTO = 'El vehículo que busca, con el precio a la vista.';
+    public const TITULAR_POR_DEFECTO = 'Conoce el historial del vehículo, el estado y el precio antes de comprar.';
 
-    public const SUBTITULO_POR_DEFECTO = 'Inventario disponible para entrega inmediata. '
-        .'Cada unidad con su precio, su kilometraje y sus documentos en orden.';
+    public const SUBTITULO_POR_DEFECTO = 'Elegimos cada unidad en subasta, la inspeccionamos y la '
+        .'preparamos en nuestro taller para que puedas recibirla lista para manejar.';
 
     protected $table = 'empresas';
 
@@ -162,12 +162,23 @@ class Empresa extends Model implements HasName
     }
 
     /**
-     * El logo para fondos claros: el portal, las etiquetas, el panel de día.
+     * El teléfono con guion, como se lee aquí: «3780-4805».
      *
-     * Se prefiere la versión clara —trazo oscuro, sin fondo— porque el archivo
-     * que sube el cliente casi siempre trae su propio fondo negro pegado, y
-     * sobre una página blanca eso es un recuadro oscuro en medio de nada.
+     * Ocho dígitos seguidos cuestan de leer y no se reconocen como teléfono de
+     * un vistazo. Si trae código de país o no son ocho, se deja como está: no
+     * vale la pena adivinar los formatos de otros países.
      */
+    public function getTelefonoConGuionAttribute(): ?string
+    {
+        $digitos = preg_replace('/\D/', '', (string) $this->telefono) ?? '';
+
+        if (strlen($digitos) !== 8) {
+            return $this->telefono;
+        }
+
+        return substr($digitos, 0, 4).'-'.substr($digitos, 4);
+    }
+
     /**
      * El titular de la portada: el que escribió el concesionario, o el de casa.
      *
@@ -184,6 +195,13 @@ class Empresa extends Model implements HasName
         return filled($this->subtitulo_portal) ? $this->subtitulo_portal : self::SUBTITULO_POR_DEFECTO;
     }
 
+    /**
+     * El logo para fondos claros: el portal, las etiquetas, el panel de día.
+     *
+     * Se prefiere la versión clara —trazo oscuro, sin fondo— porque el archivo
+     * que sube el cliente casi siempre trae su propio fondo negro pegado, y
+     * sobre una página blanca eso es un recuadro oscuro en medio de nada.
+     */
     public function getLogoUrlAttribute(): ?string
     {
         return $this->archivoDeMarca($this->logo_claro_path)

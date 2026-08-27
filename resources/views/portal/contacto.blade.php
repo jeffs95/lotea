@@ -1,7 +1,7 @@
 @extends('portal.layout')
 
-@section('titulo', 'Dónde encontrarnos · ' . ($empresa->nombre_comercial ?? $empresa->nombre))
-@section('descripcion', 'Visite nuestros patios o escríbanos. ' . ($empresa->nombre_comercial ?? $empresa->nombre) . ' en Guatemala.')
+@section('titulo', 'Encuéntranos aquí · ' . ($empresa->nombre_comercial ?? $empresa->nombre))
+@section('descripcion', 'Ven a conocer nuestros vehículos o escríbenos. ' . ($empresa->nombre_comercial ?? $empresa->nombre) . ' en Guatemala.')
 
 @section('contenido')
 
@@ -31,11 +31,11 @@
             </p>
 
             <h1 class="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-                Dónde encontrarnos.
+                Encuéntranos aquí.
             </h1>
 
             <p class="mt-4 max-w-xl text-lg text-gray-300">
-                Visite nuestros patios y vea los vehículos en persona, sin cita previa. O escríbanos y lo atendemos por el medio que prefiera.
+                Ven a conocer nuestros vehículos en persona, sin necesidad de cita. También puedes comunicarte con nosotros por el medio que prefieras.
             </p>
 
             @if ($empresa->whatsapp_enlace)
@@ -43,7 +43,7 @@
                    class="mt-8 inline-flex items-center gap-2 rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
                    style="background: var(--acento)">
                     @include('portal.componentes.icono-red', ['red' => 'whatsapp'])
-                    Escríbanos por WhatsApp
+                    Escríbenos por WhatsApp
                 </a>
             @endif
         </div>
@@ -76,7 +76,7 @@
                                         {{ $empresa->iniciales }}
                                     </span>
                                     <p class="text-sm text-gray-500">
-                                        Llámenos y le damos la referencia exacta para llegar.
+                                        Llámanos y te damos la referencia exacta para llegar.
                                     </p>
                                 </div>
                             @endif
@@ -90,7 +90,7 @@
                                           style="background: var(--acento)">Casa matriz</span>
                                 @endif
 
-                                <h2 class="text-2xl font-bold tracking-tight text-gray-900">{{ $sucursal->nombre }}</h2>
+                                <h2 class="text-2xl font-bold tracking-tight text-gray-900">{{ $sucursal->nombreConLaEmpresa() }}</h2>
                             </div>
 
                             <dl class="space-y-3.5 text-sm">
@@ -159,88 +159,23 @@
                 </div>
             @empty
                 <div class="rounded-3xl border border-dashed border-gray-300 px-6 py-16 text-center">
-                    <p class="text-lg font-semibold text-gray-900">Escríbanos y coordinamos</p>
-                    <p class="mt-1 text-gray-500">Con gusto lo atendemos por teléfono o por WhatsApp.</p>
+                    <p class="text-lg font-semibold text-gray-900">Escríbenos y coordinamos</p>
+                    <p class="mt-1 text-gray-500">Con gusto te atendemos por teléfono o por WhatsApp.</p>
                 </div>
             @endforelse
         </div>
 
-        {{-- Contáctenos --}}
-        <div id="contacto" class="mt-16 grid gap-10 lg:grid-cols-2 lg:gap-14">
-
-            <div class="lg:pt-4">
-                <h2 class="text-3xl font-bold tracking-tight text-gray-900">Contáctenos</h2>
-                <p class="mt-3 text-lg text-gray-600">
-                    Contestamos pronto. Elija el medio que prefiera.
-                </p>
-
-                <div class="mt-8 space-y-3">
-                    @if ($empresa->whatsapp_enlace)
-                        <a href="{{ $empresa->whatsapp_enlace }}" target="_blank" rel="noopener"
-                           class="group flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-200 transition hover:ring-gray-400">
-                            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white"
-                                  style="background: var(--acento)">
-                                @include('portal.componentes.icono-red', ['red' => 'whatsapp'])
-                            </span>
-                            <span>
-                                <span class="block font-semibold text-gray-900">WhatsApp</span>
-                                <span class="block text-sm text-gray-500">La forma más rápida</span>
-                            </span>
-                        </a>
-                    @endif
-
-                    @if ($empresa->telefono)
-                        <a href="tel:{{ $empresa->telefono }}"
-                           class="group flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-200 transition hover:ring-gray-400">
-                            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gray-100 text-gray-600">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                                </svg>
-                            </span>
-                            <span>
-                                <span class="block font-semibold text-gray-900">{{ $empresa->telefono }}</span>
-                                <span class="block text-sm text-gray-500">Llámenos</span>
-                            </span>
-                        </a>
-                    @endif
-
-                    @if ($empresa->email)
-                        <a href="mailto:{{ $empresa->email }}"
-                           class="group flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-200 transition hover:ring-gray-400">
-                            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gray-100 text-gray-600">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                                </svg>
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate font-semibold text-gray-900">{{ $empresa->email }}</span>
-                                <span class="block text-sm text-gray-500">Escríbanos un correo</span>
-                            </span>
-                        </a>
-                    @endif
-                </div>
-
-                @if (count($empresa->redes))
-                    <div class="mt-8">
-                        <p class="text-sm font-semibold text-gray-900">Redes sociales</p>
-                        <div class="mt-3 flex flex-wrap gap-2">
-                            @foreach ($empresa->redes as $red)
-                                <a href="{{ $red['url'] }}" target="_blank" rel="noopener"
-                                   title="{{ $red['nombre'] }}"
-                                   class="grid h-11 w-11 place-items-center rounded-xl bg-white text-gray-500 shadow-sm ring-1 ring-gray-200 transition hover:text-gray-900 hover:ring-gray-400">
-                                    @include('portal.componentes.icono-red', ['red' => $red['red']])
-                                    <span class="sr-only">{{ $red['nombre'] }}</span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-            </div>
+        {{-- Solo el formulario.
+             Aquí había además una columna con WhatsApp, teléfono, correo y
+             redes: exactamente lo que ya está en el pie de todas las páginas.
+             El visitante leía lo mismo dos veces seguidas y había dos sitios
+             que mantener sincronizados. --}}
+        <div id="contacto" class="mt-16 max-w-2xl">
 
             {{-- El mismo formulario que ya recoge los prospectos --}}
             <div class="rounded-3xl bg-white p-7 shadow-sm ring-1 ring-gray-200 sm:p-8">
-                <p class="text-xl font-bold text-gray-900">Déjenos sus datos</p>
-                <p class="mt-1 text-sm text-gray-500">Lo contactamos nosotros, sin compromiso.</p>
+                <p class="text-xl font-bold text-gray-900">Solicita más información</p>
+                <p class="mt-1 text-sm text-gray-500">Déjanos tus datos y nos comunicaremos contigo, sin compromiso.</p>
 
                 @include('portal.componentes.formulario-contacto')
             </div>

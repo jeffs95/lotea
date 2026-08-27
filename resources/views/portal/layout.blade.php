@@ -36,13 +36,16 @@
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
             <a href="{{ \App\Support\PortalUrl::inicio($empresa) }}" class="flex items-center gap-2">
                 @if ($empresa->logo_url)
-                    <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nombre }}" class="h-9 w-auto">
+                    {{-- Solo el logo, y más grande: el nombre repetido al lado
+                         estrechaba la barra y en pantalla angosta se partía en
+                         dos líneas encima del menú. El logo ya dice el nombre. --}}
+                    <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nombre }}" class="h-12 w-auto sm:h-14">
                 @else
                     <span class="grid h-9 w-9 place-items-center rounded-lg text-sm font-bold text-white" style="background: var(--acento)">
                         {{ $empresa->iniciales }}
                     </span>
+                    <span class="text-lg font-bold tracking-tight">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</span>
                 @endif
-                <span class="text-lg font-bold tracking-tight">{{ $empresa->nombre_comercial ?? $empresa->nombre }}</span>
             </a>
 
             <nav class="flex items-center gap-4 text-sm">
@@ -50,11 +53,13 @@
                     Vehículos
                 </a>
                 <a href="{{ \App\Support\PortalUrl::contacto($empresa) }}" class="font-medium text-gray-600 hover:text-gray-900">
-                    Ubicaciones
+                    Encuéntranos
                 </a>
                 @if ($empresa->telefono)
+                    {{-- Con etiqueta: un número suelto en el menú no se lee
+                         como un teléfono al que se puede llamar. --}}
                     <a href="tel:{{ $empresa->telefono }}" class="hidden font-medium text-gray-600 hover:text-gray-900 sm:block">
-                        {{ $empresa->telefono }}
+                        Tel. {{ $empresa->telefono_con_guion }}
                     </a>
                 @endif
                 <a
@@ -85,26 +90,51 @@
                 @endif
             </div>
 
+            {{-- Toda la forma de contactar, en un solo lugar.
+                 Antes esto mismo salía dos veces: aquí y en un bloque aparte de
+                 la página de contacto. El visitante leía lo mismo dos veces y
+                 el mantenimiento eran dos sitios que se desincronizaban. --}}
             <div class="text-sm text-gray-600">
-                <p class="font-semibold text-gray-900">Contacto</p>
-                @if ($empresa->telefono)<p class="mt-2">{{ $empresa->telefono }}</p>@endif
-                @if ($empresa->email)<p>{{ $empresa->email }}</p>@endif
+                <p class="font-semibold text-gray-900">Contáctanos</p>
+
+                @if ($empresa->whatsapp_enlace)
+                    <a href="{{ $empresa->whatsapp_enlace }}" target="_blank" rel="noopener"
+                       class="mt-2 block hover:text-gray-900">
+                        <span class="font-medium">WhatsApp</span>
+                        <span class="block text-xs text-gray-500">Respuesta rápida</span>
+                    </a>
+                @endif
+
+                @if ($empresa->telefono)
+                    <a href="tel:{{ $empresa->telefono }}" class="mt-3 block hover:text-gray-900">
+                        <span class="font-medium">+502 {{ $empresa->telefono_con_guion }}</span>
+                        <span class="block text-xs text-gray-500">Llámanos</span>
+                    </a>
+                @endif
+
+                @if ($empresa->email)
+                    <a href="mailto:{{ $empresa->email }}" class="mt-3 block break-words hover:text-gray-900">
+                        <span class="font-medium">{{ $empresa->email }}</span>
+                        <span class="block text-xs text-gray-500">Escríbenos por correo</span>
+                    </a>
+                @endif
             </div>
 
             <div class="text-sm text-gray-600">
-                <p class="font-semibold text-gray-900">Sucursales</p>
+                <p class="font-semibold text-gray-900">Visítanos</p>
                 @foreach ($empresa->sucursales()->where('activa', true)->where('mostrar_en_portal', true)->get() as $sucursal)
                     <p class="mt-2">
                         @if ($sucursal->tieneUbicacion())
-                            <a href="{{ $sucursal->mapa_google }}" target="_blank" rel="noopener" class="hover:underline">{{ $sucursal->nombre }}</a>
+                            <a href="{{ $sucursal->mapa_google }}" target="_blank" rel="noopener" class="hover:underline">{{ $sucursal->nombreConLaEmpresa() }}</a>
                         @else
-                            {{ $sucursal->nombre }}
+                            {{ $sucursal->nombreConLaEmpresa() }}
                         @endif
                     </p>
                 @endforeach
 
                 @if (count($empresa->redes))
-                    <div class="mt-4 flex flex-wrap gap-3">
+                    <p class="mt-5 font-semibold text-gray-900">Síguenos</p>
+                    <div class="mt-2 flex flex-wrap gap-3">
                         @foreach ($empresa->redes as $red)
                             <a href="{{ $red['url'] }}" target="_blank" rel="noopener"
                                class="text-sm font-medium text-gray-600 hover:text-gray-900">{{ $red['nombre'] }}</a>

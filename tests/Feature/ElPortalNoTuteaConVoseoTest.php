@@ -12,7 +12,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * El portal público se dirige al visitante de usted.
+ * El portal público se dirige al visitante en tuteo, no en voseo.
  *
  * El panel interno habla de vos, porque ahí se habla con quien trabaja en el
  * patio todos los días. El portal es otra cosa: lo lee alguien que está por
@@ -21,7 +21,7 @@ use Tests\TestCase;
  * Y como el resto del sistema está escrito en voseo, es facilísimo que se
  * cuele un «escribinos» al agregar una sección. De ahí este test.
  */
-class ElPortalHablaDeUstedTest extends TestCase
+class ElPortalNoTuteaConVoseoTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -62,7 +62,7 @@ class ElPortalHablaDeUstedTest extends TestCase
     }
 
     #[DataProvider('paginasDelPortal')]
-    public function test_la_pagina_no_trata_de_vos_al_visitante(string $ruta): void
+    public function test_la_pagina_no_vosea_al_visitante(string $ruta): void
     {
         Unidad::factory()->count(2)->publicada()->create();
 
@@ -77,8 +77,8 @@ class ElPortalHablaDeUstedTest extends TestCase
         $this->assertSame(
             [],
             $encontradas,
-            "En «{$ruta}» el portal trata de vos al visitante: ".implode(', ', $encontradas)
-            .'. El portal va de usted; el panel interno es el que habla de vos.',
+            "En «{$ruta}» el portal vosea al visitante: ".implode(', ', $encontradas)
+            .'. El portal va en tuteo; el panel interno es el que habla de vos.',
         );
     }
 
@@ -93,7 +93,7 @@ class ElPortalHablaDeUstedTest extends TestCase
 
         $texto = $this->soloElTextoVisible($html);
 
-        $this->assertSame([], $this->formasQueAparecen($texto), 'La ficha trata de vos al visitante.');
+        $this->assertSame([], $this->formasQueAparecen($texto), 'La ficha vosea al visitante.');
     }
 
     /**

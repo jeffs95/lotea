@@ -47,6 +47,36 @@ class Sucursal extends Model
         return $query->activas()->where('mostrar_en_portal', true);
     }
 
+    /**
+     * El nombre con el del concesionario delante: «Importadora Gómez – Roosevelt».
+     *
+     * Una sucursal se llama «Roosevelt» o «Zona 11», y sola no dice de quién
+     * es. En el portal y en un enlace compartido eso importa: el visitante ve
+     * un nombre de calle sin saber a qué patio va.
+     *
+     * Si el nombre de la sucursal ya arrastra la marca no se repite. Se compara
+     * por la primera palabra del concesionario y no por el nombre entero,
+     * porque los clientes bautizan sus patios «Importadora Roosevelt» y
+     * anteponer «Importadora Gómez» daría «Importadora Gómez – Importadora
+     * Roosevelt», que es peor que no hacer nada.
+     */
+    public function nombreConLaEmpresa(): string
+    {
+        $empresa = trim((string) $this->empresa?->getFilamentName());
+
+        if ($empresa === '') {
+            return $this->nombre;
+        }
+
+        $primera = mb_strtolower(explode(' ', $empresa)[0]);
+
+        if (mb_strlen($primera) > 2 && str_contains(mb_strtolower($this->nombre), $primera)) {
+            return $this->nombre;
+        }
+
+        return $empresa.' – '.$this->nombre;
+    }
+
     public function tieneUbicacion(): bool
     {
         return filled($this->latitud) && filled($this->longitud);

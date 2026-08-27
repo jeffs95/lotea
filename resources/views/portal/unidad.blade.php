@@ -152,7 +152,7 @@
 
                 {{-- Calculadora: la gente no compra el precio, compra la cuota --}}
                 <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                    <h2 class="text-base font-bold">Calcule su cuota</h2>
+                    <h2 class="text-base font-bold">Calcula tu cuota</h2>
                     <p class="mt-1 text-xs text-gray-500">Estimado referencial, sujeto a aprobación.</p>
 
                     <div class="mt-4 space-y-4" data-calculadora data-precio="{{ (float) $unidad->precio_lista }}">
@@ -184,7 +184,7 @@
                 <div id="contacto" class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
                     @include('portal.componentes.formulario-contacto', [
                         'unidad' => $unidad,
-                        'titulo' => '¿Le interesa? Déjenos sus datos',
+                        'titulo' => '¿Te interesa? Solicita más información',
                     ])
                 </div>
             </div>

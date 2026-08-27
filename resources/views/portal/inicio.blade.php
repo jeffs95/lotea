@@ -24,7 +24,7 @@
             @endif
 
             <p class="text-sm font-semibold uppercase tracking-widest" style="color: var(--acento)">
-                {{ $total }} {{ $total === 1 ? 'unidad disponible' : 'unidades disponibles' }}
+                {{ $total }} {{ $total === 1 ? 'unidad en inventario' : 'unidades en inventario' }}
             </p>
 
             <h1 class="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
@@ -38,7 +38,7 @@
             {{-- Buscador: lo primero que hace la gente es escribir el modelo que quiere --}}
             <form action="{{ \App\Support\PortalUrl::catalogo($empresa) }}" method="GET"
                   class="mt-8 flex max-w-xl gap-2">
-                <input type="search" name="q" placeholder="Busque por marca, modelo o número de stock"
+                <input type="search" name="q" placeholder="Busca por tipo, marca, modelo o transmisión"
                        class="w-full rounded-xl border-0 bg-white px-4 py-3 text-base text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-500 focus:ring-2 focus:ring-gray-900">
                 <button type="submit"
                         class="shrink-0 rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
@@ -75,7 +75,7 @@
 
     <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div class="flex items-end justify-between">
-            <h2 class="text-2xl font-bold tracking-tight">Recién ingresados</h2>
+            <h2 class="text-2xl font-bold tracking-tight">Lo más nuevo de nuestro inventario</h2>
             <a href="{{ \App\Support\PortalUrl::catalogo($empresa) }}" class="text-sm font-semibold hover:underline" style="color: var(--acento)">
                 Ver todo el inventario →
             </a>

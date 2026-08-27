@@ -59,8 +59,8 @@ class PortalContactoYSegmentosTest extends TestCase
     {
         $this->get($this->url('/contacto'))
             ->assertSuccessful()
-            ->assertSee('Dónde encontrarnos')
-            ->assertSee('Contáctenos');
+            ->assertSee('Encuéntranos aquí')
+            ->assertSee('Contáctanos');
     }
 
     public function test_muestra_la_sucursal_con_su_direccion_y_horario(): void
@@ -109,7 +109,7 @@ class PortalContactoYSegmentosTest extends TestCase
         $this->get($this->url('/contacto'))
             ->assertDontSee('<iframe', escape: false)
             ->assertSee('Patio sin mapa')
-            ->assertSee('Llámenos y le damos la referencia exacta para llegar.');
+            ->assertSee('Llámanos y te damos la referencia exacta para llegar.');
     }
 
     public function test_sin_coordenadas_no_hay_botones_de_mapa(): void
@@ -140,11 +140,11 @@ class PortalContactoYSegmentosTest extends TestCase
             ->assertDontSee('TikTok');
     }
 
-    public function test_el_menu_lleva_a_las_ubicaciones(): void
+    public function test_el_menu_lleva_a_encuentranos(): void
     {
         $this->get($this->url())
             ->assertSuccessful()
-            ->assertSee('Ubicaciones');
+            ->assertSee('Encuéntranos');
     }
 
     // ── La portada ──────────────────────────────────────────────────────────

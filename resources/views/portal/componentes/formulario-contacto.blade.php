@@ -11,8 +11,8 @@
 
 @if (session('lead_enviado'))
     <div class="rounded-xl bg-green-50 p-4 text-center ring-1 ring-green-200">
-        <p class="font-semibold text-green-800">Recibimos sus datos</p>
-        <p class="mt-1 text-sm text-green-700">Un asesor lo contacta hoy mismo.</p>
+        <p class="font-semibold text-green-800">Recibimos tus datos</p>
+        <p class="mt-1 text-sm text-green-700">Un asesor te contacta hoy mismo.</p>
     </div>
 @else
     @if ($titulo)
@@ -45,7 +45,7 @@
         {{-- inputmode abre el teclado numérico en el teléfono, que es desde
              donde entra casi todo el tráfico. El patrón deja pasar los formatos
              que la gente escribe de verdad, con guiones, espacios o el +502. --}}
-        <input type="tel" name="telefono" placeholder="Teléfono (5555-1234)" required
+        <input type="tel" name="telefono" placeholder="Número de teléfono (5555-1234)" required
                inputmode="tel" autocomplete="tel"
                pattern="[+]?[0-9()\s\-]{8,20}"
                title="Ocho dígitos si es de Guatemala. Puede escribirlo con guiones o con el +502."
@@ -54,17 +54,17 @@
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
         @error('telefono')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
 
-        <input type="email" name="email" placeholder="Correo (opcional)" maxlength="120"
+        <input type="email" name="email" placeholder="Correo electrónico (opcional)" maxlength="120"
                inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false"
                value="{{ old('email') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
         @error('email')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
 
-        <textarea name="mensaje" rows="3" maxlength="1000" placeholder="¿En qué podemos ayudarle?"
+        <textarea name="mensaje" rows="3" maxlength="1000" placeholder="¿En qué podemos ayudarte?"
                   class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">{{ old('mensaje') }}</textarea>
 
         <button type="submit" class="w-full rounded-xl px-4 py-3 font-semibold text-white transition hover:opacity-90" style="background: var(--acento)">
-            Solicitar contacto
+            Solicitar información
         </button>
     </form>
 @endif

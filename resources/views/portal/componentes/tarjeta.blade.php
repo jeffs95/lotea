@@ -39,22 +39,21 @@
         <p class="text-xs font-medium text-gray-400">Stock {{ $unidad->stock_no }}</p>
         <h3 class="mt-0.5 text-base font-bold leading-snug text-gray-900">{{ $unidad->descripcion }}</h3>
 
+        {{-- Solo lo que además se puede filtrar. Antes salían el odómetro, la
+             cilindrada y el combustible en cada tarjeta: cuatro líneas de datos
+             repetidos que cansan de leer y por los que nadie busca. El detalle
+             completo está en la ficha, que es donde se decide. --}}
         <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-            @if ($unidad->odometro)
-                <span>{{ number_format($unidad->odometro) }} {{ $unidad->odometro_unidad === 'mi' ? 'mi' : 'km' }}</span>
+            <span>{{ $unidad->tipo_vehiculo->getLabel() }}</span>
+            @if ($unidad->transmision)
+                <span>· {{ $unidad->tipo_vehiculo->transmisiones()[$unidad->transmision] ?? $unidad->transmision }}</span>
             @endif
-            @if ($unidad->cilindrada_cc)<span>· {{ $unidad->cilindrada_cc }} cc</span>@endif
-            @if ($unidad->transmision)<span>· {{ $unidad->tipo_vehiculo->transmisiones()[$unidad->transmision] ?? $unidad->transmision }}</span>@endif
-            @if ($unidad->combustible)<span>· {{ \App\Filament\Resources\Unidades\Schemas\UnidadForm::COMBUSTIBLES[$unidad->combustible] ?? $unidad->combustible }}</span>@endif
         </div>
 
         <div class="mt-auto flex items-end justify-between pt-4">
             <p class="text-xl font-bold text-gray-900">
                 Q {{ number_format((float) $unidad->precio_lista, 0) }}
             </p>
-            @if ($unidad->sucursal)
-                <span class="text-xs text-gray-400">{{ $unidad->sucursal->nombre }}</span>
-            @endif
         </div>
     </div>
 </a>

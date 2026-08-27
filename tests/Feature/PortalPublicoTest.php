@@ -102,7 +102,7 @@ class PortalPublicoTest extends TestCase
             ->assertSee($unidad->stock_no)
             ->assertSee('schema.org', escape: false)
             ->assertSee('"@type":"Car"', escape: false)
-            ->assertSee('Calcule su cuota', escape: false);
+            ->assertSee('Calcula tu cuota', escape: false);
     }
 
     public function test_no_se_puede_abrir_la_ficha_de_una_unidad_sin_publicar(): void

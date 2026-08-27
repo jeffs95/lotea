@@ -13,9 +13,24 @@
             {{-- Filtros --}}
             <aside class="lg:sticky lg:top-20 lg:self-start">
                 <form method="GET" class="space-y-5 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+                    {{-- Primero y con su nombre claro: es la pregunta que
+                         la gente se hace antes que cualquier otra. Antes se
+                         llamaba «Qué buscás» y había otro filtro llamado «Tipo»
+                         con las carrocerías, así que había dos nombres cruzados
+                         para dos cosas distintas. --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900">Tipo</label>
+                        <select name="tipo_vehiculo" class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
+                            <option value="">Todos</option>
+                            @foreach (\App\Enums\TipoVehiculo::opciones() as $valor => $etiqueta)
+                                <option value="{{ $valor }}" @selected(request('tipo_vehiculo') === $valor)>{{ $etiqueta }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-sm font-semibold text-gray-900">Buscar</label>
-                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Marca, modelo, stock"
+                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Marca, modelo o stock"
                                class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
                     </div>
 
@@ -58,25 +73,7 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-900">Qué buscás</label>
-                        <select name="tipo_vehiculo" class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
-                            <option value="">Todo</option>
-                            @foreach (\App\Enums\TipoVehiculo::opciones() as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(request('tipo_vehiculo') === $valor)>{{ $etiqueta }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-900">Tipo</label>
-                        <select name="carroceria" class="mt-1.5 w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
-                            <option value="">Cualquiera</option>
-                            @foreach (\App\Enums\TipoVehiculo::todasLasCarrocerias() as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(request('carroceria') === $valor)>{{ $etiqueta }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
                     @if ($sucursales->count() > 1)
                         <div>
@@ -122,7 +119,7 @@
                 @if ($unidades->isEmpty())
                     <div class="rounded-2xl border border-dashed border-gray-300 px-6 py-20 text-center">
                         <p class="text-lg font-semibold text-gray-900">No encontramos nada con esos filtros</p>
-                        <p class="mt-1 text-gray-500">Pruebe quitando alguno, o escríbanos y le avisamos cuando entre algo así.</p>
+                        <p class="mt-1 text-gray-500">Prueba quitando alguno, o escríbenos y te avisamos cuando entre algo así.</p>
                         <a href="{{ \App\Support\PortalUrl::catalogo($empresa) }}" class="mt-4 inline-block text-sm font-semibold hover:underline" style="color: var(--acento)">
                             Ver todo el inventario
                         </a>
