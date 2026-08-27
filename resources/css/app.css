@@ -15,3 +15,34 @@
         --acento: #f59e0b;
     }
 }
+
+/*
+ * Los campos de texto, siempre sobre blanco.
+ *
+ * Tailwind deja los campos transparentes y con el color de texto heredado del
+ * padre. Sobre una tarjeta blanca eso se ve bien por casualidad, y encima del
+ * hero oscuro desaparece: el buscador de la portada era una caja vacía donde ni
+ * el texto de ayuda se leía.
+ *
+ * Va como regla base y no campo por campo para que el siguiente formulario que
+ * alguien ponga sobre un fondo oscuro nazca legible.
+ */
+@layer base {
+    input[type='text'],
+    input[type='search'],
+    input[type='email'],
+    input[type='tel'],
+    input[type='number'],
+    input[type='url'],
+    input[type='date'],
+    select,
+    textarea {
+        background-color: #fff;
+        color: var(--color-gray-900);
+    }
+
+    ::placeholder {
+        color: var(--color-gray-500);
+        opacity: 1; /* Firefox lo aclara por su cuenta y queda ilegible. */
+    }
+}

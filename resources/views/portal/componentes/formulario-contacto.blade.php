@@ -11,8 +11,8 @@
 
 @if (session('lead_enviado'))
     <div class="rounded-xl bg-green-50 p-4 text-center ring-1 ring-green-200">
-        <p class="font-semibold text-green-800">¡Listo, ya te escribimos!</p>
-        <p class="mt-1 text-sm text-green-700">Un asesor te contacta hoy mismo.</p>
+        <p class="font-semibold text-green-800">Recibimos sus datos</p>
+        <p class="mt-1 text-sm text-green-700">Un asesor lo contacta hoy mismo.</p>
     </div>
 @else
     @if ($titulo)
@@ -33,7 +33,7 @@
                style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         <input type="hidden" name="_t" value="{{ now()->timestamp }}">
 
-        <input type="text" name="nombre" placeholder="Tu nombre" required maxlength="120"
+        <input type="text" name="nombre" placeholder="Nombre completo" required maxlength="120"
                value="{{ old('nombre') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
         @error('nombre')<p class="text-xs text-red-600">{{ $message }}</p>@enderror
@@ -47,11 +47,11 @@
                value="{{ old('email') }}"
                class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">
 
-        <textarea name="mensaje" rows="3" maxlength="1000" placeholder="¿Algo que quieras preguntar?"
+        <textarea name="mensaje" rows="3" maxlength="1000" placeholder="¿En qué podemos ayudarle?"
                   class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-gray-900 focus:ring-gray-900">{{ old('mensaje') }}</textarea>
 
         <button type="submit" class="w-full rounded-xl px-4 py-3 font-semibold text-white transition hover:opacity-90" style="background: var(--acento)">
-            Que me contacten
+            Solicitar contacto
         </button>
     </form>
 @endif

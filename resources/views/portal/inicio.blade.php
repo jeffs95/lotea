@@ -32,15 +32,15 @@
             </h1>
 
             <p class="mt-4 max-w-xl text-lg text-gray-300">
-                Traemos las unidades directo de subasta, las preparamos en nuestro taller y te las entregamos
+                Traemos las unidades directo de subasta, las preparamos en nuestro taller y se las entregamos
                 listas para rodar.
             </p>
 
             {{-- Buscador: lo primero que hace la gente es escribir el modelo que quiere --}}
             <form action="{{ \App\Support\PortalUrl::catalogo($empresa) }}" method="GET"
                   class="mt-8 flex max-w-xl gap-2">
-                <input type="search" name="q" placeholder="Buscá por marca, modelo o número de stock"
-                       class="w-full rounded-xl border-0 px-4 py-3 text-base shadow-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-gray-900">
+                <input type="search" name="q" placeholder="Busque por marca, modelo o número de stock"
+                       class="w-full rounded-xl border-0 bg-white px-4 py-3 text-base text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-500 focus:ring-2 focus:ring-gray-900">
                 <button type="submit"
                         class="shrink-0 rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
                         style="background: var(--acento)">

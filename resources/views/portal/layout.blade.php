@@ -50,7 +50,7 @@
                     Vehículos
                 </a>
                 <a href="{{ \App\Support\PortalUrl::contacto($empresa) }}" class="font-medium text-gray-600 hover:text-gray-900">
-                    Encontranos
+                    Ubicaciones
                 </a>
                 @if ($empresa->telefono)
                     <a href="tel:{{ $empresa->telefono }}" class="hidden font-medium text-gray-600 hover:text-gray-900 sm:block">

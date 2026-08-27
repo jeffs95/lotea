@@ -122,7 +122,7 @@
                 @if ($unidades->isEmpty())
                     <div class="rounded-2xl border border-dashed border-gray-300 px-6 py-20 text-center">
                         <p class="text-lg font-semibold text-gray-900">No encontramos nada con esos filtros</p>
-                        <p class="mt-1 text-gray-500">Probá quitando alguno, o escribinos y te avisamos cuando entre algo así.</p>
+                        <p class="mt-1 text-gray-500">Pruebe quitando alguno, o escríbanos y le avisamos cuando entre algo así.</p>
                         <a href="{{ \App\Support\PortalUrl::catalogo($empresa) }}" class="mt-4 inline-block text-sm font-semibold hover:underline" style="color: var(--acento)">
                             Ver todo el inventario
                         </a>

@@ -1,7 +1,7 @@
 @extends('portal.layout')
 
 @section('titulo', 'Dónde encontrarnos · ' . ($empresa->nombre_comercial ?? $empresa->nombre))
-@section('descripcion', 'Visitá nuestros patios o escribinos. ' . ($empresa->nombre_comercial ?? $empresa->nombre) . ' en Guatemala.')
+@section('descripcion', 'Visite nuestros patios o escríbanos. ' . ($empresa->nombre_comercial ?? $empresa->nombre) . ' en Guatemala.')
 
 @section('contenido')
 
@@ -31,11 +31,11 @@
             </p>
 
             <h1 class="mt-3 max-w-3xl text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-                Encontranos aquí.
+                Dónde encontrarnos.
             </h1>
 
             <p class="mt-4 max-w-xl text-lg text-gray-300">
-                Vení a ver los carros en persona, sin cita. O escribinos y te atendemos por donde te quede mejor.
+                Visite nuestros patios y vea los vehículos en persona, sin cita previa. O escríbanos y lo atendemos por el medio que prefiera.
             </p>
 
             @if ($empresa->whatsapp_enlace)
@@ -43,7 +43,7 @@
                    class="mt-8 inline-flex items-center gap-2 rounded-xl px-5 py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
                    style="background: var(--acento)">
                     @include('portal.componentes.icono-red', ['red' => 'whatsapp'])
-                    Escribinos por WhatsApp
+                    Escríbanos por WhatsApp
                 </a>
             @endif
         </div>
@@ -76,7 +76,7 @@
                                         {{ $empresa->iniciales }}
                                     </span>
                                     <p class="text-sm text-gray-500">
-                                        Llamanos y te damos la referencia exacta para llegar.
+                                        Llámenos y le damos la referencia exacta para llegar.
                                     </p>
                                 </div>
                             @endif
@@ -159,19 +159,19 @@
                 </div>
             @empty
                 <div class="rounded-3xl border border-dashed border-gray-300 px-6 py-16 text-center">
-                    <p class="text-lg font-semibold text-gray-900">Escribinos y coordinamos</p>
-                    <p class="mt-1 text-gray-500">Con gusto te atendemos por teléfono o WhatsApp.</p>
+                    <p class="text-lg font-semibold text-gray-900">Escríbanos y coordinamos</p>
+                    <p class="mt-1 text-gray-500">Con gusto lo atendemos por teléfono o por WhatsApp.</p>
                 </div>
             @endforelse
         </div>
 
-        {{-- Contactanos --}}
+        {{-- Contáctenos --}}
         <div id="contacto" class="mt-16 grid gap-10 lg:grid-cols-2 lg:gap-14">
 
             <div class="lg:pt-4">
-                <h2 class="text-3xl font-bold tracking-tight text-gray-900">Contactanos</h2>
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900">Contáctenos</h2>
                 <p class="mt-3 text-lg text-gray-600">
-                    Contestamos rápido. Elegí por dónde preferís escribirnos.
+                    Contestamos pronto. Elija el medio que prefiera.
                 </p>
 
                 <div class="mt-8 space-y-3">
@@ -199,7 +199,7 @@
                             </span>
                             <span>
                                 <span class="block font-semibold text-gray-900">{{ $empresa->telefono }}</span>
-                                <span class="block text-sm text-gray-500">Llamanos</span>
+                                <span class="block text-sm text-gray-500">Llámenos</span>
                             </span>
                         </a>
                     @endif
@@ -214,7 +214,7 @@
                             </span>
                             <span class="min-w-0">
                                 <span class="block truncate font-semibold text-gray-900">{{ $empresa->email }}</span>
-                                <span class="block text-sm text-gray-500">Escribinos un correo</span>
+                                <span class="block text-sm text-gray-500">Escríbanos un correo</span>
                             </span>
                         </a>
                     @endif
@@ -222,7 +222,7 @@
 
                 @if (count($empresa->redes))
                     <div class="mt-8">
-                        <p class="text-sm font-semibold text-gray-900">Seguinos</p>
+                        <p class="text-sm font-semibold text-gray-900">Redes sociales</p>
                         <div class="mt-3 flex flex-wrap gap-2">
                             @foreach ($empresa->redes as $red)
                                 <a href="{{ $red['url'] }}" target="_blank" rel="noopener"
@@ -239,8 +239,8 @@
 
             {{-- El mismo formulario que ya recoge los prospectos --}}
             <div class="rounded-3xl bg-white p-7 shadow-sm ring-1 ring-gray-200 sm:p-8">
-                <p class="text-xl font-bold text-gray-900">Dejanos tus datos</p>
-                <p class="mt-1 text-sm text-gray-500">Te contactamos nosotros, sin compromiso.</p>
+                <p class="text-xl font-bold text-gray-900">Déjenos sus datos</p>
+                <p class="mt-1 text-sm text-gray-500">Lo contactamos nosotros, sin compromiso.</p>
 
                 @include('portal.componentes.formulario-contacto')
             </div>
