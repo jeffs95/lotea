@@ -22,9 +22,38 @@
 
         {{-- Botón grande y fijo abajo: se usa con una mano, de pie --}}
         <div class="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-gray-200 bg-gray-50/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border dark:border-white/10 dark:bg-gray-900/95">
-            <x-filament::button type="submit" size="lg" class="w-full justify-center" icon="heroicon-o-check-circle">
-                Guardar y seguir con el siguiente
+            <x-filament::button
+                type="submit"
+                size="lg"
+                class="w-full justify-center"
+                icon="heroicon-o-check-circle"
+                wire:loading.attr="disabled"
+                wire:target="guardarYSeguir"
+            >
+                {{-- Mientras no se guarda, el botón dice lo suyo --}}
+                <span wire:loading.remove wire:target="guardarYSeguir">
+                    Guardar y seguir con el siguiente
+                </span>
+
+                {{-- Y mientras sube, va contando. El texto lo escribe el
+                     servidor foto por foto: sin eso, la pantalla se queda
+                     quieta medio minuto y el vendedor vuelve a darle al botón,
+                     que es como se duplica un carro. --}}
+                <span wire:loading.flex wire:target="guardarYSeguir" class="items-center gap-2">
+                    <svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                    </svg>
+                    <span wire:stream="avance">Guardando…</span>
+                </span>
             </x-filament::button>
+
+            {{-- Que no se pueda mandar dos veces mientras trabaja --}}
+            <div wire:loading.delay.longer wire:target="guardarYSeguir"
+                 class="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
+                No cierre esta pantalla: las fotos se están subiendo.
+            </div>
 
             @if (filled($capturadas))
                 <p class="mt-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300">

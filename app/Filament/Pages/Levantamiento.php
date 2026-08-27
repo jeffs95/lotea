@@ -212,6 +212,8 @@ class Levantamiento extends Page implements HasForms
 
         $perdidas = $this->adjuntarFotos($unidad, $datos['fotos'] ?? []);
 
+        $this->avisarDelPaso('Guardando la ficha…');
+
         // Con foto y precio ya cumple, así que se publica sola.
         $unidad->refresh()->update(['publicado' => $unidad->puedePublicarse()]);
 
@@ -272,8 +274,14 @@ class Levantamiento extends Page implements HasForms
     protected function adjuntarFotos(Unidad $unidad, array $rutas): int
     {
         $perdidas = 0;
+        $rutas = array_values($rutas);
+        $cuantas = count($rutas);
 
-        foreach (array_values($rutas) as $ruta) {
+        foreach ($rutas as $i => $ruta) {
+            // Cada foto viaja al almacenamiento y eso tarda. Sin decir nada, el
+            // vendedor ve la pantalla congelada y vuelve a darle al botón.
+            $this->avisarDelPaso(sprintf('Subiendo foto %d de %d…', $i + 1, $cuantas));
+
             if (! is_string($ruta) || ! Storage::disk('local')->exists($ruta)) {
                 $perdidas++;
 
@@ -284,6 +292,25 @@ class Levantamiento extends Page implements HasForms
         }
 
         return $perdidas;
+    }
+
+    /**
+     * Manda el avance a la pantalla sin esperar a terminar.
+     *
+     * Livewire deja ir escribiendo en la respuesta mientras el servidor sigue
+     * trabajando. Es lo único que convierte una espera larga en una espera
+     * tolerable: no la acorta, pero deja de parecer que se colgó.
+     */
+    protected function avisarDelPaso(string $texto): void
+    {
+        // Escribe directo en la respuesta que va saliendo, así que fuera de una
+        // petición de verdad no tiene a dónde escribir: en consola se colaría
+        // en la salida de los tests.
+        if (app()->runningInConsole()) {
+            return;
+        }
+
+        $this->stream(to: 'avance', content: $texto, replace: true);
     }
 
     /** Cuando las fotos ya no están donde el navegador las dejó. */
