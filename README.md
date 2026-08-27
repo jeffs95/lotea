@@ -337,6 +337,45 @@ tarde y por WhatsApp—, pero cada quien ve solo sus propios reportes.
 > `App\Policies\TicketPolicy` está escrita a mano. `php artisan shield:generate` la
 > sobreescribe: si volvés a correrlo, revisá que siga como está.
 
+## Dónde viven los archivos
+
+Dos cubos de Cloudflare R2, y la separación no es cosmética:
+
+| Cubo | Qué guarda | Cómo sale |
+|---|---|---|
+| `lotea-publico` | Fotos del catálogo | URL directa por CDN, sin tocar la aplicación |
+| `lotea-privado` | Documentos y fotos de subasta | Enlace firmado que caduca, tras autorizar |
+
+Los documentos llevan datos del propietario. Las fotos de subasta muestran el
+carro como llegó —golpeado, antes del taller— y eso el concesionario no quiere
+que lo vea su comprador. Ninguna de las dos cosas puede estar en un cubo que el
+CDN sirve a cualquiera con el enlace.
+
+Lo que esto arregla: una foto costaba unos 400 ms porque **arrancaba Laravel
+entera** —sesión, consulta a la base, autorización— para devolver un JPG, y
+1,5 s cuando la copia local se había perdido, que en Heroku pasa en cada
+reinicio. Ahora la entrega el borde de Cloudflare.
+
+Los documentos siguen pasando por la autorización de siempre; lo único que
+cambia es que la aplicación responde con un enlace firmado en vez de bajarse el
+archivo y reenviarlo.
+
+Si `R2_URL_PUBLICA` está vacía, las fotos vuelven a salir por la aplicación: se
+ve igual y funciona, solo que lento. Nada se rompe mientras el dominio no esté
+conectado.
+
+### Mover lo que ya estaba subido
+
+Cambiar el disco solo dice dónde se guarda de ahora en adelante. Lo viejo se
+queda donde estaba y el sistema lo busca donde no está:
+
+```bash
+php artisan lotea:migrar-archivos --fingir   # ver el plan
+php artisan lotea:migrar-archivos            # hacerlo
+```
+
+Reparte cada colección a su cubo y se puede correr de nuevo sin duplicar nada.
+
 ## Subir fotos sin que se caiga
 
 Guardar una unidad con fotos parece barato y no lo es. Por cada foto hay que

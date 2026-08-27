@@ -51,13 +51,6 @@ class AlmacenDeArchivos
         return config('lotea.discos.privado') ?: static::nombreDelDisco();
     }
 
-    /** ¿Ese disco puede entregar el archivo sin que la aplicación lo lea? */
-    public static function sirveDirecto(string $disco): bool
-    {
-        return filled(config("filesystems.disks.{$disco}.url"))
-            || config("filesystems.disks.{$disco}.driver") === 's3';
-    }
-
     /** ¿Los archivos están en un disco local que el navegador puede pedir directo? */
     public static function esLocalPublico(): bool
     {

@@ -7,8 +7,8 @@ use App\Support\AlmacenDeArchivos;
 use App\Support\Tenancy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -52,6 +52,34 @@ class ArchivoController extends Controller
      * carro, los documentos y las fotos de lo que aún no está a la venta— es
      * del concesionario y solo lo ve su gente.
      */
+    /**
+     * Un enlace temporal al archivo, si el almacenamiento los admite.
+     *
+     * Solo R2 y compañía; con un FTP o un disco local no hay nada que firmar y
+     * el archivo se sigue entregando desde aquí.
+     */
+    protected function enlaceFirmado(Media $media, ?string $conversion): ?string
+    {
+        // Por el driver y no por la interfaz: en Laravel hasta el disco local
+        // implementa Cloud, así que preguntarle a la clase decía que sí a todo,
+        // incluidos los discos fingidos de los tests.
+        if (config("filesystems.disks.{$media->disk}.driver") !== 's3') {
+            return null;
+        }
+
+        try {
+            $disco = Storage::disk($media->disk);
+
+            return $disco->temporaryUrl(
+                AlmacenDeArchivos::rutaDe($media, $conversion),
+                now()->addMinutes((int) config('lotea.minutos_de_enlace_firmado', 15)),
+            );
+        } catch (Throwable) {
+            // Un disco en la nube que no sabe firmar: se entrega como siempre.
+            return null;
+        }
+    }
+
     protected function puedeVer(Unidad $unidad, Media $media): bool
     {
         if ($unidad->publicado && in_array($media->collection_name, self::PUBLICAS, true)) {
@@ -64,8 +92,20 @@ class ArchivoController extends Controller
             && $usuario->empresas()->whereKey($unidad->empresa_id)->exists();
     }
 
-    protected function entregar(Media $media, ?string $conversion, Unidad $unidad): BinaryFileResponse
+    protected function entregar(Media $media, ?string $conversion, Unidad $unidad): Response
     {
+        /*
+         * Si el almacenamiento sabe firmar enlaces, que entregue él el archivo.
+         *
+         * La autorización ya se resolvió arriba; lo único que queda es mover
+         * bytes, y eso no tiene por qué hacerlo PHP. Se responde con un enlace
+         * firmado que caduca en minutos: sirve para abrir el documento, no para
+         * reenviarlo por WhatsApp y que siga funcionando mañana.
+         */
+        if ($enlace = $this->enlaceFirmado($media, $conversion)) {
+            return redirect()->away($enlace);
+        }
+
         $archivo = AlmacenDeArchivos::archivoLocal($media, $conversion);
 
         $respuesta = response()->file($archivo, [

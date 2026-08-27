@@ -19,6 +19,11 @@ use Throwable;
  * Esto lo arregla: recorre lo que está en el disco viejo y lo pasa al nuevo,
  * regenerando las conversiones. Es idempotente: lo que ya está en su sitio se
  * salta.
+ *
+ * Desde que hay dos cubos, el destino depende de la colección y no es uno solo:
+ * las fotos del catálogo van al público, los documentos y las fotos de subasta
+ * al privado. Mandarlo todo al mismo sitio dejaría los títulos de vehículo
+ * accesibles por CDN, que es justo lo que la separación evita.
  */
 class MigrarArchivos extends Command
 {
@@ -28,19 +33,26 @@ class MigrarArchivos extends Command
 
     protected $description = 'Pasa las fotos y documentos ya subidos al disco de archivos configurado';
 
+    /** Las colecciones que van al cubo que sirve el CDN. */
+    protected const PUBLICAS = ['fotos'];
+
     public function handle(): int
     {
-        $destino = AlmacenDeArchivos::nombreDelDisco();
         $desde = $this->option('desde');
         $fingir = (bool) $this->option('fingir');
 
-        $this->line("Disco de destino: <fg=cyan>{$destino}</>");
+        $publico = AlmacenDeArchivos::discoPublico();
+        $privado = AlmacenDeArchivos::discoPrivado();
+
+        $this->line("Fotos del catálogo → <fg=cyan>{$publico}</>");
+        $this->line("Documentos y fotos de subasta → <fg=cyan>{$privado}</>");
+        $this->newLine();
 
         // Sin filtro de empresa: esto es mantenimiento de toda la instalación.
         $pendientes = Tenancy::sinFiltro(fn () => Media::query()
             ->when($desde, fn ($q) => $q->where('disk', $desde))
-            ->where('disk', '!=', $destino)
-            ->get());
+            ->get()
+            ->filter(fn (Media $m) => $m->disk !== $this->discoQueLeToca($m)));
 
         if ($pendientes->isEmpty()) {
             $this->info('No hay nada que mover: todo está en el disco configurado.');
@@ -53,7 +65,12 @@ class MigrarArchivos extends Command
 
         if ($fingir) {
             foreach ($pendientes->groupBy('disk') as $disco => $grupo) {
-                $this->line("  desde <fg=yellow>{$disco}</>: {$grupo->count()} archivos");
+                $this->line("  desde <fg=yellow>{$disco}</>:");
+
+                foreach ($grupo->groupBy('collection_name') as $coleccion => $suyos) {
+                    $this->line("    {$coleccion} → <fg=cyan>{$this->discoQueLeToca($suyos->first())}</>: "
+                        .$suyos->count().' archivos');
+                }
             }
 
             $this->newLine();
@@ -70,14 +87,14 @@ class MigrarArchivos extends Command
 
         foreach ($pendientes as $media) {
             try {
-                Tenancy::sinFiltro(function () use ($media, $destino) {
+                Tenancy::sinFiltro(function () use ($media) {
                     $modelo = $media->model;
 
                     if (! $modelo) {
                         throw new \RuntimeException('el registro dueño del archivo ya no existe');
                     }
 
-                    $media->move($modelo, $media->collection_name, $destino);
+                    $media->move($modelo, $media->collection_name, $this->discoQueLeToca($media));
                 });
 
                 $movidos++;
@@ -105,5 +122,13 @@ class MigrarArchivos extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /** A qué cubo pertenece este archivo según lo que sea. */
+    protected function discoQueLeToca(Media $media): string
+    {
+        return in_array($media->collection_name, self::PUBLICAS, true)
+            ? AlmacenDeArchivos::discoPublico()
+            : AlmacenDeArchivos::discoPrivado();
     }
 }
