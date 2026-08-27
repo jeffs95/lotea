@@ -82,6 +82,20 @@ return [
             // no hay CDN y las URL apuntarían al endpoint de Cloudflare.
             'url' => env('R2_URL_PUBLICA'),
             'visibility' => 'public',
+            /*
+             * La cabecera con la que R2 va a entregar cada archivo.
+             *
+             * Sin un «public» explícito, Cloudflare responde DYNAMIC y no
+             * guarda nada en el borde: la foto viaja desde el cubo en cada
+             * visita y se pierde justo lo que se venía a ganar.
+             *
+             * Un año e «immutable» porque estos archivos no cambian nunca: si
+             * se sube otra foto es otro archivo con otro nombre, así que el
+             * navegador no tiene ni que preguntar si sigue vigente.
+             */
+            'options' => [
+                'CacheControl' => 'public, max-age=31536000, immutable',
+            ],
             'throw' => true,
         ],
 

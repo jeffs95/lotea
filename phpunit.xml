@@ -37,6 +37,19 @@
         <env name="FTP_USERNAME" value="" force="true"/>
         <env name="FTP_PASSWORD" value="" force="true"/>
 
+        <!-- Y lo mismo con R2. Sin esto los tests hablaban con los cubos de
+             verdad: leían el .env de quien los corre y podían escribir en el
+             almacenamiento de producción. Vaciar las credenciales no basta,
+             porque el reparto entre cubos lo deciden las dos primeras. -->
+        <env name="LOTEA_DISCO_PUBLICO" value="" force="true"/>
+        <env name="LOTEA_DISCO_PRIVADO" value="" force="true"/>
+        <env name="R2_URL_PUBLICA" value="" force="true"/>
+        <env name="R2_ACCESS_KEY_ID" value="" force="true"/>
+        <env name="R2_SECRET_ACCESS_KEY" value="" force="true"/>
+        <env name="R2_ENDPOINT" value="" force="true"/>
+        <env name="R2_BUCKET_PUBLICO" value="" force="true"/>
+        <env name="R2_BUCKET_PRIVADO" value="" force="true"/>
+
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="lotea_test"/>
         <env name="DB_URL" value=""/>
