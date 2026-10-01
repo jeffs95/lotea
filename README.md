@@ -456,6 +456,32 @@ se subió. Si alguien lo borra por fuera queda una imagen rota, y se prefiere es
 a un segundo de espera para todos. Hay tests que fallan si alguna URL de marca
 vuelve a preguntarle al disco.
 
+### El panel tiene que poder leer los archivos
+
+El panel vive en `app.lotea.dev` y los archivos en `archivos.lotea.dev`: para el
+navegador son dos sitios distintos. Mostrar una foto con `<img>` no necesita
+permiso, pero el panel hace algo más — al abrir la ficha de un carro pide cada
+archivo por JavaScript para saber su tamaño y poder enseñarlo con su botón de
+borrar.
+
+Sin CORS esa petición se bloquea **en silencio**: las fotos se quedan en
+«Cargando… esperando tamaño» para siempre y no se pueden quitar. No hay error en
+el log del servidor, porque el servidor respondió bien; quien lo bloquea es el
+navegador.
+
+```bash
+php artisan lotea:cors-r2        # aplicar
+php artisan lotea:cors-r2 --ver  # ver lo que hay
+```
+
+Se corre **una vez por cubo**, y otra vez si cambia el dominio del panel. Van
+los dos cubos: los documentos están en el privado y su enlace, aunque salga del
+servidor, redirige a R2 — y el navegador aplica la misma regla al seguir un
+redirect a otro sitio.
+
+Solo lectura y solo desde los dominios de Lotea. Subir y borrar pasa por el
+servidor con sus credenciales, nunca desde el navegador.
+
 ### Los límites, que fallan en silencio
 
 Tres números tienen que cuadrar: el del formulario (`LimiteDeSubida`), los de
