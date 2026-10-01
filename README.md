@@ -390,6 +390,32 @@ php artisan lotea:reubicar-archivos
 Los busca por nombre —un ULID que no se repite— y los deja donde la base los
 busca, sin borrar el original.
 
+## Ofertas
+
+Un carro parado cuesta dinero todos los días: capital detenido, patio ocupado y
+el modelo envejeciendo. A las dos o tres semanas la pregunta deja de ser cuánto
+vale y pasa a ser cuánto hay que bajarle para que salga.
+
+**El precio de lista no se toca.** La rebaja se guarda aparte, y así el portal
+puede enseñar los dos: el de antes tachado y el de ahora. Esa comparación es lo
+que vende; cambiar el precio de lista a secas no la permite y además pierde el
+dato de a cuánto se había puesto.
+
+Se pone desde la lista de unidades, sin entrar a la ficha: se usa mirando el
+patio, no sentado. La vigencia es opcional —hay quien liquida con plazo y quien
+solo baja el precio hasta que el carro salga— y «hasta el 15» significa todo el
+15.
+
+Si la rebaja baja del precio mínimo autorizado **no se impide**: para un carro
+que lleva meses parado, liquidar a veces es lo correcto. Pero se avisa en la
+pantalla antes de guardar, para que nadie se entere después.
+
+Lo que hay que cuidar al tocar esto: **todo lo que mire el precio de cara al
+comprador tiene que pasar por `precio_vigente`** — la ficha, la tarjeta, la
+calculadora de cuota y el dato que lee Google. Si alguno se queda leyendo
+`precio_lista`, se anuncia una rebaja y se cobra otra cosa. Hay un test que lo
+comprueba en la calculadora y en el schema.
+
 ## Subir fotos sin que se caiga
 
 Guardar una unidad con fotos parece barato y no lo es. Por cada foto hay que

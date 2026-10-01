@@ -26,7 +26,7 @@
 @endphp
 
 @section('titulo', $unidad->descripcion . ' · Stock ' . $unidad->stock_no)
-@section('descripcion', $unidad->descripcion . ($unidad->odometro ? ' con ' . number_format($unidad->odometro) . ' ' . $unidad->odometro_unidad : '') . '. Q' . number_format((float) $unidad->precio_lista, 0) . '.')
+@section('descripcion', $unidad->descripcion . ($unidad->odometro ? ' con ' . number_format($unidad->odometro) . ' ' . $unidad->odometro_unidad : '') . '. Q' . number_format((float) $unidad->precio_vigente, 0) . '.')
 @section('og_tipo', 'product')
 @section('og_imagen', $portada ?? '')
 
@@ -51,7 +51,7 @@
         ] : null,
         'offers' => [
             '@type' => 'Offer',
-            'price' => (float) $unidad->precio_lista,
+            'price' => (float) $unidad->precio_vigente,
             'priceCurrency' => 'GTQ',
             'availability' => $enCamino ? 'https://schema.org/PreOrder' : 'https://schema.org/InStock',
             'seller' => ['@type' => 'AutoDealer', 'name' => $empresa->nombre_comercial ?? $empresa->nombre],
@@ -129,9 +129,29 @@
 
                     <p class="mt-2 text-xs font-medium text-gray-400">Stock {{ $unidad->stock_no }}</p>
                     <h1 class="mt-1 text-2xl font-bold leading-tight">{{ $unidad->descripcion }}</h1>
-                    <p class="mt-3 text-3xl font-bold" style="color: var(--acento)">
-                        Q {{ number_format((float) $unidad->precio_lista, 0) }}
-                    </p>
+                    @if ($unidad->tieneOferta())
+                        <div class="mt-3">
+                            <div class="flex flex-wrap items-baseline gap-x-3">
+                                <p class="text-3xl font-bold text-red-600">
+                                    Q {{ number_format((float) $unidad->precio_oferta, 0) }}
+                                </p>
+                                <p class="text-lg text-gray-400 line-through">
+                                    Q {{ number_format((float) $unidad->precio_lista, 0) }}
+                                </p>
+                            </div>
+                            <p class="mt-1 text-sm font-semibold text-red-600">
+                                {{ $unidad->etiqueta_de_oferta }}: ahorrás Q {{ number_format((float) $unidad->ahorro, 0) }}
+                                ({{ $unidad->descuento_porcentaje }}%)
+                                @if ($unidad->oferta_hasta)
+                                    · hasta el {{ $unidad->oferta_hasta->translatedFormat('j \d\e F') }}
+                                @endif
+                            </p>
+                        </div>
+                    @else
+                        <p class="mt-3 text-3xl font-bold" style="color: var(--acento)">
+                            Q {{ number_format((float) $unidad->precio_lista, 0) }}
+                        </p>
+                    @endif
 
                     @if ($unidad->sucursal)
                         <p class="mt-2 text-sm text-gray-500">Disponible en {{ $unidad->sucursal->nombre }}</p>
@@ -155,7 +175,7 @@
                     <h2 class="text-base font-bold">Calcula tu cuota</h2>
                     <p class="mt-1 text-xs text-gray-500">Estimado referencial, sujeto a aprobación.</p>
 
-                    <div class="mt-4 space-y-4" data-calculadora data-precio="{{ (float) $unidad->precio_lista }}">
+                    <div class="mt-4 space-y-4" data-calculadora data-precio="{{ (float) $unidad->precio_vigente }}">
                         <div>
                             <div class="flex justify-between text-sm">
                                 <label class="font-medium text-gray-700">Enganche</label>

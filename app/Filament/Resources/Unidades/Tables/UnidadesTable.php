@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Unidades\Tables;
 use App\Enums\EstadoUnidad;
 use App\Enums\TipoVehiculo;
 use App\Filament\Resources\Unidades\Actions\CambiarEstadoAction;
+use App\Filament\Resources\Unidades\Actions\PonerEnOfertaAction;
 use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Filament\Resources\Unidades\Schemas\UnidadForm;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -113,12 +115,17 @@ class UnidadesTable
                 SelectFilter::make('marca')->relationship('marca', 'nombre')->searchable()->preload(),
                 SelectFilter::make('tipo_vehiculo')->label('Tipo')->options(TipoVehiculo::opciones()),
                 SelectFilter::make('tipo_titulo')->label('Título')->options(UnidadForm::TIPOS_TITULO),
+                Filter::make('en_oferta')
+                    ->label('Con precio rebajado')
+                    ->query(fn ($query) => $query->enOferta()),
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 ActionGroup::make([
                     EditAction::make(),
                     CambiarEstadoAction::make(),
+                    PonerEnOfertaAction::make(),
+                    PonerEnOfertaAction::quitar(),
 
                     Action::make('etiqueta')
                         ->label('Imprimir etiqueta')

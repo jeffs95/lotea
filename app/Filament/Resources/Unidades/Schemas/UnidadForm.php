@@ -47,6 +47,39 @@ class UnidadForm
      * Sin esto la unidad se guarda, no aparece, y nadie sabe por qué: el
      * sistema apaga «Publicado» en silencio cuando falta el precio o la foto.
      */
+    /**
+     * Lo que significa la rebaja, en plata y en porcentaje.
+     *
+     * Y la advertencia que importa: si la oferta se come el piso que autorizó
+     * el dueño, hay que verlo antes de guardar. No se bloquea —liquidar bajo el
+     * mínimo a veces es lo correcto para un carro que lleva meses parado— pero
+     * nadie debería enterarse después.
+     */
+    protected static function avisoDeLaOferta(callable $get): HtmlString
+    {
+        $lista = (float) $get('precio_lista');
+        $oferta = (float) $get('precio_oferta');
+        $minimo = $get('precio_minimo');
+
+        if ($oferta <= 0 || $lista <= 0 || $oferta >= $lista) {
+            return new HtmlString('');
+        }
+
+        $ahorro = $lista - $oferta;
+        $porcentaje = (int) round($ahorro / $lista * 100);
+
+        $texto = '<span class="text-sm">Se anuncia <strong>Q '.number_format($ahorro, 0)
+            .'</strong> menos, un <strong>'.$porcentaje.'%</strong> de descuento.</span>';
+
+        if (filled($minimo) && $oferta < (float) $minimo) {
+            $texto .= '<br><span class="text-sm font-semibold text-danger-600">'
+                .'Ojo: queda Q '.number_format((float) $minimo - $oferta, 0)
+                .' por debajo del precio mínimo autorizado.</span>';
+        }
+
+        return new HtmlString($texto);
+    }
+
     protected static function avisoDelPortal(callable $get): HtmlString
     {
         $faltan = RequisitosDelPortal::trabas($get('precio_lista'), self::tieneAlgunaFoto($get));
@@ -393,6 +426,48 @@ class UnidadForm
                         Toggle::make('publicado')->label('Publicado en el portal')->live(),
                         Toggle::make('destacado')->label('Destacado'),
                     ]),
+
+                    Section::make('Oferta')
+                        ->description('Para un carro que lleva mucho en el patio y hay que mover.')
+                        ->collapsed(fn (callable $get) => blank($get('precio_oferta')))
+                        ->columns(3)
+                        ->schema([
+                            TextInput::make('precio_oferta')
+                                ->label('Precio de oferta')
+                                ->numeric()
+                                ->live(onBlur: true)
+                                ->prefix('Q')
+                                ->helperText('El de lista no se toca: el portal muestra los dos, el viejo tachado.')
+                                ->rules([
+                                    fn (callable $get) => function (string $atributo, $valor, \Closure $fallar) use ($get) {
+                                        if (blank($valor) || blank($get('precio_lista'))) {
+                                            return;
+                                        }
+
+                                        if ((float) $valor >= (float) $get('precio_lista')) {
+                                            $fallar('La oferta tiene que ser menor que el precio de lista.');
+                                        }
+                                    },
+                                ]),
+
+                            DatePicker::make('oferta_hasta')
+                                ->label('Vigente hasta')
+                                ->native(false)
+                                ->minDate(today())
+                                ->helperText('Opcional. Vacío: dura hasta que la quite.'),
+
+                            TextInput::make('oferta_etiqueta')
+                                ->label('Texto de la etiqueta')
+                                ->maxLength(40)
+                                ->placeholder('Oferta')
+                                ->helperText('Lo que se lee en el distintivo rojo. Por ejemplo «Candente».'),
+
+                            Placeholder::make('aviso_de_oferta')
+                                ->hiddenLabel()
+                                ->columnSpanFull()
+                                ->content(fn (callable $get) => self::avisoDeLaOferta($get))
+                                ->visible(fn (callable $get) => filled($get('precio_oferta'))),
+                        ]),
 
                     Textarea::make('descripcion_comercial')
                         ->label('Descripción para el portal')

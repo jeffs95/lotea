@@ -72,6 +72,8 @@
         </div>
     </header>
 
+    @include('portal.componentes.aviso-de-ofertas')
+
     <main>
         @yield('contenido')
     </main>

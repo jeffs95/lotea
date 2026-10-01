@@ -61,6 +61,8 @@ class Unidad extends Model implements HasMedia
             'fecha_venta' => 'date',
             'precio_lista' => 'decimal:2',
             'precio_minimo' => 'decimal:2',
+            'precio_oferta' => 'decimal:2',
+            'oferta_hasta' => 'date',
             'costo_total' => 'decimal:2',
             'costo_presupuestado' => 'decimal:2',
             'publicado' => 'boolean',
@@ -350,6 +352,90 @@ class Unidad extends Model implements HasMedia
             ->orWhereNull('marca_id')
             ->orWhereNull('precio_lista')
             ->orWhereDoesntHave('media', fn ($m) => $m->whereIn('collection_name', ['fotos', 'fotos_subasta'])));
+    }
+
+    /**
+     * ¿Tiene una rebaja vigente ahora mismo?
+     *
+     * Sin fecha de fin la oferta dura hasta que la quiten: hay quien liquida
+     * con plazo y quien solo baja el precio hasta que el carro salga.
+     */
+    public function tieneOferta(): bool
+    {
+        if ($this->precio_oferta === null || (float) $this->precio_oferta <= 0) {
+            return false;
+        }
+
+        // Una «oferta» más cara que el precio de lista no es una oferta.
+        if ($this->precio_lista !== null && (float) $this->precio_oferta >= (float) $this->precio_lista) {
+            return false;
+        }
+
+        // Se compara contra el día y no contra el instante: «hasta el 15»
+        // significa todo el 15. Con isPast() la oferta moría a las 00:01 de
+        // ese mismo día, justo cuando el cliente la daba por vigente.
+        return $this->oferta_hasta === null || ! $this->oferta_hasta->lt(today());
+    }
+
+    /**
+     * Lo que de verdad cuesta hoy.
+     *
+     * Todo lo que mire el precio de cara al comprador —el portal, la ficha, la
+     * calculadora de cuota, el dato que se manda a Google— tiene que pasar por
+     * aquí. Si alguno se queda leyendo precio_lista a secas, anuncia una rebaja
+     * y cobra el precio viejo.
+     */
+    public function getPrecioVigenteAttribute(): ?string
+    {
+        return $this->tieneOferta() ? $this->precio_oferta : $this->precio_lista;
+    }
+
+    /** Cuánto se ahorra, en quetzales. */
+    public function getAhorroAttribute(): ?string
+    {
+        if (! $this->tieneOferta()) {
+            return null;
+        }
+
+        return bcsub((string) $this->precio_lista, (string) $this->precio_oferta, 2);
+    }
+
+    /** Y en porcentaje, que es lo que se pone en la etiqueta. */
+    public function getDescuentoPorcentajeAttribute(): ?int
+    {
+        if (! $this->tieneOferta() || (float) $this->precio_lista <= 0) {
+            return null;
+        }
+
+        return (int) round(((float) $this->ahorro / (float) $this->precio_lista) * 100);
+    }
+
+    /** Lo que se lee en la etiqueta roja: lo que puso el cliente, o «Oferta». */
+    public function getEtiquetaDeOfertaAttribute(): string
+    {
+        return filled($this->oferta_etiqueta) ? $this->oferta_etiqueta : 'Oferta';
+    }
+
+    /**
+     * ¿La rebaja se come el piso que autorizó el dueño?
+     *
+     * No lo impide —a veces liquidar bajo el mínimo es la decisión correcta
+     * para un carro que lleva meses parado— pero quien la pone tiene que verlo
+     * escrito antes de guardar.
+     */
+    public function ofertaBajaDelMinimo(): bool
+    {
+        return $this->precio_minimo !== null
+            && $this->precio_oferta !== null
+            && (float) $this->precio_oferta < (float) $this->precio_minimo;
+    }
+
+    /** Las que están rebajadas y vigentes, para el portal. */
+    public function scopeEnOferta($query)
+    {
+        return $query->whereNotNull('precio_oferta')
+            ->whereColumn('precio_oferta', '<', 'precio_lista')
+            ->where(fn ($q) => $q->whereNull('oferta_hasta')->orWhereDate('oferta_hasta', '>=', today()));
     }
 
     public function scopeEnInventario($query)

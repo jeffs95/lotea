@@ -28,7 +28,13 @@
             </span>
         @endif
 
-        @if ($unidad->destacado)
+        @if ($unidad->tieneOferta())
+            {{-- El porcentaje y no solo la palabra: «-15%» dice cuánto se baja,
+                 «Oferta» no dice nada y está en todas partes. --}}
+            <span class="absolute right-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow">
+                {{ $unidad->etiqueta_de_oferta }} −{{ $unidad->descuento_porcentaje }}%
+            </span>
+        @elseif ($unidad->destacado)
             <span class="absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow" style="background: var(--acento)">
                 Destacado
             </span>
@@ -51,9 +57,23 @@
         </div>
 
         <div class="mt-auto flex items-end justify-between pt-4">
-            <p class="text-xl font-bold text-gray-900">
-                Q {{ number_format((float) $unidad->precio_lista, 0) }}
-            </p>
+            <div>
+                @if ($unidad->tieneOferta())
+                    {{-- El de antes tachado y arriba: la comparación es lo que
+                         vende. Un precio rebajado a secas no se distingue de
+                         uno que siempre estuvo así. --}}
+                    <p class="text-sm text-gray-400 line-through">
+                        Q {{ number_format((float) $unidad->precio_lista, 0) }}
+                    </p>
+                    <p class="text-xl font-bold text-red-600">
+                        Q {{ number_format((float) $unidad->precio_oferta, 0) }}
+                    </p>
+                @else
+                    <p class="text-xl font-bold text-gray-900">
+                        Q {{ number_format((float) $unidad->precio_lista, 0) }}
+                    </p>
+                @endif
+            </div>
         </div>
     </div>
 </a>
