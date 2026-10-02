@@ -7,6 +7,7 @@ use App\Enums\EstadoUnidad;
 use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
+use App\Models\Unidad;
 use App\Support\LimiteDeSubida;
 use App\Support\QrDeUnidad;
 use App\Support\RequisitosDelPortal;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -503,6 +505,14 @@ class UnidadForm
                                 ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
+
+                            ViewField::make('portada_de_la_unidad')
+                                ->label('Cuál es la portada')
+                                ->view('filament.resources.unidades.elegir-portada')
+                                // Solo al editar: al crear todavía no hay fotos
+                                // guardadas sobre las que decidir.
+                                ->visible(fn (?Unidad $record) => $record !== null)
+                                ->dehydrated(false),
                         ]),
 
                     Section::make('Documentos')
