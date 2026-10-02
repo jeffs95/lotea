@@ -22,23 +22,33 @@
             </div>
         @endif
 
-        @if ($enCamino)
-            <span class="absolute left-3 top-3 rounded-full bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
-                Próximamente
-            </span>
-        @endif
+        {{-- Los distintivos en una fila y no cada uno anclado a una esquina.
+             Con la etiqueta de oferta escrita por el cliente —«Oferta
+             candente, aproveche»— el de la derecha crecía hasta montarse
+             encima del de «Próximamente». Aquí comparten el espacio y el que
+             puede ser largo se recorta. --}}
+        <div class="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+            @if ($enCamino)
+                <span class="shrink-0 rounded-full bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow">
+                    Próximamente
+                </span>
+            @else
+                <span></span>
+            @endif
 
-        @if ($unidad->tieneOferta())
-            {{-- El porcentaje y no solo la palabra: «-15%» dice cuánto se baja,
-                 «Oferta» no dice nada y está en todas partes. --}}
-            <span class="absolute right-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow">
-                {{ $unidad->etiqueta_de_oferta }} −{{ $unidad->descuento_porcentaje }}%
-            </span>
-        @elseif ($unidad->destacado)
-            <span class="absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow" style="background: var(--acento)">
-                Destacado
-            </span>
-        @endif
+            @if ($unidad->tieneOferta())
+                {{-- El porcentaje y no solo la palabra: «−15%» dice cuánto se
+                     baja, «Oferta» no dice nada y está en todas partes. --}}
+                <span class="flex min-w-0 items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow">
+                    <span class="truncate">{{ $unidad->etiqueta_de_oferta }}</span>
+                    <span class="shrink-0">−{{ $unidad->descuento_porcentaje }}%</span>
+                </span>
+            @elseif ($unidad->destacado)
+                <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow" style="background: var(--acento)">
+                    Destacado
+                </span>
+            @endif
+        </div>
     </div>
 
     <div class="flex flex-1 flex-col p-4">

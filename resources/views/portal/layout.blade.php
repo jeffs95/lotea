@@ -72,6 +72,8 @@
         </div>
     </header>
 
+    @include('portal.componentes.cinta-de-ofertas')
+
     @include('portal.componentes.aviso-de-ofertas')
 
     <main>

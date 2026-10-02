@@ -46,3 +46,44 @@
         opacity: 1; /* Firefox lo aclara por su cuenta y queda ilegible. */
     }
 }
+
+/*
+ * La cinta de ofertas.
+ *
+ * La duración se calcula por la cantidad de ofertas y no es fija: con una sola
+ * un recorrido largo la deja parada medio minuto fuera de la pantalla, y con
+ * ocho uno corto las pasa tan rápido que no se alcanzan a leer.
+ */
+.lotea-cinta {
+    overflow: hidden;
+}
+
+.lotea-cinta-pista {
+    animation: lotea-desliza var(--duracion, 40s) linear infinite;
+}
+
+/* Al pasar el ratón se detiene: si algo interesa, hay que poder leerlo. */
+.lotea-cinta:hover .lotea-cinta-pista {
+    animation-play-state: paused;
+}
+
+@keyframes lotea-desliza {
+    from { transform: translateX(0); }
+    /* La mitad justa, que es donde empieza la copia: ahí el salto no se ve. */
+    to { transform: translateX(-50%); }
+}
+
+/*
+ * Y para quien pidió que nada se mueva. No es un detalle de cortesía: a algunas
+ * personas el movimiento continuo les provoca mareo, y el sistema operativo ya
+ * lo sabe. La cinta se queda quieta y se lee desplazándola a mano.
+ */
+@media (prefers-reduced-motion: reduce) {
+    .lotea-cinta {
+        overflow-x: auto;
+    }
+
+    .lotea-cinta-pista {
+        animation: none;
+    }
+}

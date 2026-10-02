@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\CrearEmpresa;
+use App\Enums\EstadoUnidad;
 use App\Models\Empresa;
 use App\Models\Unidad;
 use App\Support\Tenancy;
@@ -211,5 +212,77 @@ class OfertasTest extends TestCase
         $this->get("/v/{$this->empresa->slug}")
             ->assertSee('59,500')
             ->assertDontSee('31,111');
+    }
+
+    // ── La cinta de arriba ──────────────────────────────────────────────────
+
+    /**
+     * Dice lo mismo que el aviso de entrada, pero para quien ya lo cerró o
+     * entró directo a una ficha.
+     */
+    public function test_la_cinta_dice_el_antes_y_el_ahora(): void
+    {
+        $this->unidadRebajada();
+
+        $html = $this->get("/v/{$this->empresa->slug}")->assertSuccessful()->getContent();
+
+        $this->assertStringContainsString('lotea-cinta', $html, 'No salió la cinta.');
+        $this->assertStringContainsString('antes', $html);
+        $this->assertStringContainsString('ahora', $html);
+        $this->assertStringContainsString('70,000', $html);
+        $this->assertStringContainsString('59,500', $html);
+    }
+
+    /** Sin rebajas no hay cinta: una franja roja vacía es peor que nada. */
+    public function test_sin_rebajas_no_hay_cinta(): void
+    {
+        Unidad::factory()->publicada()->create(['precio_lista' => 70000]);
+
+        $this->get("/v/{$this->empresa->slug}")->assertDontSee('lotea-cinta', false);
+    }
+
+    /**
+     * El contenido va dos veces: es lo que hace que el bucle no tenga costura.
+     * Si alguien quita la copia, la cinta da un salto visible al reiniciar.
+     */
+    public function test_la_cinta_lleva_el_contenido_duplicado(): void
+    {
+        $this->unidadRebajada();
+
+        $html = $this->get("/v/{$this->empresa->slug}")->getContent();
+
+        $this->assertStringContainsString('data-pasada="1"', $html);
+        $this->assertStringContainsString(
+            'data-pasada="2"',
+            $html,
+            'La cinta no lleva la copia: el bucle va a dar un salto visible al reiniciar.',
+        );
+
+        // Y la copia no se le lee dos veces a quien usa lector de pantalla.
+        $this->assertStringContainsString('aria-hidden="true"', $html);
+    }
+
+    // ── Los distintivos sobre la foto ───────────────────────────────────────
+
+    /**
+     * Un carro en camino y rebajado lleva dos distintivos, y antes se montaban
+     * uno encima del otro: el de oferta crecía con la etiqueta que escribe el
+     * cliente —«Oferta candente»— hasta tapar el de «Próximamente».
+     */
+    public function test_los_dos_distintivos_caben_sin_pisarse(): void
+    {
+        $unidad = $this->unidadRebajada([
+            'estado' => EstadoUnidad::TransitoUsa,
+            'oferta_etiqueta' => 'Oferta candente',
+        ]);
+
+        $html = $this->get("/v/{$this->empresa->slug}/vehiculos")->getContent();
+
+        $this->assertStringContainsString('Próximamente', $html);
+        $this->assertStringContainsString('Oferta candente', $html);
+
+        // En una fila con reparto, no cada uno anclado a su esquina.
+        $this->assertStringContainsString('justify-between', $html);
+        $this->assertStringContainsString('truncate', $html, 'La etiqueta larga no se recorta.');
     }
 }

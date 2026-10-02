@@ -69,9 +69,9 @@ class PonerEnOfertaAction
 
                 TextInput::make('oferta_etiqueta')
                     ->label('Texto del distintivo')
-                    ->maxLength(40)
+                    ->maxLength(18)
                     ->placeholder('Oferta')
-                    ->helperText('Lo que se lee en rojo sobre la foto. Por ejemplo «Candente».'),
+                    ->helperText('Lo que se lee en rojo sobre la foto, junto al porcentaje. Corto: «Candente», «Liquidación».'),
             ])
             ->action(function (Unidad $record, array $data) {
                 $record->update([

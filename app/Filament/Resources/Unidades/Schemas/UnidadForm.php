@@ -458,9 +458,9 @@ class UnidadForm
 
                             TextInput::make('oferta_etiqueta')
                                 ->label('Texto de la etiqueta')
-                                ->maxLength(40)
+                                ->maxLength(18)
                                 ->placeholder('Oferta')
-                                ->helperText('Lo que se lee en el distintivo rojo. Por ejemplo «Candente».'),
+                                ->helperText('Corto: se lee junto al porcentaje sobre la foto. «Candente», «Liquidación».'),
 
                             Placeholder::make('aviso_de_oferta')
                                 ->hiddenLabel()
