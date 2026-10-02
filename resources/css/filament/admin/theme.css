@@ -60,52 +60,59 @@
         margin: 8mm;
     }
 
-    html,
-    body {
-        height: auto !important;
-        overflow: visible !important;
-        background: #fff !important;
-    }
-
-    /* Lo que estorba. */
-    .fi-topbar,
-    .fi-sidebar,
-    .fi-header,
-    .fi-breadcrumbs,
-    .fi-simple-layout-header,
-    .fi-global-search {
-        display: none !important;
-    }
-
     /*
-     * Y lo importante: devolverles altura automática y desborde visible. Sin
-     * esto el contenido se queda encerrado en una caja del tamaño de la
-     * pantalla y solo se imprime lo que entraba en ella.
+     * Se aísla lo que se quiere imprimir en vez de ir tapando lo que estorba.
+     *
+     * Ir ocultando el menú, la barra lateral y el encabezado es una lista que
+     * nunca termina: al agregar un aviso arriba —la franja del modo soporte,
+     * por ejemplo— vuelve a salir impreso. Y cuando algún contenedor conserva
+     * una altura del viewport, el navegador recorta el resto y la hoja sale en
+     * blanco sin decir por qué.
+     *
+     * Con «visibility» en lugar de «display» los contenedores siguen ahí y no
+     * se rehace el layout: solo deja de dibujarse todo menos la hoja, que se
+     * saca a la esquina y ocupa el ancho del papel.
      */
+    body * {
+        visibility: hidden;
+    }
+
+    .hoja-de-etiquetas,
+    .hoja-de-etiquetas * {
+        visibility: visible;
+    }
+
+    .hoja-de-etiquetas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: block !important;
+    }
+
+    /* Y los contenedores que la envuelven dejan de limitar su alto: uno con
+       altura de pantalla recorta lo que no entra en la primera página. */
+    html,
+    body,
     .fi-body,
     .fi-layout,
     .fi-main-ctn,
     .fi-main,
     .fi-page,
     .fi-page-content {
-        display: block !important;
         height: auto !important;
         min-height: 0 !important;
         max-width: none !important;
         overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
-        gap: 0 !important;
+        background: #fff !important;
     }
 
     /*
      * Las etiquetas dejan de ser una rejilla: Chrome no fragmenta bien un grid
      * entre páginas y se come filas enteras. En bloques en línea sí pagina.
      */
-    .hoja-de-etiquetas {
-        display: block !important;
-    }
-
     .hoja-de-etiquetas .etiqueta {
         display: inline-block;
         vertical-align: top;
@@ -113,11 +120,9 @@
         margin: 0 0.3% 3mm;
         break-inside: avoid;
         page-break-inside: avoid;
-    }
 
-    /* Los fondos de color no se imprimen si no se piden: la cabecera de la
-       etiqueta saldría en blanco y con ella el logo del concesionario. */
-    .hoja-de-etiquetas .etiqueta {
+        /* Los fondos de color no se imprimen si no se piden: la cabecera de la
+           etiqueta saldría en blanco y con ella el logo del concesionario. */
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
