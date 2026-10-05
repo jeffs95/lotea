@@ -8,6 +8,7 @@ use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
 use App\Models\Linea;
 use App\Models\Unidad;
+use App\Support\FotoLigera;
 use App\Support\LimiteDeSubida;
 use App\Support\QrDeUnidad;
 use App\Support\RequisitosDelPortal;
@@ -398,6 +399,10 @@ class UnidadForm
                                 ->imageEditor()
                                 ->imageResizeMode('contain')
                                 ->imageResizeTargetWidth('1920')
+                                // Y se comprimen al llegar: el navegador reescala pero
+                                // guarda a calidad casi máxima, así que sin esto se
+                                // almacenan tres megas por foto que nadie distingue.
+                                ->afterStateUpdated(fn ($state) => FotoLigera::encoger($state))
                                 ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
@@ -502,6 +507,7 @@ class UnidadForm
                                 // solo ve que no pasa nada.
                                 ->imageResizeMode('contain')
                                 ->imageResizeTargetWidth('1920')
+                                ->afterStateUpdated(fn ($state) => FotoLigera::encoger($state))
                                 ->maxSize(LimiteDeSubida::KILOBYTES)
                                 ->panelLayout('grid')
                                 ->hiddenLabel(),
