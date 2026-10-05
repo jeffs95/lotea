@@ -15,10 +15,23 @@ use Illuminate\Support\Facades\DB;
  * Nadie debería hacer $unidad->update(['estado' => ...]) por su cuenta: aquí
  * es donde se valida la transición, se deja el rastro y se marcan las fechas
  * hito de las que después salen los días de rotación.
+ *
+ * El salto se puede forzar, y eso es para la persona que está mirando la
+ * unidad, no para el sistema. Un concesionario que empieza a usar esto tiene
+ * el patio lleno de carros que ya están listos, y obligarlo a registrarles
+ * diez etapas de importación que ocurrieron el año pasado es pedirle que
+ * invente historia. Lo que no se fuerza solo es lo que dispara el programa:
+ * una venta sigue exigiendo que el carro esté donde debe estar.
+ *
+ * El salto queda igual en el historial —de dónde venía y a dónde fue—, así
+ * que forzar no es borrar el rastro, es no pedir permiso.
  */
 class CambiarEstadoUnidad
 {
-    public function ejecutar(Unidad $unidad, EstadoUnidad $destino, ?string $nota = null, ?int $userId = null): Unidad
+    /**
+     * @param  bool  $forzado  Un salto que pidió una persona a sabiendas.
+     */
+    public function ejecutar(Unidad $unidad, EstadoUnidad $destino, ?string $nota = null, ?int $userId = null, bool $forzado = false): Unidad
     {
         $origen = $unidad->estado;
 
@@ -26,7 +39,7 @@ class CambiarEstadoUnidad
             return $unidad;
         }
 
-        if (! $origen->puedePasarA($destino)) {
+        if (! $forzado && ! $origen->puedePasarA($destino)) {
             throw new DomainException(
                 "Una unidad en «{$origen->getLabel()}» no puede pasar a «{$destino->getLabel()}»."
             );

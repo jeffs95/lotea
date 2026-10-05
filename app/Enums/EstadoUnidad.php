@@ -152,6 +152,51 @@ enum EstadoUnidad: string implements HasColor, HasIcon, HasLabel
         return ! in_array($this->etapa(), ['cerrada', 'baja'], strict: true);
     }
 
+    /**
+     * El camino que recorre un carro, de principio a fin.
+     *
+     * Es el orden en que están declarados los casos, sin la baja: dar de baja
+     * no es avanzar un paso, es salirse del camino, y ponerla al final de la
+     * línea la haría parecer la meta.
+     *
+     * @return array<int, self>
+     */
+    public static function recorrido(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            static fn (self $estado) => $estado !== self::Baja,
+        ));
+    }
+
+    /** En qué puesto del camino va, contando desde cero. */
+    public function puesto(): ?int
+    {
+        $puesto = array_search($this, self::recorrido(), strict: true);
+
+        return $puesto === false ? null : $puesto;
+    }
+
+    /**
+     * Cuánto del camino lleva andado, de 0 a 100.
+     *
+     * Es la posición y no las etapas por las que pasó de verdad: un carro que
+     * entra directo como «Lista» —porque ya estaba en el patio cuando se
+     * empezó a usar el sistema— lleva andado lo mismo que uno que pasó por
+     * las diez etapas. Lo que importa es dónde está, no por dónde vino.
+     */
+    public function porcentajeDelCamino(): int
+    {
+        $puesto = $this->puesto();
+        $total = count(self::recorrido()) - 1;
+
+        if ($puesto === null || $total < 1) {
+            return 0;
+        }
+
+        return (int) round($puesto / $total * 100);
+    }
+
     public static function opciones(): array
     {
         return collect(self::cases())->mapWithKeys(fn (self $e) => [$e->value => $e->getLabel()])->all();

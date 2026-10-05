@@ -8,16 +8,18 @@ use App\Models\Unidad;
 use DomainException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 
 /**
  * Mover la unidad de etapa desde el panel.
  *
- * Solo ofrece los destinos que la máquina de estados permite, así que el
- * usuario no puede inventar un salto imposible desde la interfaz.
+ * Muestra el camino completo con lo andado marcado, y deja tocar cualquier
+ * etapa. La máquina de estados sigue valiendo para lo que dispara el programa
+ * solo —una venta exige que el carro esté donde debe—, pero a la persona que
+ * tiene el carro delante no se le discute en qué etapa está.
  */
 class CambiarEstadoAction
 {
@@ -52,7 +54,7 @@ class CambiarEstadoAction
             ->label('Cambiar estado')
             ->icon('heroicon-o-arrow-path')
             ->color('primary')
-            ->visible(fn (Unidad $record) => filled($record->estado->siguientes()))
+            ->visible(fn (Unidad $record) => $record->estado !== EstadoUnidad::Baja)
             ->modalHeading(fn (Unidad $record) => "Cambiar estado · {$record->stock_no}")
             ->schema([
                 /*
@@ -68,13 +70,19 @@ class CambiarEstadoAction
                     ->label('Hoy está en')
                     ->content(fn (Unidad $record) => new HtmlString(self::dondeEsta($record))),
 
-                Select::make('estado')
+                /*
+                 * El camino entero, no solo los dos destinos de al lado.
+                 *
+                 * La lista desplegable escondía dos cosas: en qué punto del
+                 * recorrido va el carro, y que existen etapas más allá de las
+                 * que la máquina de estados ofrecía. Y obligaba a un patio que
+                 * recién arranca a inventarle diez etapas de importación a un
+                 * carro que ya tiene parqueado y listo.
+                 */
+                ViewField::make('estado')
                     ->label('Pasa a')
-                    ->options(fn (Unidad $record) => collect($record->estado->siguientes())
-                        ->mapWithKeys(fn (EstadoUnidad $e) => [$e->value => $e->getLabel()])
-                        ->all())
-                    ->required()
-                    ->native(false),
+                    ->view('filament.resources.unidades.linea-de-tiempo-estado')
+                    ->required(),
 
                 Textarea::make('nota')
                     ->label('Nota')
@@ -87,6 +95,10 @@ class CambiarEstadoAction
                         $record,
                         EstadoUnidad::from($data['estado']),
                         $data['nota'] ?? null,
+                        // Lo pidió una persona mirando la línea de tiempo, con
+                        // el camino entero a la vista: no hay salto que
+                        // explicarle. El historial guarda de dónde venía.
+                        forzado: true,
                     );
 
                     Notification::make()
