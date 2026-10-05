@@ -45,6 +45,25 @@ class AlmacenDeArchivos
         return config('lotea.discos.publico') ?: static::nombreDelDisco();
     }
 
+    /**
+     * Las colecciones que puede ver cualquiera con el enlace.
+     *
+     * La lista es de las públicas y no de las privadas a propósito: una
+     * colección que nadie clasificó se trata como privada y su URL sale por la
+     * ruta que pregunta quién está pidiendo. Equivocarse en ese sentido cuesta
+     * una consulta de más por foto; equivocarse al revés cuesta publicar el DPI
+     * de un comprador en un CDN.
+     *
+     * Esto no sustituye configurar bien el disco privado: es lo que sostiene el
+     * día que esa variable de entorno falte.
+     */
+    public const COLECCIONES_PUBLICAS = ['fotos'];
+
+    public static function esPublica(?string $coleccion): bool
+    {
+        return in_array($coleccion, static::COLECCIONES_PUBLICAS, true);
+    }
+
     /** El de los documentos y las fotos de subasta, que salen firmados. */
     public static function discoPrivado(): string
     {

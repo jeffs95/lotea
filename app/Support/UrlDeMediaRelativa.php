@@ -54,6 +54,10 @@ class UrlDeMediaRelativa extends DefaultUrlGenerator
     /** ¿El navegador puede pedir este archivo directo al disco donde está? */
     protected function seSirveSinIntermediario(): bool
     {
+        if (! AlmacenDeArchivos::esPublica($this->media->collection_name)) {
+            return false;
+        }
+
         $disco = $this->media->disk;
 
         return config("filesystems.disks.{$disco}.driver") === 'local'
@@ -67,9 +71,17 @@ class UrlDeMediaRelativa extends DefaultUrlGenerator
      * y ahí la sirve esta misma aplicación, así que esa se recorta para que en
      * el portal de un cliente no aparezca «lotea» en el src de sus fotos. Lo
      * que distingue al CDN es que el archivo vive fuera.
+     *
+     * Y se pregunta antes por la colección: si el disco privado quedó sin
+     * configurar, los dos cubos son el mismo y un documento de identidad saldría
+     * por el CDN sin que nadie lo note hasta que fuera tarde.
      */
     protected function seSirveDesdeSuPropioDominio(): bool
     {
+        if (! AlmacenDeArchivos::esPublica($this->media->collection_name)) {
+            return false;
+        }
+
         $disco = $this->media->disk;
 
         return $disco === AlmacenDeArchivos::discoPublico()
