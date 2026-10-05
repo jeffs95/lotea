@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Leads;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Leads\Pages\ListLeads;
 use App\Filament\Resources\Leads\Schemas\LeadForm;
 use App\Filament\Resources\Leads\Tables\LeadsTable;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class LeadResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Lead::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedInbox;

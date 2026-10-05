@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Marcas;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Marcas\Pages\ListMarcas;
 use App\Filament\Resources\Marcas\RelationManagers\LineasRelationManager;
 use App\Filament\Resources\Marcas\Schemas\MarcaForm;
@@ -20,6 +21,8 @@ use UnitEnum;
  */
 class MarcaResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Marca::class;
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Unidades;
 
+use App\Filament\Concerns\RespetaElTope;
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Unidades\Pages\CreateUnidad;
 use App\Filament\Resources\Unidades\Pages\EditUnidad;
 use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
@@ -22,6 +24,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class UnidadResource extends Resource
 {
+    use RespetaElTope;
+
+    /** Lo que este recurso consume del plan. */
+    protected static string $cuenta = 'unidades';
+
+    use SujetoAlPlan;
+
     protected static ?string $model = Unidad::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;

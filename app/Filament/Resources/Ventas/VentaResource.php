@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Ventas;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Ventas\Pages\CreateVenta;
 use App\Filament\Resources\Ventas\Pages\EditVenta;
 use App\Filament\Resources\Ventas\Pages\ListVentas;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class VentaResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Venta::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;

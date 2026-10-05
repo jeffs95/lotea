@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OrdenesTrabajo;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\OrdenesTrabajo\Pages\CreateOrdenTrabajo;
 use App\Filament\Resources\OrdenesTrabajo\Pages\EditOrdenTrabajo;
 use App\Filament\Resources\OrdenesTrabajo\Pages\ListOrdenesTrabajo;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class OrdenTrabajoResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = OrdenTrabajo::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;

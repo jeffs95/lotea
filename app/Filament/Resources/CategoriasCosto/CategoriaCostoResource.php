@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CategoriasCosto;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\CategoriasCosto\Pages\CreateCategoriaCosto;
 use App\Filament\Resources\CategoriasCosto\Pages\EditCategoriaCosto;
 use App\Filament\Resources\CategoriasCosto\Pages\ListCategoriasCosto;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class CategoriaCostoResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = CategoriaCosto::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;

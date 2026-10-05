@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\GastosCompartidos;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\GastosCompartidos\Pages\CreateGastoCompartido;
 use App\Filament\Resources\GastosCompartidos\Pages\ListGastosCompartidos;
 use App\Filament\Resources\GastosCompartidos\Schemas\GastoCompartidoForm;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
  */
 class GastoCompartidoResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = GastoCompartido::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;

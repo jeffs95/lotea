@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Support\AlcanceDelPlan;
+use App\Support\Tenancy;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
 
@@ -19,9 +21,20 @@ class UserPolicy
         return $authUser->can('View:User');
     }
 
+    /**
+     * El permiso dice si esta persona puede dar de alta; el tope del plan,
+     * si a la empresa le queda lugar.
+     *
+     * Va en la política y no solo en el recurso porque por aquí pasa todo:
+     * el botón de la pantalla, la URL tecleada a mano y cualquier acción que
+     * se agregue mañana. Puesto solo en el recurso hay que acordarse en cada
+     * sitio nuevo, y olvidarlo deja un botón que lleva a un formulario que no
+     * va a guardar.
+     */
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:User');
+        return $authUser->can('Create:User')
+            && AlcanceDelPlan::puedeAgregar(Tenancy::empresa(), 'usuarios');
     }
 
     public function update(AuthUser $authUser): bool

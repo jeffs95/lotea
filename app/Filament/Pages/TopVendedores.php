@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\AlcanceDelPlan;
 use App\Support\RankingDeVendedores;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
@@ -40,7 +42,11 @@ class TopVendedores extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->can('ver_ventas_ajenas') ?? false;
+        // Dos llaves distintas: el permiso dice quién de la empresa lo puede
+        // mirar, y el plan dice si la empresa contrató el módulo. Aquí no se
+        // usa el rasgo porque esta página ya decidía por su cuenta.
+        return (auth()->user()?->can('ver_ventas_ajenas') ?? false)
+            && AlcanceDelPlan::permitePantalla(Filament::getTenant(), static::class);
     }
 
     public function getPeriodos(): array

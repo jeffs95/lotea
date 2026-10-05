@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Usuarios;
 
+use App\Filament\Concerns\RespetaElTope;
 use App\Filament\Resources\Usuarios\Pages\CreateUsuario;
 use App\Filament\Resources\Usuarios\Pages\EditUsuario;
 use App\Filament\Resources\Usuarios\Pages\ListUsuarios;
@@ -22,6 +23,11 @@ use UnitEnum;
  */
 class UsuarioResource extends Resource
 {
+    use RespetaElTope;
+
+    /** Lo que este recurso consume del plan. */
+    protected static string $cuenta = 'usuarios';
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;

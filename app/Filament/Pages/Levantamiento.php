@@ -6,6 +6,7 @@ use App\Actions\GenerarStockNo;
 use App\Enums\EstadoUnidad;
 use App\Enums\TipoPlaca;
 use App\Enums\TipoVehiculo;
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Unidades\Actions\LeerDocumentoAction;
 use App\Filament\Resources\Unidades\Pages\EtiquetasUnidades;
 use App\Filament\Resources\Unidades\UnidadResource;
@@ -42,6 +43,7 @@ use UnitEnum;
 class Levantamiento extends Page implements HasForms
 {
     use InteractsWithForms;
+    use SujetoAlPlan;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 

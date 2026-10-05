@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cajas;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Cajas\Pages\CreateCaja;
 use App\Filament\Resources\Cajas\Pages\EditCaja;
 use App\Filament\Resources\Cajas\Pages\ListCajas;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class CajaResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Caja::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWallet;

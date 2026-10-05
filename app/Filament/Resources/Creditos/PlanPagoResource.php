@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Creditos;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Creditos\Pages\EditPlanPago;
 use App\Filament\Resources\Creditos\Pages\ListPlanesPago;
 use App\Filament\Resources\Creditos\RelationManagers\CuotasRelationManager;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class PlanPagoResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = PlanPago::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;

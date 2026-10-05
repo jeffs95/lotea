@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sucursales;
 
+use App\Filament\Concerns\RespetaElTope;
 use App\Filament\Resources\Sucursales\Pages\CreateSucursal;
 use App\Filament\Resources\Sucursales\Pages\EditSucursal;
 use App\Filament\Resources\Sucursales\Pages\ListSucursales;
@@ -17,6 +18,11 @@ use UnitEnum;
 
 class SucursalResource extends Resource
 {
+    use RespetaElTope;
+
+    /** Lo que este recurso consume del plan. */
+    protected static string $cuenta = 'sucursales';
+
     protected static ?string $model = Sucursal::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;

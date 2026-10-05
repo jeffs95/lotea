@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Proveedores;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Proveedores\Pages\CreateProveedor;
 use App\Filament\Resources\Proveedores\Pages\EditProveedor;
 use App\Filament\Resources\Proveedores\Pages\ListProveedores;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class ProveedorResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Proveedor::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;

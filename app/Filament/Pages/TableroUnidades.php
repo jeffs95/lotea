@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Enums\EstadoUnidad;
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Models\Unidad;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -17,6 +18,8 @@ use Illuminate\Support\Collection;
  */
 class TableroUnidades extends Page
 {
+    use SujetoAlPlan;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedViewColumns;
 
     protected static ?int $navigationSort = 2;

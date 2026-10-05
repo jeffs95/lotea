@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clientes;
 
+use App\Filament\Concerns\SujetoAlPlan;
 use App\Filament\Resources\Clientes\Pages\CreateCliente;
 use App\Filament\Resources\Clientes\Pages\EditCliente;
 use App\Filament\Resources\Clientes\Pages\ListClientes;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class ClienteResource extends Resource
 {
+    use SujetoAlPlan;
+
     protected static ?string $model = Cliente::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

@@ -87,10 +87,28 @@ class Empresa extends Model implements HasName
         return $relacion->withoutGlobalScope(EmpresaScope::class);
     }
 
-    /** ¿Este cliente contrató el módulo? */
+    /**
+     * ¿Este cliente contrató el módulo?
+     *
+     * Sin plan asignado es «no». Se usa para lo que cuesta dinero por uso
+     * —la lectura con IA—, donde equivocarse de más se paga en la factura.
+     */
     public function tieneModulo(string $modulo): bool
     {
         return (bool) $this->plan?->permite($modulo);
+    }
+
+    /**
+     * ¿Puede abrir esta parte del sistema?
+     *
+     * Aquí sin plan es «sí», al revés que arriba. Una empresa sin plan es un
+     * descuido de configuración, no un cliente que dejó de pagar, y dejarla
+     * encerrada fuera de su propio sistema hace más daño del que evita. Lo que
+     * no se abre es lo que nos cuesta plata con cada uso.
+     */
+    public function puedeUsarModulo(string $modulo): bool
+    {
+        return $this->plan === null || $this->plan->permite($modulo);
     }
 
     public function lecturasIaDelMes(?string $periodo = null): int
