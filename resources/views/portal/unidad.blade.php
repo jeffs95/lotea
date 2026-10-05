@@ -178,10 +178,32 @@
                     <div class="mt-4 space-y-4" data-calculadora data-precio="{{ (float) $unidad->precio_vigente }}">
                         <div>
                             <div class="flex justify-between text-sm">
-                                <label class="font-medium text-gray-700">Enganche</label>
+                                <label for="enganche-{{ $unidad->id }}" class="font-medium text-gray-700">Enganche</label>
                                 <span data-enganche-texto class="font-semibold text-gray-900"></span>
                             </div>
-                            <input type="range" data-enganche min="10" max="60" step="5" value="30" class="mt-2 w-full accent-gray-900">
+
+                            {{-- Escrito, no solo deslizado: quien pregunta por
+                                 un carro no piensa «el treinta por ciento»,
+                                 piensa «tengo quince mil ahorrados». Con la
+                                 barra sola tenía que ir tanteando hasta que el
+                                 monto se pareciera al suyo. --}}
+                            <div class="mt-2 flex items-center gap-1.5 rounded-xl border border-gray-300 px-3 py-2 transition focus-within:border-gray-900 focus-within:ring-1 focus-within:ring-gray-900">
+                                <span class="text-sm font-medium text-gray-500">Q</span>
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    id="enganche-{{ $unidad->id }}"
+                                    data-enganche-monto
+                                    placeholder="0"
+                                    class="w-full border-0 bg-transparent p-0 text-sm font-semibold text-gray-900 placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:ring-0">
+                            </div>
+
+                            {{-- De uno en uno y hasta el 100: con saltos de
+                                 cinco, un enganche escrito a mano dejaba la
+                                 barra en un sitio y el porcentaje diciendo
+                                 otro. El 100 es pagar al contado. --}}
+                            <input type="range" data-enganche min="0" max="100" step="1" value="30"
+                                   aria-label="Enganche en porcentaje" class="mt-3 w-full accent-gray-900">
                         </div>
 
                         <div>
@@ -225,15 +247,21 @@
     <script>
         document.querySelectorAll('[data-calculadora]').forEach(function (caja) {
             const precio = parseFloat(caja.dataset.precio || 0);
-            const engancheInput = caja.querySelector('[data-enganche]');
+            const barra = caja.querySelector('[data-enganche]');
+            const montoInput = caja.querySelector('[data-enganche-monto]');
             const plazoInput = caja.querySelector('[data-plazo]');
             const quetzales = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ', maximumFractionDigits: 0 });
+            const enteros = new Intl.NumberFormat('es-GT', { maximumFractionDigits: 0 });
+
+            // El monto manda, y la barra es una forma cómoda de moverlo. Al
+            // revés —guardando el porcentaje— un enganche escrito a mano se
+            // redondearía al múltiplo de cinco más cercano, y el cliente
+            // vería otro número del que acaba de teclear.
+            let enganche = precio * 0.3;
 
             function calcular() {
-                const porcentaje = parseInt(engancheInput.value, 10);
                 const meses = parseInt(plazoInput.value, 10);
-                const enganche = precio * (porcentaje / 100);
-                const financiado = precio - enganche;
+                const financiado = Math.max(precio - enganche, 0);
                 const tasaMensual = 0.16 / 12;
 
                 // Cuota nivelada. Es un estimado para que el cliente se haga
@@ -242,13 +270,52 @@
                     ? (financiado * tasaMensual) / (1 - Math.pow(1 + tasaMensual, -meses))
                     : 0;
 
-                caja.querySelector('[data-enganche-texto]').textContent = quetzales.format(enganche) + ' (' + porcentaje + '%)';
+                const porcentaje = precio > 0 ? Math.round((enganche / precio) * 100) : 0;
+
+                caja.querySelector('[data-enganche-texto]').textContent =
+                    quetzales.format(enganche) + ' (' + porcentaje + '%)';
                 caja.querySelector('[data-plazo-texto]').textContent = meses + ' meses';
-                caja.querySelector('[data-cuota]').textContent = quetzales.format(cuota);
+
+                // Pagando todo no hay cuota que calcular, y un «Q 0» ahí
+                // arriba se lee como un error del sitio.
+                caja.querySelector('[data-cuota]').textContent = financiado > 0
+                    ? quetzales.format(cuota)
+                    : 'Sin financiar';
             }
 
-            engancheInput.addEventListener('input', calcular);
+            function escribirMonto() {
+                montoInput.value = enteros.format(Math.round(enganche));
+            }
+
+            function moverBarra() {
+                if (precio > 0) {
+                    barra.value = Math.min(Math.round((enganche / precio) * 100), barra.max);
+                }
+            }
+
+            barra.addEventListener('input', function () {
+                enganche = precio * (parseInt(barra.value, 10) / 100);
+                escribirMonto();
+                calcular();
+            });
+
+            // Mientras teclea solo se recalcula: reformatear a cada letra le
+            // movería el cursor a mitad del número.
+            montoInput.addEventListener('input', function () {
+                const tecleado = parseFloat(montoInput.value.replace(/[^\d]/g, '')) || 0;
+
+                enganche = Math.min(Math.max(tecleado, 0), precio);
+                moverBarra();
+                calcular();
+            });
+
+            // Y al salir del campo se acomoda lo que escribió: con los miles
+            // separados, y recortado al precio si puso de más.
+            montoInput.addEventListener('blur', escribirMonto);
+
             plazoInput.addEventListener('input', calcular);
+
+            escribirMonto();
             calcular();
         });
     </script>
