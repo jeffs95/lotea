@@ -4,13 +4,21 @@
 @section('descripcion', 'Vehículos importados con garantía. ' . $total . ' unidades disponibles en ' . ($empresa->nombre_comercial ?? $empresa->nombre) . '.')
 
 @section('contenido')
+    @php($fondos = \App\Support\FondoDelPortal::imagenes($empresa, $recientes))
+
     <section class="relative overflow-hidden bg-gray-900">
-        @if ($empresa->portada_url)
-            {{-- La foto del cliente, y encima una capa oscura: sin ella el
-                 titular blanco se pierde sobre una foto clara y la portada
-                 queda ilegible, que es peor que no tener foto. --}}
-            <img src="{{ $empresa->portada_url }}" alt=""
-                 class="absolute inset-0 h-full w-full object-cover" loading="eager">
+        @if ($fondos->isNotEmpty())
+            {{-- La portada del cliente y sus carros publicados, turnándose.
+                 Encima va una capa oscura: sin ella el titular blanco se
+                 pierde sobre una foto clara y la portada queda ilegible, que
+                 es peor que no tener foto. --}}
+            <div class="absolute inset-0" data-fondo-portal>
+                @foreach ($fondos as $i => $fondo)
+                    <img src="{{ $fondo }}" alt="" aria-hidden="true"
+                         @class(['lamina-portal absolute inset-0 h-full w-full object-cover', 'opacity-0' => $i > 0])
+                         @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                @endforeach
+            </div>
             <div class="absolute inset-0 bg-gray-900/75"></div>
             <div class="absolute inset-0 opacity-25" style="background: radial-gradient(60% 60% at 70% 20%, var(--acento), transparent)"></div>
         @else
@@ -48,6 +56,60 @@
             </form>
         </div>
     </section>
+
+    @if ($fondos->isNotEmpty())
+        <style>
+            /* El acercamiento lento: la portada deja de verse como una foto
+               pegada y parece que respira. Va y vuelve, así que no hace falta
+               reiniciarla nunca. */
+            .lamina-portal {
+                transition: opacity 1.4s ease-in-out;
+                animation: respirar-portada 24s ease-in-out infinite alternate;
+                transform-origin: center 60%;
+                will-change: transform, opacity;
+            }
+
+            @keyframes respirar-portada {
+                from { transform: scale(1); }
+                to   { transform: scale(1.09); }
+            }
+
+            /* A quien le molesta el movimiento se le deja la foto quieta. No
+               es un detalle de cortesía: hay gente a la que un fondo que se
+               mueve solo le provoca mareo. */
+            @media (prefers-reduced-motion: reduce) {
+                .lamina-portal { animation: none; transition: none; }
+            }
+        </style>
+    @endif
+
+    @if ($fondos->count() > 1)
+        <script>
+            (() => {
+                const caja = document.querySelector('[data-fondo-portal]');
+
+                if (! caja || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    return;
+                }
+
+                const laminas = [...caja.querySelectorAll('.lamina-portal')];
+                let visible = 0;
+
+                setInterval(() => {
+                    // Con la pestaña en segundo plano no se turna nada: nadie
+                    // lo está viendo y el teléfono gastaría batería de balde.
+                    if (document.hidden) {
+                        return;
+                    }
+
+                    laminas[visible].classList.add('opacity-0');
+                    visible = (visible + 1) % laminas.length;
+                    laminas[visible].classList.remove('opacity-0');
+                }, {{ \App\Support\FondoDelPortal::SEGUNDOS * 1000 }});
+            })();
+        </script>
+    @endif
+
 
     @if ($marcas->isNotEmpty())
         <section class="border-b border-gray-200 bg-white">
