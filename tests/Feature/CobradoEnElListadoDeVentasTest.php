@@ -56,6 +56,10 @@ class CobradoEnElListadoDeVentasTest extends TestCase
             }
         }
 
+        // El listado solo muestra las ventas de uno salvo que se tenga esto,
+        // y lo que aquí se mira es la columna de cobrado, no el alcance.
+        Permission::findOrCreate('ver_ventas_ajenas', 'web');
+
         Tenancy::comoEmpresa($this->empresa, function () {
             Role::findByName('dueno', 'web')->syncPermissions(Permission::all());
             $this->usuario->assignRole('dueno');

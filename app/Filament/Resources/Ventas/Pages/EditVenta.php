@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Ventas\Pages;
 
 use App\Actions\RegistrarVenta;
+use App\Filament\Resources\Ventas\Pages\Concerns\FijaElVendedor;
 use App\Filament\Resources\Ventas\VentaResource;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 
 class EditVenta extends EditRecord
 {
+    use FijaElVendedor;
+
     protected static string $resource = VentaResource::class;
 
     public function getTitle(): string
@@ -22,6 +25,8 @@ class EditVenta extends EditRecord
      */
     protected function handleRecordUpdate(Model $record, array $data): Model
     {
+        $data = $this->conElVendedorQueCorresponde($data);
+
         $veniaAbierta = ! $record->estaCerrada();
 
         $data['precio_final'] = bcsub((string) $data['precio_venta'], (string) ($data['descuento'] ?? 0), 2);

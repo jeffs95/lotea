@@ -30,7 +30,7 @@ class VentasTable
             // Precarga: sin esto cada fila dispara una consulta por
             // relación, y con doscientas filas son cientos de consultas.
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->with(['cliente', 'vendedor', 'unidad.marca', 'unidad.linea'])
+                ->with(['cliente', 'vendedor', 'registradaPor', 'unidad.marca', 'unidad.linea'])
                 // Lo cobrado se suma en la misma consulta: pedirlo fila por
                 // fila serían doscientas consultas más.
                 ->withSum(
@@ -95,6 +95,17 @@ class VentasTable
                     ->description(fn (Venta $record) => $record->vendedor?->name)
                     ->toggleable(),
 
+                // Quién la cargó y cuánto después. La venta queda firme al
+                // registrarse, sin que nadie la apruebe, así que esto es lo
+                // que permite revisar a posteriori sin trabar al vendedor.
+                TextColumn::make('registradaPor.name')
+                    ->label('Cargada por')
+                    ->description(fn (Venta $record) => $record->resumen_de_carga)
+                    ->color(fn (Venta $record) => $record->diasEntreVentaYCarga() >= 7 ? 'warning' : null)
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visible(fn () => auth()->user()?->can('ver_ventas_ajenas') ?? false),
+
                 TextColumn::make('estado')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => Venta::ESTADOS[$state] ?? $state)
@@ -109,6 +120,10 @@ class VentasTable
                 SelectFilter::make('estado')->options(Venta::ESTADOS)->multiple(),
                 SelectFilter::make('forma_pago')->label('Forma de pago')->options(Venta::FORMAS_PAGO),
                 SelectFilter::make('vendedor')->relationship('vendedor', 'name'),
+                SelectFilter::make('registradaPor')
+                    ->label('Cargada por')
+                    ->relationship('registradaPor', 'name')
+                    ->visible(fn () => auth()->user()?->can('ver_ventas_ajenas') ?? false),
             ])
             ->recordActions([
                 Action::make('cobrar')

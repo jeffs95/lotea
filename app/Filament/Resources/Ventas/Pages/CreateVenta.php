@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Ventas\Pages;
 
 use App\Actions\RegistrarVenta;
+use App\Filament\Resources\Ventas\Pages\Concerns\FijaElVendedor;
 use App\Filament\Resources\Ventas\VentaResource;
 use App\Models\Cliente;
 use App\Models\Unidad;
@@ -14,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class CreateVenta extends CreateRecord
 {
+    use FijaElVendedor;
+
     protected static string $resource = VentaResource::class;
 
     protected static ?string $title = 'Nueva venta';
@@ -24,6 +27,8 @@ class CreateVenta extends CreateRecord
      */
     protected function handleRecordCreation(array $data): Model
     {
+        $data = $this->conElVendedorQueCorresponde($data);
+
         $unidad = Unidad::findOrFail($data['unidad_id']);
 
         try {

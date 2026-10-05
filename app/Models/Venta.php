@@ -91,6 +91,47 @@ class Venta extends Model
         return $this->belongsTo(Sucursal::class);
     }
 
+    /**
+     * Quién escribió la venta en el sistema, que no siempre es quien la hizo.
+     *
+     * Los vendedores externos cargan lo suyo cuando pueden, y más de uno lo
+     * hace el viernes de corrido. La venta queda firme al cargarla —así se
+     * decidió, sin paso de aprobación—, de modo que esto es lo que queda para
+     * revisar después: quién la escribió y cuánto después del día de la venta.
+     */
+    public function registradaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** Días entre el día de la venta y el día en que alguien la escribió. */
+    public function diasEntreVentaYCarga(): int
+    {
+        if ($this->fecha === null || $this->created_at === null) {
+            return 0;
+        }
+
+        return max(0, (int) $this->fecha->startOfDay()
+            ->diffInDays($this->created_at->startOfDay(), false));
+    }
+
+    /** Cuándo se cargó, y si fue bastante después, cuánto. */
+    public function getResumenDeCargaAttribute(): ?string
+    {
+        if ($this->created_at === null) {
+            return null;
+        }
+
+        $cuando = $this->created_at->format('d/m/Y');
+        $dias = $this->diasEntreVentaYCarga();
+
+        if ($dias === 0) {
+            return $cuando;
+        }
+
+        return $cuando.' · '.$dias.($dias === 1 ? ' día' : ' días').' después';
+    }
+
     public function planPago(): HasOne
     {
         return $this->hasOne(PlanPago::class);
@@ -174,5 +215,33 @@ class Venta extends Model
     public function scopeCerradas(Builder $query): Builder
     {
         return $query->vigentes()->where('estado', 'cerrada');
+    }
+
+    /**
+     * Lo que este usuario tiene derecho a ver.
+     *
+     * Varios vendedores no son empleados del patio: publican los carros por su
+     * cuenta y cobran por unidad vendida, con un trato distinto cada uno. Que
+     * uno abra la pantalla de ventas y lea lo que cobró el otro es un problema
+     * entre personas, y de los que no se arreglan después.
+     *
+     * Suya es la venta en la que él figura como vendedor, no la que él cargó:
+     * si el dueño corrige después a quién le toca la comisión, la venta sigue
+     * a la comisión y no a quien la escribió.
+     *
+     * Sin usuario no se devuelve nada. Una consulta sin sesión es un error de
+     * programación, y entre fallar y enseñarlo todo, falla.
+     */
+    public function scopeVisiblesPara(Builder $query, ?User $usuario): Builder
+    {
+        if ($usuario === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($usuario->can('ver_ventas_ajenas')) {
+            return $query;
+        }
+
+        return $query->where('vendedor_id', $usuario->getKey());
     }
 }

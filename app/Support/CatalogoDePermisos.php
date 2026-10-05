@@ -58,6 +58,7 @@ class CatalogoDePermisos
         'ver_costos_unidad' => ['modulo' => 'Dinero', 'accion' => 'Ver costos y márgenes'],
         'ver_precio_minimo' => ['modulo' => 'Dinero', 'accion' => 'Ver el precio mínimo autorizado'],
         'administrar_marca' => ['modulo' => 'La empresa', 'accion' => 'Cambiar el logo y los colores'],
+        'ver_ventas_ajenas' => ['modulo' => 'Ventas', 'accion' => 'Ver las ventas de los demás vendedores'],
     ];
 
     /** El orden en que conviene leerlos en una llamada. */

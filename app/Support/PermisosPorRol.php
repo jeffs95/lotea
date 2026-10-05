@@ -20,6 +20,10 @@ use Spatie\Permission\Models\Permission;
  *   pierde su margen en la negociación.
  * - **Ver el precio mínimo autorizado** es todavía más estrecho: quien lo sabe
  *   puede regalar el piso completo.
+ * - **Ver las ventas de los demás** no lo tiene el vendedor. Varios de ellos no
+ *   son empleados del patio: publican carros por su cuenta y cobran por unidad
+ *   vendida. Lo que gana cada uno se negocia aparte, y que uno vea la comisión
+ *   del otro es un problema entre personas que no se arregla después.
  */
 class PermisosPorRol
 {
@@ -61,7 +65,7 @@ class PermisosPorRol
                     'CapitalEnPatio' => self::LECTURA,
                     'UnidadesEstancadas' => self::LECTURA,
                 ],
-                'propios' => ['ver_costos_unidad', 'ver_precio_minimo'],
+                'propios' => ['ver_costos_unidad', 'ver_precio_minimo', 'ver_ventas_ajenas'],
             ],
 
             // Quien va a las subastas: registra lo que compra y con qué costo.
@@ -134,7 +138,7 @@ class PermisosPorRol
                     'Cliente' => self::LECTURA,
                     'PlanPago' => ['ViewAny', 'View', 'Update'],
                 ],
-                'propios' => [],
+                'propios' => ['ver_ventas_ajenas'],
             ],
 
             // Mira todo el dinero, pero no opera: no vende ni mueve caja.
@@ -155,7 +159,7 @@ class PermisosPorRol
                     'CapitalEnPatio' => self::LECTURA,
                     'UnidadesEstancadas' => self::LECTURA,
                 ],
-                'propios' => ['ver_costos_unidad', 'ver_precio_minimo'],
+                'propios' => ['ver_costos_unidad', 'ver_precio_minimo', 'ver_ventas_ajenas'],
             ],
 
             // La planilla del taller y del patio.

@@ -18,6 +18,7 @@ class PermisosPropiosSeeder extends Seeder
         'ver_costos_unidad' => 'Ver el costo y la utilidad de las unidades',
         'ver_precio_minimo' => 'Ver el precio mínimo autorizado',
         'administrar_marca' => 'Cambiar el logo y los colores de la empresa',
+        'ver_ventas_ajenas' => 'Ver las ventas y comisiones de los demás vendedores',
     ];
 
     public function run(): void

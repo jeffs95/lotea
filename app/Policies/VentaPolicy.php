@@ -12,6 +12,20 @@ class VentaPolicy
 {
     use HandlesAuthorization;
 
+    /**
+     * ¿Esta venta le toca?
+     *
+     * El listado ya viene filtrado, pero eso solo cambia lo que se ve. Quien
+     * teclea el id de otra venta en la barra de direcciones llega igual, y es
+     * exactamente lo que haría un vendedor con curiosidad por la comisión del
+     * de al lado. Aquí es donde se le dice que no.
+     */
+    protected function esSuya(AuthUser $authUser, Venta $venta): bool
+    {
+        return $authUser->can('ver_ventas_ajenas')
+            || (int) $venta->vendedor_id === (int) $authUser->getKey();
+    }
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Venta');
@@ -19,7 +33,7 @@ class VentaPolicy
 
     public function view(AuthUser $authUser, Venta $venta): bool
     {
-        return $authUser->can('View:Venta');
+        return $authUser->can('View:Venta') && $this->esSuya($authUser, $venta);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,12 +43,12 @@ class VentaPolicy
 
     public function update(AuthUser $authUser, Venta $venta): bool
     {
-        return $authUser->can('Update:Venta');
+        return $authUser->can('Update:Venta') && $this->esSuya($authUser, $venta);
     }
 
     public function delete(AuthUser $authUser, Venta $venta): bool
     {
-        return $authUser->can('Delete:Venta');
+        return $authUser->can('Delete:Venta') && $this->esSuya($authUser, $venta);
     }
 
     public function deleteAny(AuthUser $authUser): bool

@@ -75,12 +75,20 @@ class VentaForm
                             TextInput::make('telefono')->label('Teléfono')->tel()->maxLength(30),
                         ]),
 
+                    // Quien no puede ver las ventas de los demás tampoco las
+                    // registra a nombre de otro: la suya queda a su nombre, sin
+                    // forma de equivocarse de persona ni de cargarle la
+                    // comisión a un compañero. Para el dueño sigue abierto,
+                    // porque él sí carga ventas ajenas.
                     Select::make('vendedor_id')
                         ->label('Vendedor')
                         ->relationship('vendedor', 'name')
                         ->searchable()
                         ->preload()
-                        ->native(false),
+                        ->native(false)
+                        ->default(fn () => self::puedeElegirVendedor() ? null : auth()->id())
+                        ->disabled(fn () => ! self::puedeElegirVendedor())
+                        ->dehydrated(),
 
                     Select::make('sucursal_id')
                         ->label('Sucursal')
@@ -178,5 +186,10 @@ class VentaForm
                     Textarea::make('notas')->rows(2)->columnSpanFull(),
                 ]),
         ]);
+    }
+
+    protected static function puedeElegirVendedor(): bool
+    {
+        return auth()->user()?->can('ver_ventas_ajenas') ?? false;
     }
 }

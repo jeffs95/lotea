@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class VentaResource extends Resource
 {
@@ -40,6 +41,18 @@ class VentaResource extends Resource
     public static function table(Table $table): Table
     {
         return VentasTable::configure($table);
+    }
+
+    /**
+     * El vendedor externo ve su propio trabajo, no el del resto del patio.
+     *
+     * Va aquí y no solo en la tabla porque de esta consulta cuelga todo lo
+     * demás del recurso: el buscador global, el contador del menú y la
+     * resolución del registro al abrir una URL.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->visiblesPara(auth()->user());
     }
 
     public static function getPages(): array
