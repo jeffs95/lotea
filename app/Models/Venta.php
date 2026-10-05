@@ -62,6 +62,7 @@ class Venta extends Model
             'enganche' => 'decimal:2',
             'saldo_financiado' => 'decimal:2',
             'comision_porcentaje' => 'decimal:3',
+            'comision_acordada' => 'decimal:2',
             'comision_monto' => 'decimal:2',
             'comision_pagada' => 'boolean',
             'factura_fecha' => 'date',

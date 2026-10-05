@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\DB;
  */
 class RegistrarVenta
 {
+    /** Un monto por carro vendido, no un porcentaje de nada. */
+    public const COMISION_FIJA = 'fijo';
+
     public function __construct(
         private CambiarEstadoUnidad $cambiarEstado,
         private RegistrarCosto $registrarCosto,
@@ -53,6 +56,7 @@ class RegistrarVenta
                 'saldo_financiado' => $datos['saldo_financiado'] ?? null,
                 'comision_base' => $datos['comision_base'] ?? 'margen',
                 'comision_porcentaje' => $datos['comision_porcentaje'] ?? 0,
+                'comision_acordada' => $datos['comision_acordada'] ?? null,
                 'comision_monto' => 0,
                 'factura_serie' => $datos['factura_serie'] ?? null,
                 'factura_numero' => $datos['factura_numero'] ?? null,
@@ -103,11 +107,28 @@ class RegistrarVenta
     }
 
     /**
-     * La comisión sobre el margen es lo que alinea al vendedor con el dueño:
-     * si regala precio, se corta su propia comisión.
+     * Cuánto le toca al vendedor por esta venta.
+     *
+     * Tres formas, y la que se usa depende de con quién se trabaje:
+     *
+     * - **Monto fijo**: lo acordado por carro vendido, sin importar en cuánto
+     *   salió. Es como se le paga a quien no es del negocio y solo lo publica
+     *   en sus redes: no participa del precio, así que atarlo al margen no
+     *   tendría sentido para él ni para el dueño.
+     * - **Sobre el margen**: lo que alinea a un vendedor de planta con el
+     *   dueño, porque si regala precio se corta su propia comisión.
+     * - **Sobre el precio**: lo más simple de explicar, y el que premia vender
+     *   barato. Está porque algunos lo usan, no porque convenga.
      */
     public function calcularComision(Venta $venta, Unidad $unidad): string
     {
+        // El monto fijo no se calcula: es lo que se escribió.
+        if ($venta->comision_base === self::COMISION_FIJA) {
+            $acordado = (string) ($venta->comision_acordada ?? '0');
+
+            return bccomp($acordado, '0.00', 2) > 0 ? bcadd($acordado, '0.00', 2) : '0.00';
+        }
+
         $porcentaje = (string) $venta->comision_porcentaje;
 
         if (bccomp($porcentaje, '0', 3) === 0) {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ModoSoporte;
+use App\Support\Tenancy;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -45,7 +46,33 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function empresas(): BelongsToMany
     {
-        return $this->belongsToMany(Empresa::class)->withTimestamps();
+        return $this->belongsToMany(Empresa::class)
+            // Lo acordado es entre este vendedor y este concesionario: la misma
+            // persona podría vender para dos y haber pactado distinto.
+            ->withPivot('comision_por_venta')
+            ->withTimestamps();
+    }
+
+    /**
+     * Lo que este concesionario le paga por carro vendido.
+     *
+     * Es el valor de arranque de una venta nueva, no una atadura: en la venta
+     * se puede escribir otro monto porque algunos carros se negocian aparte.
+     */
+    public function comisionAcordadaCon(?Empresa $empresa = null): ?string
+    {
+        $empresa ??= Tenancy::hayEmpresa() ? Tenancy::empresa() : null;
+
+        if (! $empresa) {
+            return null;
+        }
+
+        $relacion = $this->empresas->firstWhere('id', $empresa->getKey())
+            ?? $this->empresas()->whereKey($empresa->getKey())->first();
+
+        $acordado = $relacion?->pivot?->comision_por_venta;
+
+        return filled($acordado) ? (string) $acordado : null;
     }
 
     public function canAccessPanel(Panel $panel): bool
