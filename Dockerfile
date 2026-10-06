@@ -4,8 +4,15 @@
 # de un NAS: lo único que cambia es quién le pasa las variables de entorno.
 #
 # Se construye por partes para que la imagen final no cargue con composer, con
-# node ni con los compiladores de las extensiones de PHP. Lo que llega al
-# servidor es PHP, nginx y el código ya listo.
+# node ni con los compiladores de las extensiones. Lo que llega al servidor es
+# PHP, nginx y el código ya listo.
+#
+# Sobre Debian y no Alpine: Alpine daría una imagen bastante más chica, pero
+# su tar usa una llamada al sistema nueva —fchmodat2— que los núcleos de
+# algunos NAS todavía no reconocen. Ahí la construcción muere al descomprimir
+# el código de PHP con un «Cannot change mode: Bad address» que no dice nada
+# de lo que de verdad pasa. Debian usa la llamada de siempre y funciona en
+# todos lados; los megas de más valen esa tranquilidad.
 
 # ----------------------------------------------------------------------- base
 # PHP con todo lo que el proyecto pide, en una capa que usan tanto la
@@ -15,26 +22,21 @@
 # existan antes de instalar nada, así que si el sitio donde se instala no es
 # el mismo donde se va a ejecutar, o falla, o hay que mentirle con
 # --ignore-platform-reqs y enterarse del problema en producción.
-FROM php:8.3-fpm-alpine AS base
+FROM php:8.3-fpm AS base
 
-RUN apk add --no-cache \
-        libpng \
-        libjpeg-turbo \
-        freetype \
-        libwebp \
-        icu-libs \
-        libzip \
-    && apk add --no-cache --virtual .compilar \
-        $PHPIZE_DEPS \
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
         libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
         libwebp-dev \
-        icu-dev \
+        libicu-dev \
         libzip-dev \
-        postgresql-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" \
+        libpq-dev \
+    ; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp; \
+    docker-php-ext-install -j"$(nproc)" \
         bcmath \
         gd \
         intl \
@@ -44,8 +46,8 @@ RUN apk add --no-cache \
         pdo_pgsql \
         opcache \
         pcntl \
-    && apk del .compilar \
-    && rm -rf /tmp/*
+    ; \
+    rm -rf /var/lib/apt/lists/*
 
 # bcmath, gd y mbstring las exige composer.json; intl la pide Filament y
 # formatea los quetzales; exif la usan medialibrary y spatie/image para leer
@@ -53,6 +55,11 @@ RUN apk add --no-cache \
 # almacenamiento anterior; pdo_pgsql habla con la base; pcntl deja que el
 # worker atienda la señal de apagado en vez de que lo maten a mitad de un
 # trabajo.
+#
+# Los paquetes -dev se quedan en la imagen. Sacarlos con un purge sin
+# llevarse por delante las bibliotecas que las extensiones necesitan en
+# tiempo de ejecución es frágil, y lo que se gana son unos megas de disco en
+# un servidor que tiene de sobra.
 
 # ---------------------------------------------------------------- dependencias
 FROM base AS dependencias
@@ -77,7 +84,7 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
 
 # --------------------------------------------------------------------- assets
-FROM node:22-alpine AS assets
+FROM node:22-bookworm-slim AS assets
 
 WORKDIR /app
 
@@ -96,12 +103,22 @@ RUN npm run build
 # -------------------------------------------------------------------- runtime
 FROM base AS runtime
 
-RUN apk add --no-cache nginx supervisor postgresql-client
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        nginx \
+        supervisor \
+        postgresql-client \
+    ; \
+    rm -rf /var/lib/apt/lists/*; \
+    # Debian deja un sitio de ejemplo activado que se pelea con el nuestro.
+    rm -f /etc/nginx/sites-enabled/default
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/lotea.ini
-COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
+
 # Por si el bit de ejecución se pierde en el camino —pasa al clonar en
 # Windows o al copiar por FTP—, que no dependa de cómo llegó el archivo.
 RUN chmod +x /usr/local/bin/entrypoint
