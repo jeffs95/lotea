@@ -50,7 +50,11 @@ services:
         condition: service_healthy
 
   base:
-    image: postgres:18-alpine
+    # Debian y no Alpine, como el resto: no por un fallo comprobado, sino
+    # porque en este NAS las bases Alpine ya dieron problema al extraer
+    # archivos y no vale la pena dejar esa incógnita en la pieza que guarda
+    # los datos.
+    image: postgres:18-bookworm
     restart: unless-stopped
     environment:
       POSTGRES_DB: "${DB_DATABASE:-lotea}"
@@ -58,7 +62,11 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD:?hace falta DB_PASSWORD en el .env}"
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
-      - datos:/var/lib/postgresql/data
+      # El directorio padre, no «/data». Desde la 18 estas imágenes guardan
+      # los datos en un subdirectorio por versión mayor, para que actualizar
+      # de una a otra sea posible; montando la ruta de antes, el contenedor
+      # se niega a arrancar y dice que encontró datos en un sitio que ya no usa.
+      - datos:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-lotea} -d ${DB_DATABASE:-lotea}"]
       interval: 10s
