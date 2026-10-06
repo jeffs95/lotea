@@ -7,12 +7,17 @@
 # node ni con los compiladores de las extensiones. Lo que llega al servidor es
 # PHP, nginx y el código ya listo.
 #
-# Sobre Debian y no Alpine: Alpine daría una imagen bastante más chica, pero
-# su tar usa una llamada al sistema nueva —fchmodat2— que los núcleos de
-# algunos NAS todavía no reconocen. Ahí la construcción muere al descomprimir
-# el código de PHP con un «Cannot change mode: Bad address» que no dice nada
-# de lo que de verdad pasa. Debian usa la llamada de siempre y funciona en
-# todos lados; los megas de más valen esa tranquilidad.
+# Sobre la base anclada a Debian 12 (bookworm) y no a la etiqueta suelta:
+# desde glibc 2.39 y desde musl 1.2.5, tar extrae con una llamada al sistema
+# nueva, fchmodat2. Un núcleo que no la conoce —el de varios NAS— no devuelve
+# «no la tengo», devuelve «Bad address», y la construcción muere al
+# descomprimir el código de PHP con cientos de líneas que no dicen nada del
+# problema real.
+#
+# No es cosa de Alpine: Debian 13 tiene glibc 2.41 y falla igual. Lo que hace
+# falta es una base anterior a ese cambio, y bookworm trae glibc 2.36.
+# Por eso la etiqueta va fija: «php:8.3-fpm» a secas sigue a la última, y el
+# día que Docker Hub mueva el apuntador esto se rompería solo.
 
 # ----------------------------------------------------------------------- base
 # PHP con todo lo que el proyecto pide, en una capa que usan tanto la
@@ -22,7 +27,7 @@
 # existan antes de instalar nada, así que si el sitio donde se instala no es
 # el mismo donde se va a ejecutar, o falla, o hay que mentirle con
 # --ignore-platform-reqs y enterarse del problema en producción.
-FROM php:8.3-fpm AS base
+FROM php:8.3-fpm-bookworm AS base
 
 RUN set -eux; \
     apt-get update; \
@@ -108,8 +113,20 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
-        postgresql-client \
+        curl \
+        ca-certificates \
+        gnupg \
     ; \
+    # El cliente de PostgreSQL tiene que ser de la misma versión mayor que el
+    # servidor: pg_dump se niega a volcar una base más nueva que él, y el que
+    # trae bookworm es el 15 contra un servidor 18. Sin esto el respaldo de
+    # cada noche fallaría, y de eso uno se entera el día que lo necesita.
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg; \
+    echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends postgresql-client-18; \
     rm -rf /var/lib/apt/lists/*; \
     # Debian deja un sitio de ejemplo activado que se pelea con el nuestro.
     rm -f /etc/nginx/sites-enabled/default
