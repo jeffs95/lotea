@@ -7,8 +7,57 @@
 # node ni con los compiladores de las extensiones de PHP. Lo que llega al
 # servidor es PHP, nginx y el código ya listo.
 
+# ----------------------------------------------------------------------- base
+# PHP con todo lo que el proyecto pide, en una capa que usan tanto la
+# instalación de dependencias como la imagen final.
+#
+# Compartirla no es solo ahorrar: composer comprueba que las extensiones
+# existan antes de instalar nada, así que si el sitio donde se instala no es
+# el mismo donde se va a ejecutar, o falla, o hay que mentirle con
+# --ignore-platform-reqs y enterarse del problema en producción.
+FROM php:8.3-fpm-alpine AS base
+
+RUN apk add --no-cache \
+        libpng \
+        libjpeg-turbo \
+        freetype \
+        libwebp \
+        icu-libs \
+        libzip \
+    && apk add --no-cache --virtual .compilar \
+        $PHPIZE_DEPS \
+        libpng-dev \
+        libjpeg-turbo-dev \
+        freetype-dev \
+        libwebp-dev \
+        icu-dev \
+        libzip-dev \
+        postgresql-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        gd \
+        intl \
+        zip \
+        exif \
+        ftp \
+        pdo_pgsql \
+        opcache \
+        pcntl \
+    && apk del .compilar \
+    && rm -rf /tmp/*
+
+# bcmath, gd y mbstring las exige composer.json; intl la pide Filament y
+# formatea los quetzales; exif la usan medialibrary y spatie/image para leer
+# la orientación de las fotos; ftp viene con flysystem-ftp, que quedó del
+# almacenamiento anterior; pdo_pgsql habla con la base; pcntl deja que el
+# worker atienda la señal de apagado en vez de que lo maten a mitad de un
+# trabajo.
+
 # ---------------------------------------------------------------- dependencias
-FROM composer:2 AS dependencias
+FROM base AS dependencias
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -45,50 +94,17 @@ COPY --from=dependencias /app/vendor ./vendor
 RUN npm run build
 
 # -------------------------------------------------------------------- runtime
-FROM php:8.3-fpm-alpine AS runtime
+FROM base AS runtime
 
-# Las de la izquierda se quedan; las de la derecha solo sirven para compilar
-# las extensiones y se borran en la misma capa, que es lo que mantiene la
-# imagen chica.
-RUN apk add --no-cache \
-        nginx \
-        supervisor \
-        postgresql-client \
-        libpng \
-        libjpeg-turbo \
-        freetype \
-        libwebp \
-        icu-libs \
-        libzip \
-    && apk add --no-cache --virtual .compilar \
-        $PHPIZE_DEPS \
-        libpng-dev \
-        libjpeg-turbo-dev \
-        freetype-dev \
-        libwebp-dev \
-        icu-dev \
-        libzip-dev \
-        postgresql-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" \
-        bcmath \
-        gd \
-        intl \
-        zip \
-        pdo_pgsql \
-        opcache \
-        pcntl \
-    && apk del .compilar \
-    && rm -rf /tmp/*
-
-# bcmath, gd y mbstring las exige composer.json; pdo_pgsql habla con la base;
-# intl formatea los quetzales; pcntl deja que el worker atienda la señal de
-# apagado en vez de que lo maten a mitad de un trabajo.
+RUN apk add --no-cache nginx supervisor postgresql-client
 
 COPY docker/php.ini /usr/local/etc/php/conf.d/lotea.ini
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
+# Por si el bit de ejecución se pierde en el camino —pasa al clonar en
+# Windows o al copiar por FTP—, que no dependa de cómo llegó el archivo.
+RUN chmod +x /usr/local/bin/entrypoint
 
 WORKDIR /var/www/html
 
