@@ -56,6 +56,29 @@ Los dominios propios importan: cada concesionario puede entrar por el suyo
 el que termine el SSL tiene que poder emitir certificados para dominios que se
 agregan sobre la marcha.
 
+## En un NAS con Container Station
+
+Se usa el otro compose, que no publica puertos y trae el túnel:
+
+```bash
+docker compose -f docker-compose.nas.yml up -d --build
+```
+
+Antes hace falta crear el túnel en Cloudflare (Zero Trust → Networks →
+Tunnels), copiar su token al `.env` y, dentro del túnel, apuntar cada nombre
+público a `http://app:8080`. Así se agregan también los dominios propios de
+los concesionarios, sin tocar el NAS.
+
+Tres cosas que muerden en un NAS y no en un VPS:
+
+- **El puerto 8080 ya es de QTS.** Por eso este compose no publica ninguno:
+  el túnel llega por la red interna de Docker.
+- **La memoria.** Si el NAS tiene 4 GB o menos, `npm run build` puede morirse
+  al compilar los estilos. Se resuelve construyendo la imagen en otra máquina
+  y cargándola, o agregando memoria de intercambio.
+- **La arquitectura.** Si el NAS es ARM en vez de Intel, la construcción es
+  bastante más lenta pero funciona; las imágenes base existen para los dos.
+
 ## Respaldos
 
 Cada noche a las 3, `lotea:respaldar` vuelca la base y la sube al cubo

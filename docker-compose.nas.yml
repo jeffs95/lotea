@@ -1,0 +1,85 @@
+# Lotea en el Container Station de un NAS.
+#
+#   docker compose -f docker-compose.nas.yml up -d --build
+#
+# Cambia dos cosas respecto del compose normal:
+#
+# 1. No publica ningún puerto en el NAS. El tráfico entra por un túnel de
+#    Cloudflare que se conecta desde adentro hacia afuera, así que no hay que
+#    abrir nada en el router ni pelearse con el 8080, que en QTS ya lo usa la
+#    propia interfaz del NAS.
+#
+# 2. Lleva el contenedor del túnel, que es lo que hace posible servir una IP
+#    privada a internet, con certificado y todo.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      LOTEA_MIGRAR_AL_ARRANCAR: "true"
+    env_file: .env
+    depends_on:
+      base:
+        condition: service_healthy
+    # Sin «ports»: al túnel le llega por la red interna de Docker. Nada de
+    # esto queda expuesto en la red del NAS.
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: php artisan queue:work --tries=3 --timeout=120 --sleep=3 --max-time=3600
+    depends_on:
+      base:
+        condition: service_healthy
+
+  reloj:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: php artisan schedule:work
+    depends_on:
+      base:
+        condition: service_healthy
+
+  base:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-lotea}"
+      POSTGRES_USER: "${DB_USERNAME:-lotea}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?hace falta DB_PASSWORD en el .env}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-lotea} -d ${DB_DATABASE:-lotea}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # La puerta de entrada.
+  #
+  # Se conecta él hacia Cloudflare, no al revés, así que no hace falta IP
+  # pública, ni abrir puertos, ni DDNS. Cloudflare termina el certificado, y
+  # eso resuelve de una vez el de app.lotea.dev y el de los dominios propios
+  # de cada concesionario, que a mano sería lo más pesado de todo esto.
+  tunel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:?hace falta el token del túnel}"
+    depends_on:
+      - app
+
+volumes:
+  datos:
