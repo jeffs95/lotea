@@ -76,8 +76,15 @@ services:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --no-autoupdate run
+    # Queda apartado en su propio perfil para poder montar todo lo demás
+    # primero y probarlo por dentro, antes de abrirlo a internet. Sin esto,
+    # hasta construir la imagen exigía tener ya creado el túnel.
+    #
+    #   docker compose -f docker-compose.nas.yml up -d                     → sin túnel
+    #   docker compose -f docker-compose.nas.yml --profile publico up -d   → con túnel
+    profiles: ["publico"]
     environment:
-      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:?hace falta el token del túnel}"
+      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:-}"
     depends_on:
       - app
 

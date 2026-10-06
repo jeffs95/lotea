@@ -60,11 +60,19 @@ agregan sobre la marcha.
 
 Se usa el otro compose, que no publica puertos y trae el túnel:
 
+Primero todo menos el túnel, para probarlo por dentro:
+
 ```bash
 docker compose -f docker-compose.nas.yml up -d --build
 ```
 
-Antes hace falta crear el túnel en Cloudflare (Zero Trust → Networks →
+Y cuando ya responde, se le abre la puerta:
+
+```bash
+docker compose -f docker-compose.nas.yml --profile publico up -d
+```
+
+Para eso hace falta crear el túnel en Cloudflare (Zero Trust → Networks →
 Tunnels), copiar su token al `.env` y, dentro del túnel, apuntar cada nombre
 público a `http://app:8080`. Así se agregan también los dominios propios de
 los concesionarios, sin tocar el NAS.
