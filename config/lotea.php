@@ -24,6 +24,19 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dónde está pg_dump
+    |--------------------------------------------------------------------------
+    |
+    | El contenedor lo trae en el PATH, pero en una Mac con el PostgreSQL
+    | oficial vive en /Library/PostgreSQL/18/bin y no está en el PATH. Sin
+    | esto, el respaldo falla ahí con un «command not found» que no dice
+    | que lo único que pasa es que hay que decirle dónde buscarlo.
+    |
+    */
+    'pg_dump' => env('LOTEA_PG_DUMP', 'pg_dump'),
+
     'discos' => [
         // Sin definir, los dos caen al disco de medialibrary. Así en desarrollo
         // y en los tests hay uno solo, y quien cambia ese disco sobre la marcha

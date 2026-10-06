@@ -1,0 +1,24 @@
+# Lo que no tiene por qué entrar a la imagen: o se instala dentro, o es basura
+# de la máquina de desarrollo, o es un secreto que no se copia nunca.
+.git
+.github
+.env
+.env.*
+!.env.ejemplo
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+storage/app/public/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+database/seeders/datos
+tests
+phpunit.xml
+.phpunit.cache
+docker-compose.override.yml
+*.md
+.DS_Store

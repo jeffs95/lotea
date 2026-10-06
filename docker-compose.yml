@@ -1,0 +1,73 @@
+# Lotea completo: la aplicación, el worker de colas y la base.
+#
+#   docker compose up -d --build
+#
+# Las variables salen de un archivo .env junto a este compose. En Coolify no
+# hace falta: ahí se escriben en el panel y él las inyecta.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${LOTEA_PUERTO:-8080}:8080"
+    environment:
+      # Solo el web migra; si lo hicieran los dos, dos procesos correrían las
+      # mismas migraciones a la vez contra la misma base.
+      LOTEA_MIGRAR_AL_ARRANCAR: "true"
+    env_file: .env
+    depends_on:
+      base:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    # Sin supervisor ni nginx: este contenedor solo saca trabajos de la cola.
+    # Las conversiones de las fotos pasan por aquí, así que si se apaga, las
+    # unidades nuevas se quedan sin miniatura.
+    command: php artisan queue:work --tries=3 --timeout=120 --sleep=3 --max-time=3600
+    depends_on:
+      base:
+        condition: service_healthy
+
+  reloj:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    # Dispara las tareas programadas, que hoy son una: el respaldo de las
+    # tres de la mañana. Sin este contenedor el respaldo nunca corre, y de
+    # eso uno se entera el día que lo necesita.
+    command: php artisan schedule:work
+    depends_on:
+      base:
+        condition: service_healthy
+
+  base:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-lotea}"
+      POSTGRES_USER: "${DB_USERNAME:-lotea}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?hace falta DB_PASSWORD en el .env}"
+      # Sin esto Postgres ordena y compara según el idioma del sistema, que no
+      # es el mismo dentro del contenedor que en la máquina de desarrollo.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-lotea} -d ${DB_DATABASE:-lotea}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  datos:
