@@ -15,7 +15,24 @@ use App\Support\LimiteDeSubida;
 
 return [
     'temporary_file_upload' => [
-        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK'),
+        /*
+         * El archivo a medio subir se queda en el servidor, no en el cubo.
+         *
+         * Sin esto, Livewire toma el disco por defecto. Cuando ese disco es
+         * R2 —que es como corre en producción— deja de mandar el archivo al
+         * servidor y hace que el navegador lo suba directo al cubo con una
+         * URL firmada. Eso suena mejor de lo que es: el navegador tiene que
+         * pedir permiso al cubo con una petición previa, y la política del
+         * cubo solo permite leer. El resultado es un «Error durante la
+         * subida» con un fallo de CORS en la consola que no dice nada de
+         * todo esto.
+         *
+         * Se puede arreglar en el otro sentido —abrir el cubo a escrituras
+         * desde el navegador—, pero no vale la pena: las fotos de un carro
+         * pesan poco, pasan por el servidor sin que se note, y así el cubo
+         * no acepta escrituras de nadie que no sea la aplicación.
+         */
+        'disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK', 'local'),
 
         /*
          * El tope de fábrica son 12 MB, por debajo de lo que aceptan nuestros
