@@ -49,6 +49,16 @@ services:
     # los datos.
     image: postgres:18-bookworm
     restart: unless-stopped
+    # Asomada solo al propio NAS, nunca a la red.
+    #
+    # El 127.0.0.1 de adelante es lo que importa: sin él, Docker la publica a
+    # toda la red de la oficina y cualquiera puede probar contraseñas contra
+    # la base de los concesionarios. Así, para entrar desde fuera hay que
+    # pasar antes por SSH, que ya pide llave.
+    #
+    # El 15432 evita chocar con cualquier otro PostgreSQL del NAS.
+    ports:
+      - "127.0.0.1:15432:5432"
     environment:
       POSTGRES_DB: "${DB_DATABASE:-lotea}"
       POSTGRES_USER: "${DB_USERNAME:-lotea}"
