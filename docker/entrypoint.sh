@@ -12,6 +12,11 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Y se le devuelven a www-data. Este guion corre como root, así que lo que
+# acaba de escribir queda a nombre de root; php-fpm atiende como www-data y
+# se encuentra con un «Permission denied» al leer su propia configuración.
+chown -R www-data:www-data bootstrap/cache storage
+
 # Solo el contenedor web migra. Si lo hicieran también el worker y cualquier
 # réplica, dos procesos correrían las mismas migraciones a la vez contra la
 # misma base, que es como se rompe una tabla a medio crear.
