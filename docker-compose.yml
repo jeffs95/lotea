@@ -42,26 +42,6 @@ services:
       base:
         condition: service_healthy
 
-  reloj:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    env_file: .env
-    # Dispara las tareas programadas, que hoy son una: el respaldo de las
-    # tres de la mañana. Sin este contenedor el respaldo nunca corre, y de
-    # eso uno se entera el día que lo necesita.
-    command: php artisan schedule:work
-    # Este contenedor no sirve HTTP, así que el chequeo de salud de la
-    # imagen —que pregunta por /up— no lo pasaría nunca: figuraría como
-    # enfermo estando perfecto, y eso enseña a ignorar la columna de salud,
-    # que es justo lo que no se quiere el día que uno sí se cae.
-    healthcheck:
-      disable: true
-    depends_on:
-      base:
-        condition: service_healthy
-
   base:
     # Debian y no Alpine, como el resto: no por un fallo comprobado, sino
     # porque en este NAS las bases Alpine ya dieron problema al extraer

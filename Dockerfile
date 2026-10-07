@@ -113,20 +113,8 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
-        curl \
-        ca-certificates \
-        gnupg \
+        postgresql-client \
     ; \
-    # El cliente de PostgreSQL tiene que ser de la misma versión mayor que el
-    # servidor: pg_dump se niega a volcar una base más nueva que él, y el que
-    # trae bookworm es el 15 contra un servidor 18. Sin esto el respaldo de
-    # cada noche fallaría, y de eso uno se entera el día que lo necesita.
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-        | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
-        > /etc/apt/sources.list.d/pgdg.list; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends postgresql-client-18; \
     rm -rf /var/lib/apt/lists/*; \
     # Debian deja un sitio de ejemplo activado que se pelea con el nuestro.
     rm -f /etc/nginx/sites-enabled/default

@@ -8,17 +8,16 @@ cambia es quién pone las variables de entorno y cómo entra el tráfico.
 | Archivo | Para qué |
 | --- | --- |
 | `Dockerfile` | Construye la imagen: PHP 8.3 + nginx, con el código y los assets adentro |
-| `docker-compose.yml` | Los cuatro servicios: web, worker, reloj y base |
+| `docker-compose.yml` | Los tres servicios: web, worker y base |
 | `docker/` | La configuración de nginx, PHP, supervisor y el arranque |
 | `.env.docker.ejemplo` | Las variables que hay que llenar |
 
-## Los cuatro servicios
+## Los tres servicios
 
 - **app** — nginx y PHP sirviendo el panel y los portales. Es el único que
   aplica las migraciones al arrancar.
 - **worker** — la cola. Si se apaga, las fotos nuevas se quedan sin las
   versiones que muestra el portal.
-- **reloj** — dispara lo programado. Hoy es el respaldo de las 3 de la mañana.
 - **base** — PostgreSQL 18, con los datos en un volumen.
 
 ## Arrancarlo
@@ -86,27 +85,6 @@ Tres cosas que muerden en un NAS y no en un VPS:
   y cargándola, o agregando memoria de intercambio.
 - **La arquitectura.** Si el NAS es ARM en vez de Intel, la construcción es
   bastante más lenta pero funciona; las imágenes base existen para los dos.
-
-## Respaldos
-
-Cada noche a las 3, `lotea:respaldar` vuelca la base y la sube al cubo
-**privado** de R2 — fuera del servidor, que es lo único que cuenta como
-respaldo. Se conservan 14 días.
-
-Para correrlo a mano:
-
-```bash
-docker compose exec app php artisan lotea:respaldar
-```
-
-Y para recuperar:
-
-```bash
-gzip -dc lotea-AAAA-MM-DD-HHMMSS.sql.gz | docker compose exec -T base psql -U lotea -d lotea
-```
-
-**Conviene probar esa recuperación una vez**, contra una base vacía, antes de
-necesitarla. Un respaldo que nunca se restauró es una suposición.
 
 ## Desplegar cambios
 
