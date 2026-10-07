@@ -25,10 +25,10 @@ class PlanesSeeder extends Seeder
             'slug' => 'pro',
             'nombre' => 'Pro',
             'descripcion' => 'Para concesionarios con varias sucursales y equipo de ventas.',
-            'precio_mensual' => 1295,
+            'precio_mensual' => 1495,
             'max_sucursales' => 3,
             'max_usuarios' => 10,
-            'max_unidades_activas' => 150,
+            'max_unidades_activas' => 120,
             'modulos' => ['unidades', 'importacion', 'costeo', 'portal', 'taller', 'ventas', 'comisiones', 'cartera', 'ia'],
             // Un tope generoso pero real: 200 lecturas al mes cubren de sobra
             // a un patio de 60 carros y protegen el crédito.
@@ -39,7 +39,7 @@ class PlanesSeeder extends Seeder
             'slug' => 'full',
             'nombre' => 'Full',
             'descripcion' => 'Todo el sistema, sin límites, con soporte prioritario.',
-            'precio_mensual' => 2495,
+            'precio_mensual' => 2550,
             'max_sucursales' => null,
             'max_usuarios' => null,
             'max_unidades_activas' => null,
